@@ -1,6 +1,9 @@
 # voxide — zero-spend project plan
 
-Status: proposed, not implemented or qualified. Created 2026-10-20.
+Status: PR 00 implemented and locally revalidated after independent review on
+`pr-00-bootstrap`. Subsequent PRs remain planned. No harmonizer
+quality/live-monitoring qualification yet.
+Created 2026-10-20.
 
 ## 1. Brief and hard boundaries
 
@@ -116,8 +119,8 @@ device-to-host delay when measuring the physical keyboard experience.
   does not make delayed harmonies low-latency.
 - [ ] Approve musical mapping, exact initial scale list, expression policy, and
   expected behavior on non-scale notes and unsupported/ambiguous source material.
-- [ ] Confirm local-only use versus distribution and willingness to satisfy
-  AGPL/GPL source obligations if distributing. No paid license fallback is assumed.
+- [x] User confirmed local-only use for now under JUCE's AGPLv3 option. Revisit
+  source/notice obligations before sharing; no paid license fallback is assumed.
 - [ ] Confirm no-cost recordings and independent listeners available. Missing
   resources remain blocked gates, not permission to invent results.
 
@@ -292,40 +295,61 @@ bounded decision, not universal professional-quality certification.
 Depends on: this plan; user licensing/support-profile clarification as needed.
 
 **Scope / TODO**
-- [ ] Initialize Voxide's Git repository if still absent; do not initialize/copy
+- [x] Initialize Voxide's Git repository if still absent; do not initialize/copy
   Nitride's history or create a remote without asking.
-- [ ] Add minimal README, contributing instructions, scoped ignores, directory
+- [x] Add minimal README, contributing instructions, scoped ignores, directory
   layout, CMake/CTest, Debug/Release/ASan/TSan presets, and local check entrypoints.
-- [ ] Audit exact pinned JUCE terms: Nitride's 8.0.15 revision
+- [x] Audit exact pinned JUCE terms: Nitride's 8.0.15 revision
   `91ad83ae34a81e0833b1a2b0866f54846370ae53` uses **AGPLv3 or commercial licensing**.
   Confirm a no-cost compliant path; no assumed commercial entitlement. If the
   user's distribution/source preferences conflict, stop before adopting JUCE.
-- [ ] Pin approved dependencies by revision and archive checksum; document licenses
+- [x] Pin approved dependencies by revision and archive checksum; document licenses
   and transitive dependencies. Keep Rubber Band in an optional isolated evaluator.
   Pin free Python evaluation dependencies separately; no global package mutation.
-- [ ] Build minimal shared DSP/test target and AU music-effect shell with unique
+  PR 00 adopts JUCE only; Python is standard-library-only. Engine evaluators and
+  Python evaluation packages are intentionally deferred to their scoped PRs.
+- [x] Build minimal shared DSP/test target and AU music-effect shell with unique
   Voxide bundle/manufacturer/subtype IDs, MIDI input, correct input/sidechain buses,
   and mono-source/stereo-output layout. No synth flags copied from Nitride.
-- [ ] Add explicit local ad-hoc sign/install/`auval` helpers and build metadata.
+- [x] Add explicit local ad-hoc sign/install/`auval` helpers and build metadata.
   Ordinary `make check` must not install anything. No paid Developer ID/notarization.
 
 **Validation required to merge**
-- [ ] Clean Debug and Release configure/build/tests succeed without Nitride present
+- [x] Clean Debug and Release configure/build/tests succeed without Nitride present
   as a dependency; repeat with an approved dependency cache/offline mode after fetch.
-- [ ] Checksum mismatch and wrong/dirty explicit dependency override are rejected.
-- [ ] Focused sanitizer smoke tests run; metadata/logs identify actual compiler/SDK.
-- [ ] `codesign` verification and explicit `auval -v aumf <subtype> <manufacturer>`
+- [x] Checksum mismatch and wrong/dirty explicit dependency override are rejected.
+- [x] Focused sanitizer smoke tests run; metadata/logs identify actual compiler/SDK.
+- [x] `codesign` verification and explicit `auval -v aumf <subtype> <manufacturer>`
   succeed in the logged-in GUI context on the installed Voxide shell.
-- [ ] Identity does not collide with/replace Nitride; install helper only touches
+- [x] Identity does not collide with/replace Nitride; install helper only touches
   Voxide-owned paths, and tests use temporary roots.
-- [ ] License decision and zero-cost setup instructions reviewed. Shell is explicitly
+- [x] License decision and zero-cost setup instructions reviewed. Shell is explicitly
   described as pass-through scaffolding, not a working harmonizer.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — dependency/license path, AU IDs/buses, support profile.
-- Learnings/evidence: pending — exact build/AU commands and logs.
-- Reflections/next-agent cautions: reuse Nitride's rigor, not its synth assumptions;
-  do not copy its destructive clean/install behavior into default checks.
+- Major decisions: local-only AGPLv3 use explicitly approved by user. Pinned JUCE
+  8.0.15; arm64/macOS 15 deployment; identity `aumf / Vx00 / Vxid`, bundle
+  `com.voxide.audio.voxide`. Mono/stereo main input, optional mono/stereo sidechain,
+  stereo output; explicit `sourceBus` Main input/Sidechain choice (default Main)
+  routes channel 1 to both outputs in normal and bypass processing. AU bus
+  enablement cannot indicate an actual source connection. The routing choice is
+  host-automatable and persisted as shell-v2; preserve its ID/meaning in later PRs.
+  See `docs/DECISIONS.md` and `THIRD_PARTY_NOTICES.md`.
+- Learnings/evidence: post-review fresh cached/offline Debug/Release each pass 5
+  CTest suites, and ASan/TSan each pass 2 focused
+  suites. Independent review found five gaps plus a follow-up rollback race, all
+  addressed; see `docs/CODE_REVIEW.md`. Validation now includes 96 native device-free
+  AU cases, generated privacy metadata, 20 Python tooling cases, extracted-source
+  integrity guards, and deterministic installer collision/rollback regressions.
+  Actual Release AU ad-hoc signing and GUI-context `auval` passed. Exact commands,
+  run paths, environment, initial diagnostic failure, and limits are in
+  `docs/VALIDATION.md`; the updated stable-input fresh offline run and installed-AU
+  validation passed. Nitride stayed read-only and is not a build dependency.
+- Reflections/next-agent cautions: shell only, MIDI intentionally ignored; no
+  harmonizer/listening/Logic claims. Preserve prior owned AU bundles outside AU
+  discovery, not as duplicate identities under Components. Keep installation
+  separate from checks, retain logs, and never regenerate expected audio implicitly.
+  Next action is PR 01's actual Logic routing proof, not engine selection.
 
 ### PR 01 — Prove Logic audio/MIDI routing before DSP investment
 

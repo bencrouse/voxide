@@ -1,0 +1,25 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {"major": 3, "minor": 24, "patch": 0},
+  "configurePresets": [
+    {"name": "local-base", "hidden": true, "generator": "Unix Makefiles", "cacheVariables": {
+      "CMAKE_OSX_ARCHITECTURES": "arm64", "CMAKE_OSX_DEPLOYMENT_TARGET": "15.0", "VOXIDE_SANITIZER": ""
+    }},
+    {"name": "local-debug", "inherits": "local-base", "binaryDir": "${sourceDir}/build/local-debug", "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug"}},
+    {"name": "local-release", "inherits": "local-base", "binaryDir": "${sourceDir}/build/local-release", "cacheVariables": {"CMAKE_BUILD_TYPE": "Release"}},
+    {"name": "local-asan", "inherits": "local-debug", "binaryDir": "${sourceDir}/build/local-asan", "cacheVariables": {"VOXIDE_SANITIZER": "address"}},
+    {"name": "local-tsan", "inherits": "local-debug", "binaryDir": "${sourceDir}/build/local-tsan", "cacheVariables": {"VOXIDE_SANITIZER": "thread"}}
+  ],
+  "buildPresets": [
+    {"name": "local-debug", "configurePreset": "local-debug", "jobs": 6},
+    {"name": "local-release", "configurePreset": "local-release", "jobs": 6},
+    {"name": "local-asan", "configurePreset": "local-asan", "jobs": 6},
+    {"name": "local-tsan", "configurePreset": "local-tsan", "jobs": 6}
+  ],
+  "testPresets": [
+    {"name": "local-debug", "configurePreset": "local-debug", "output": {"outputOnFailure": true}},
+    {"name": "local-release", "configurePreset": "local-release", "output": {"outputOnFailure": true}},
+    {"name": "local-asan", "configurePreset": "local-asan", "output": {"outputOnFailure": true}},
+    {"name": "local-tsan", "configurePreset": "local-tsan", "output": {"outputOnFailure": true}}
+  ]
+}

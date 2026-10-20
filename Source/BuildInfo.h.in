@@ -1,0 +1,9 @@
+#pragma once
+
+namespace voxide::build
+{
+inline constexpr auto version = "@PROJECT_VERSION@";
+inline constexpr auto revision = "@VOXIDE_REVISION@";
+inline constexpr auto juceRevision = "@VOXIDE_JUCE_REVISION@";
+inline constexpr auto profile = "@CMAKE_BUILD_TYPE@";
+}
