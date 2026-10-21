@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
 import shutil
 import subprocess
 import sys
@@ -100,6 +101,19 @@ def check_identity(bundle):
 def sign(bundle):
     subprocess.run(["codesign", "--force", "--sign", "-", "--timestamp=none", str(bundle)], check=True)
     subprocess.run(["codesign", "--verify", "--deep", "--strict", str(bundle)], check=True)
+
+
+def verify_validation_output(text, expected_version):
+    if "AU VALIDATION SUCCEEDED." not in text:
+        raise ValueError("auval did not report successful validation")
+    identity = "VALIDATING AUDIO UNIT: 'aumf' - 'Vx00' - 'Vxid'"
+    if identity not in text:
+        raise ValueError("auval validated a different component identity")
+    version = re.search(r"Component Version:\s*(\d+\.\d+\.\d+)", text)
+    if version is None or version.group(1) != expected_version:
+        actual = version.group(1) if version else "missing"
+        raise ValueError(f"AU registry version is {actual}, expected {expected_version}. "
+                         "Rescan only Voxide in Logic's Plug-in Manager before claiming installed-host acceptance; do not reset broad caches.")
 
 
 def owned_component(target, ledger):
@@ -203,7 +217,7 @@ def main():
                                   DEFAULT_INSTALL, DEFAULT_STATE))
         else:
             target = DEFAULT_INSTALL / COMPONENT
-            owned_component(target, DEFAULT_STATE / "au-install.json")
+            installed = owned_component(target, DEFAULT_STATE / "au-install.json")
             subprocess.run(["codesign", "--verify", "--deep", "--strict", str(target)], check=True)
             result["files"] = fingerprint(target)
             command = ["launchctl", "asuser", str(os.getuid()), "/usr/bin/auval", "-v",
@@ -215,6 +229,7 @@ def main():
             print((report_dir / "auval.log").read_text())
             if process.returncode:
                 raise subprocess.CalledProcessError(process.returncode, command)
+            verify_validation_output((report_dir / "auval.log").read_text(), installed["version"])
         result["status"] = "pass"
     except Exception as error:
         result["status"] = "fail"

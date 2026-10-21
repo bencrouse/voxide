@@ -1,8 +1,9 @@
 # voxide — zero-spend project plan
 
-Status: PR 00 implemented and locally revalidated after independent review on
-`pr-00-bootstrap`. Subsequent PRs remain planned. No harmonizer
-quality/live-monitoring qualification yet.
+Status: PR 00 is merged. PR 01 engineering is complete and automatically qualified.
+User testing supports direct-input monitoring with Low Latency Mode off/on and
+project recall; remaining host checks and the track-fed mode limitation are recorded
+below. No harmonizer quality or measured monitoring-latency qualification yet.
 Created 2026-10-20.
 
 ## 1. Brief and hard boundaries
@@ -351,33 +352,80 @@ Depends on: this plan; user licensing/support-profile clarification as needed.
   separate from checks, retain logs, and never regenerate expected audio implicitly.
   Next action is PR 01's actual Logic routing proof, not engine selection.
 
-### PR 01 — Prove Logic audio/MIDI routing before DSP investment
+### PR 01 — Automated routing diagnostics and manual Logic acceptance
 
 Depends on: PR 00 and user Logic session.
 
+**User-approved workflow revision:** stop scripted Logic UI operation. Complete
+the engineering PR using the actual built AU in a device-free native host and
+production-processor tests. Supply one human-operated Logic checklist/test kit.
+Software merge readiness and actual Logic acceptance are separate; native results
+must not close the manual host gates or justify advancing to engine selection.
+
 **Scope / TODO**
-- [ ] Add diagnostic pass-through and bounded timestamped MIDI/audio logging outside
+- [x] Add diagnostic pass-through and bounded timestamped MIDI/audio logging outside
   the audio callback (fixed-capacity telemetry, no console/file writes in render).
-- [ ] Prepare a disposable Logic project: AU MIDI-controlled effect on an instrument
-  track, recorded vocal via sidechain, MIDI region and live controller input.
-- [ ] Document recorded-source and physical-input routes, exactly one audible lead,
+- [x] Prepare reusable fixtures and instructions for a human-created disposable
+  Logic project: AU MIDI-controlled effect on an instrument track, recorded vocal
+  via sidechain, MIDI region and live input. Do not generate a fictitious `.logicx`.
+- [x] Document proposed recorded-source and physical-input routes, exactly one audible lead,
   input monitoring, record-enable, source output suppression, and direct-monitor split.
-- [ ] Record the actual hardware/software environment without serials or hostname.
+  These instructions are not observations that the routes work in Logic.
+- [x] Record the actual hardware/software environment without serials or hostname.
+  CoreAudio defaults/installed Logic version are recorded; actual Logic-selected
+  devices and monitoring configuration remain manual acceptance items.
 
 **Validation required to merge**
-- [ ] Native Logic discovers the correct new build; recorded sidechain and MIDI
-  note events reach the same instance, including within-block event offsets.
+- [x] Automated native-AU and production-processor routing/MIDI/transport/state
+  tests pass with a machine-readable report and explicit coverage boundaries.
+- [x] Diagnostic queue/logging, overflow/stale handling, parser negative controls,
+  and existing Debug/Release/sanitizer regression checks pass.
+- [x] Publish the human checklist and evidence boundaries; manual gates below stay
+  pending until observed, even if the engineering PR is merged.
+
+**Manual Logic acceptance — not inferred from software checks**
+- [x] User-operated Logic captures identify routing-003 and show recorded-source
+  audio on Main plus MIDI at the same instance, including within-block offsets.
 - [ ] User-coordinated physical input test works while stopped and during recording;
   focus/record-enable/mute/solo behavior is documented, not assumed from `auval`.
 - [ ] No doubled lead, feedback route, stale telemetry, or stuck diagnostic notes.
-- [ ] Low Latency Mode on/off test confirms which routes/sends remain active.
-- [ ] Save/quit/reopen the diagnostic project and verify routing/MIDI again.
+- [x] User comparison documents direct physical-input monitoring working with
+  Low Latency Mode off/on; the recorded track-fed route goes silent in that mode.
+  This is a route-specific observation, not resolution of the track-fed failure.
+- [x] User reports save/quit/reopen preserves the working direct-input setup.
+- [ ] Capture fresh audio/MIDI telemetry after recall, including release to zero;
+  this is not established by the general project-reopen report.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — chosen Logic route and direct/software monitoring policy.
-- Learnings/evidence: pending — screenshots/project hash, actual version and observations.
-- Reflections/next-agent cautions: Logic may bypass effects or disable sends in Low
-  Latency Mode; audible pass-through is not proof the intended processing remains active.
+- Major decisions: user approved stopping scripted Logic UI operation. Use the exact
+  built AU in the native host plus production-processor tests, then one reusable
+  human checklist. Source parameter/state identities are unchanged; no harmony DSP.
+  Only the opt-in editor consumer writes metadata logs, never PCM or render-thread I/O.
+- Learnings/evidence: see `docs/LOGIC_ROUTING.md` and `docs/ROUTING_VALIDATION.md`.
+  Native tests include time-varying samples, transport/reset, fresh-instance state
+  and MIDI API acceptance; delivered MIDI offsets are asserted separately at the
+  processor layer. Initial `auval` success had a stale version, now explicitly rejected.
+  Independent right-pane review found three diagnostic reliability/counter issues;
+  all were fixed with regressions and the focused rereview found no remaining
+  concrete issues. Final post-review offline qualification passed Debug/Release
+  (5/5 suites each) and focused ASan/TSan (2/2 each); evidence:
+  `build/checks/20261020T210313Z-fc7eb798/`. See the review record in
+  `docs/ROUTING_VALIDATION.md`; current diagnostic build is routing-003.
+- Reflections/next-agent cautions: the user subsequently tested their own audio/MIDI
+  in Logic. A capture confirms Main-bus audio plus MIDI delivery, but ends with two
+  diagnostic held keys. The user reports Low Latency Mode silences the route and a
+  track-fed live-source recording produces no visible Voxide signal. The user then
+  confirmed direct physical-input selection works and records. A follow-up log
+  shows continuing callbacks with silent input/output during the reported Low
+  Latency Mode test, but does not identify the upstream cause or toggle timing.
+  The user subsequently confirmed direct physical-input monitoring through Voxide
+  works with Low Latency Mode off/on, with the Live Source track at No Output.
+  The user also confirmed save/quit/reopen works for that setup. This is the
+  working live route; the track-fed mode failure, complete monitoring state matrix,
+  single-lead isolation and fresh post-recall MIDI/release telemetry remain open. Do not
+  mark these gates passed from native tests or resume brittle UI automation. The
+  user has a microphone, not an external MIDI controller; Musical Typing is a labeled
+  manual alternative. Logging stops when its editor closes and is not persisted.
 
 ### PR 02 — Freeze requirements, corpus, fixtures, and measurement protocol
 

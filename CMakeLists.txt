@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_OSX_ARCHITECTURES arm64 CACHE STRING "Supported architecture")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum macOS")
-project(voxide VERSION 0.0.1 LANGUAGES C CXX)
+project(voxide VERSION 0.1.0 LANGUAGES C CXX)
 
 if(NOT APPLE OR NOT CMAKE_OSX_ARCHITECTURES STREQUAL "arm64"
    OR NOT CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "15.0")
@@ -39,7 +39,7 @@ add_library(voxide_dsp STATIC Source/DSP/PassThrough.cpp)
 target_include_directories(voxide_dsp PUBLIC Source/DSP)
 target_compile_options(voxide_dsp PRIVATE -Wall -Wextra -Wpedantic)
 
-add_library(voxide_processor STATIC Source/PluginProcessor.cpp)
+add_library(voxide_processor STATIC Source/PluginProcessor.cpp Source/DiagnosticLog.cpp)
 target_include_directories(voxide_processor PUBLIC Source "${PROJECT_BINARY_DIR}/generated")
 target_compile_definitions(voxide_processor PUBLIC
     JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
@@ -73,15 +73,20 @@ add_executable(voxide_dsp_tests Source/Tests/PassThroughTests.cpp)
 target_link_libraries(voxide_dsp_tests PRIVATE voxide_dsp)
 add_test(NAME dsp COMMAND voxide_dsp_tests)
 juce_add_console_app(voxide_processor_tests PRODUCT_NAME "voxide_processor_tests")
-target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp)
+target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp)
+target_compile_definitions(voxide_processor_tests PRIVATE VOXIDE_TEST_OUTPUT_DIR="${PROJECT_BINARY_DIR}/test-output/diagnostics")
 target_link_libraries(voxide_processor_tests PRIVATE voxide_processor)
 add_test(NAME processor COMMAND voxide_processor_tests)
 add_executable(voxide_au_render_tests Source/Tests/AuRenderTests.cpp)
 target_link_libraries(voxide_au_render_tests PRIVATE "-framework AudioToolbox" "-framework CoreFoundation")
 add_dependencies(voxide_au_render_tests voxide_AU)
-add_test(NAME au_render COMMAND voxide_au_render_tests "$<TARGET_BUNDLE_DIR:voxide_AU>")
+add_test(NAME au_render COMMAND voxide_au_render_tests "$<TARGET_BUNDLE_DIR:voxide_AU>"
+    --report "${PROJECT_BINARY_DIR}/au-routing-report.json")
 add_test(NAME tooling COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s scripts/tests -v)
 set_tests_properties(tooling PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 add_test(NAME bundle_metadata COMMAND "${Python3_EXECUTABLE}"
     "${PROJECT_SOURCE_DIR}/scripts/verify_bundle.py" "$<TARGET_BUNDLE_DIR:voxide_Standalone>"
     "$<TARGET_BUNDLE_DIR:voxide_AU>")
+
+add_executable(voxide_environment Source/Tools/EnvironmentProbe.cpp)
+target_link_libraries(voxide_environment PRIVATE "-framework CoreAudio" "-framework CoreMIDI" "-framework CoreFoundation")

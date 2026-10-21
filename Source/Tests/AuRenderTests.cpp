@@ -3,7 +3,9 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <cstdint>
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 
@@ -24,7 +26,12 @@ struct Input
     float value;
     int calls = 0;
 
-    static OSStatus render(void* context, AudioUnitRenderActionFlags*, const AudioTimeStamp*,
+    static float sample(float base, std::uint64_t index)
+    {
+        return base == 0.0f ? 0.0f : base + static_cast<float>(static_cast<int>(index % 31) - 15) / 1024.0f;
+    }
+
+    static OSStatus render(void* context, AudioUnitRenderActionFlags*, const AudioTimeStamp* time,
                            UInt32, UInt32 frames, AudioBufferList* buffers)
     {
         auto& input = *static_cast<Input*>(context);
@@ -35,9 +42,29 @@ struct Input
             if (buffer.mData == nullptr) return kAudio_ParamError;
             auto* samples = static_cast<float*>(buffer.mData);
             for (UInt32 i = 0; i < frames; ++i)
-                samples[i] = input.value;
+                samples[i] = sample(input.value, static_cast<std::uint64_t>(time->mSampleTime) + i);
             buffer.mDataByteSize = frames * static_cast<UInt32>(sizeof(float));
         }
+        return noErr;
+    }
+};
+
+struct Transport
+{
+    bool playing = true;
+    double position = 0;
+    int calls = 0;
+    static OSStatus get(void* context, Boolean* playing, Boolean* changed, Float64* position,
+                        Boolean* cycling, Float64* cycleStart, Float64* cycleEnd)
+    {
+        auto& state = *static_cast<Transport*>(context);
+        ++state.calls;
+        if (playing) *playing = state.playing;
+        if (changed) *changed = true;
+        if (position) *position = state.position;
+        if (cycling) *cycling = false;
+        if (cycleStart) *cycleStart = 0;
+        if (cycleEnd) *cycleEnd = 0;
         return noErr;
     }
 };
@@ -72,6 +99,12 @@ void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
     checked(AudioUnitSetProperty(unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output,
                                  0, &outputFormat, sizeof(outputFormat)), "output format");
     Input main { 0.25f }, side { sideValue };
+    Transport transport;
+    HostCallbackInfo callbacks {};
+    callbacks.hostUserData = &transport;
+    callbacks.transportStateProc = Transport::get;
+    checked(AudioUnitSetProperty(unit, kAudioUnitProperty_HostCallbacks, kAudioUnitScope_Global,
+                                 0, &callbacks, sizeof(callbacks)), "transport callback");
     AURenderCallbackStruct mainCallback { Input::render, &main };
     checked(AudioUnitSetProperty(unit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input,
                                  0, &mainCallback, sizeof(mainCallback)), "connect main");
@@ -105,28 +138,77 @@ void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
     AudioTimeStamp timestamp {};
     timestamp.mFlags = kAudioTimeStampSampleTimeValid;
     AudioUnitRenderActionFlags flags = 0;
-    const auto status = AudioUnitRender(unit, &flags, &timestamp, 0, frames, output);
+    for (int pass = 0; pass < 4; ++pass)
+    {
+        // Monotonic render clock, independently stopped/backward/forward project time.
+        timestamp.mSampleTime = pass * frames;
+        transport.playing = pass != 1;
+        transport.position = pass == 2 ? 0 : (pass + 1) * frames;
+        if (pass == 3) checked(AudioUnitReset(unit, kAudioUnitScope_Global, 0), "reset");
+        checked(MusicDeviceMIDIEvent(unit, 0x90, 60, 100, 7), "MIDI note-on");
+        checked(MusicDeviceMIDIEvent(unit, 0x80, 60, 0, 23), "MIDI note-off");
+        checked(AudioUnitRender(unit, &flags, &timestamp, 0, frames, output), "render");
+        const float base = sideSelected ? (sideConnected ? sideValue : 0.0f) : main.value;
+        for (UInt32 i = 0; i < frames; ++i)
+        {
+            const auto expected = Input::sample(base, static_cast<std::uint64_t>(pass) * frames + i);
+            require(std::abs(left[i] - expected) < 1.0e-7f && std::abs(right[i] - expected) < 1.0e-7f,
+                    "AU routing/transport sample mismatch in pass " + std::to_string(pass));
+        }
+    }
     std::free(output);
-    checked(status, "render");
-    const float expected = sideSelected ? (sideConnected ? sideValue : 0.0f) : main.value;
-    for (UInt32 i = 0; i < frames; ++i)
-        require(std::abs(left[i] - expected) < 1.0e-7f && std::abs(right[i] - expected) < 1.0e-7f,
-                "AU samples disagree: side connected=" + std::to_string(sideConnected)
-                    + ", side selected=" + std::to_string(sideSelected)
-                    + ", bypass=" + std::to_string(bypassed)
-                    + ", expected=" + std::to_string(expected)
-                    + ", left=" + std::to_string(left[i]) + ", right=" + std::to_string(right[i]));
+    require(transport.calls >= 4, "AU did not request host transport context");
     require(main.calls > 0, "Main render callback was not exercised");
     if (sideConnected) require(side.calls > 0, "Sidechain render callback was not exercised");
     checked(AudioUnitUninitialize(unit), "uninitialize");
+}
+
+AudioUnitParameterID sourceId(AudioUnit unit)
+{
+    UInt32 size = sizeof(AudioUnitParameterID);
+    AudioUnitParameterID result = 0;
+    checked(AudioUnitGetProperty(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
+                                 0, &result, &size), "source parameter");
+    require(size == sizeof(result) && result == 449045605u, "Source parameter ID changed");
+    return result;
+}
+
+void stateRoundTrip(AudioComponent component)
+{
+    Instance first(component);
+    checked(AudioUnitSetParameter(first.unit, sourceId(first.unit), kAudioUnitScope_Global, 0, 1.0f, 0), "source before save");
+    CFPropertyListRef state = nullptr;
+    UInt32 size = sizeof(state);
+    checked(AudioUnitGetProperty(first.unit, kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global,
+                                 0, &state, &size), "save AU state");
+    require(state != nullptr, "AU state missing");
+    Instance restored(component);
+    checked(AudioUnitSetProperty(restored.unit, kAudioUnitProperty_ClassInfo, kAudioUnitScope_Global,
+                                 0, &state, sizeof(state)), "restore fresh AU state");
+    CFRelease(state);
+    checked(AudioUnitInitialize(restored.unit), "initialize restored AU");
+    checked(AudioUnitReset(restored.unit, kAudioUnitScope_Global, 0), "reset restored AU");
+    AudioUnitParameterValue value = 0;
+    checked(AudioUnitGetParameter(restored.unit, sourceId(restored.unit), kAudioUnitScope_Global, 0, &value), "read restored source");
+    require(std::abs(value - 1.0f) < 1.0e-7f, "Source did not survive AU state/new instance/reset");
+    checked(AudioUnitUninitialize(restored.unit), "uninitialize restored AU");
 }
 }
 
 int main(int argc, char** argv)
 {
+    std::string reportPath;
     try
     {
-        require(argc == 2, "Pass the built AU component directory");
+        require(argc == 2 || (argc == 4 && std::string(argv[2]) == "--report"),
+                "Pass the built AU component directory [--report file.json]");
+        if (argc == 4)
+        {
+            reportPath = argv[3];
+            std::ofstream initial(reportPath);
+            require(initial.good(), "Cannot initialize AU report");
+            initial << "{\"schema\":\"voxide.native-au.v1\",\"status\":\"running\"}\n";
+        }
         const std::string path(argv[1]);
         auto url = CFURLCreateFromFileSystemRepresentation(nullptr,
             reinterpret_cast<const UInt8*>(path.data()), static_cast<CFIndex>(path.size()), true);
@@ -140,7 +222,13 @@ int main(int argc, char** argv)
         const AudioComponentDescription description { 'aumf', 'Vx00', 'Vxid', 0, 0 };
         // Process-local registration loads this exact build. No installed component,
         // registry lookup, audio device, microphone, or Logic is used.
-        auto component = AudioComponentRegister(&description, CFSTR("voxide render test"), 1, factory);
+        const auto descriptions = static_cast<CFArrayRef>(CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("AudioComponents")));
+        require(descriptions != nullptr && CFArrayGetCount(descriptions) == 1, "Component metadata missing");
+        const auto item = static_cast<CFDictionaryRef>(CFArrayGetValueAtIndex(descriptions, 0));
+        const auto versionValue = static_cast<CFNumberRef>(CFDictionaryGetValue(item, CFSTR("version")));
+        UInt32 version = 0;
+        require(versionValue != nullptr && CFNumberGetValue(versionValue, kCFNumberSInt32Type, &version), "Component version missing");
+        auto component = AudioComponentRegister(&description, CFSTR("voxide render test"), version, factory);
         require(component != nullptr, "process-local AU registration");
         int cases = 0;
         for (double rate : { 44100.0, 48000.0 })
@@ -153,12 +241,32 @@ int main(int argc, char** argv)
                                 renderCase(component, sideConnected, sideSelected, bypassed, side, rate, frames);
                                 ++cases;
                             }
+        stateRoundTrip(component);
+        if (argc == 4)
+        {
+            std::ofstream report(argv[3]);
+            require(report.good(), "Cannot open AU report output");
+            report << "{\"schema\":\"voxide.native-au.v1\",\"status\":\"pass\",\"component_version\":" << version
+                   << ",\"routing_cases\":" << cases << ",\"rendered_blocks\":" << cases * 4
+                   << ",\"midi_api_events\":" << cases * 8
+                   << ",\"state_round_trip\":true,\"transport_callbacks_observed\":true,"
+                   << "\"midi_offset_delivery_observed\":false,"
+                   << "\"scope\":\"Built AU without devices or Logic; MIDI offsets are asserted separately in production processor tests\"}\n";
+            report.flush();
+            require(report.good(), "AU report write failed");
+        }
         CFRelease(bundle);
-        std::cout << "Device-free built AU sample tests passed: " << cases << " cases\n";
+        std::cout << "Device-free built AU tests passed: " << cases << " routes, " << cases * 4
+                  << " blocks, host transport/reset and fresh-instance state\n";
         return EXIT_SUCCESS;
     }
     catch (const std::exception& error)
     {
+        if (!reportPath.empty())
+        {
+            std::ofstream failed(reportPath);
+            failed << "{\"schema\":\"voxide.native-au.v1\",\"status\":\"fail\"}\n";
+        }
         std::cerr << error.what() << '\n';
         return EXIT_FAILURE;
     }

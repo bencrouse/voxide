@@ -4,7 +4,8 @@ A vocal harmonizer project for Logic Pro, intended to keep the original lead and
 generate three harmony voices with key/scale and MIDI control.
 
 **Currently only a pass-through shell. No pitch tracking or harmonies yet.**
-PR 00 establishes builds, tests, and an AU music-effect component. Nothing here
+PR 00 establishes builds and the AU; PR 01 adds routing diagnostics and native
+automated checks, with a separate human-operated Logic checklist. Nothing here
 demonstrates professional vocal quality or acceptable live-monitoring latency.
 
 ## Local development
@@ -16,6 +17,7 @@ No paid SDK, signing membership, Python package, or Nitride checkout is required
 ```sh
 make check
 make check-full
+make routing-check
 ```
 
 Checks do not install plug-ins, launch Logic, access the microphone, or change
@@ -51,8 +53,20 @@ sends channel 1 of that bus to both outputs, including in bypass. A stereo sourc
 second channel is deliberately ignored. A selected silent/disconnected sidechain
 produces silence, not automatic fallback: JUCE's AU wrapper enables both buses, so
 enablement cannot identify a connection. PR 01 must prove which bus Logic routes.
-The source choice is saved in plug-in state; MIDI is accepted but ignored, with no
-MIDI output. This routing control is not a harmony feature.
+The source choice is saved in plug-in state. MIDI is observed for diagnostics but
+does not generate sound or MIDI output. The editor's optional local metadata log
+contains bounded audio/MIDI summaries, not PCM; logging stops when the editor closes.
+These are development diagnostics, not harmony features.
+
+## Routing development loop
+
+Use `make routing-check` rather than scripting Logic's UI. It runs the actual built
+AU in a device-free native host plus production-processor/tooling tests and saves
+a machine-readable report under `build/routing-checks/`.
+
+Use `make routing-fixtures` to create a new private WAV/MIDI probe kit, then follow
+the [manual Logic checklist](docs/LOGIC_ROUTING.md) when convenient. Native success
+does not claim Logic monitoring, Low Latency Mode, or project recall acceptance.
 
 ## License and project boundaries
 
@@ -65,6 +79,7 @@ obligations; no proprietary distribution entitlement is implied.
 - [Decisions](docs/DECISIONS.md)
 - [Validation and evidence](docs/VALIDATION.md)
 - [Independent review and fixes](docs/CODE_REVIEW.md)
+- [Routing diagnostics and manual Logic acceptance](docs/LOGIC_ROUTING.md)
 - [PR-by-PR project plan](docs/PROJECT_PLAN.md)
 
 `../nitride` is a read-only reference for engineering conventions, never a build

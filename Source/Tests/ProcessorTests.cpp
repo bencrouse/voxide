@@ -1,9 +1,11 @@
 #include "PluginProcessor.h"
+#include "DiagnosticsTests.h"
 #include <bit>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+
 
 namespace
 {
@@ -41,6 +43,7 @@ int main()
 {
     try
     {
+        runDiagnosticsTests();
         // No audio device, microphone, GUI window, install, or host is opened.
         voxide::Processor processor;
         require(processor.acceptsMidi() && !processor.producesMidi() && !processor.isMidiEffect(),

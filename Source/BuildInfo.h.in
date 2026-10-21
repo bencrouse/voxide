@@ -6,4 +6,6 @@ inline constexpr auto version = "@PROJECT_VERSION@";
 inline constexpr auto revision = "@VOXIDE_REVISION@";
 inline constexpr auto juceRevision = "@VOXIDE_JUCE_REVISION@";
 inline constexpr auto profile = "@CMAKE_BUILD_TYPE@";
+inline constexpr auto diagnosticBuild = "routing-003";
+inline constexpr auto diagnosticDirectory = "@PROJECT_SOURCE_DIR@/evaluation/pr-01/telemetry";
 }

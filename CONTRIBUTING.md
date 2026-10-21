@@ -5,6 +5,7 @@
 ```sh
 make check                                  # Debug AU/app and all tests
 make check-full                             # Debug/Release; focused ASan/TSan
+make routing-check                          # device-free inner loop, no Logic UI
 python3 scripts/check.py --profile release --offline
 python3 scripts/check.py --full --fresh --offline  # new build trees, no deletion
 cmake --preset local-debug
@@ -21,8 +22,9 @@ variables. Do not delete unfamiliar build/evidence directories.
 All test checks use explicit conditions, not `assert` disabled in Release.
 Tooling tests use temporary fake component/install roots, never the user's AU
 directory. ASan disables process-lifetime leak reporting for system/JUCE code;
-other memory errors remain fatal. TSan runs the same headless DSP/processor smoke
-tests; this is not a concurrency stress or real-time-safety certification.
+other memory errors remain fatal. TSan includes the diagnostic queue's concurrent
+producer/consumer ordering test as well as DSP/processor checks; this is not a
+certification of every host/framework callback or GUI lifecycle.
 
 `scripts/check.py` records per-command logs, exit statuses, compiler/SDK/OS/architecture,
 revision, binary hashes, and hashes of non-ignored project files under unique
@@ -62,8 +64,12 @@ pinned/audited when introduced, not speculatively installed now.
 - `Source/PluginEntry.cpp`: JUCE factory for AU/development Standalone wrappers.
 - `Source/Tests`: deterministic DSP/processor checks, no microphone/device setup.
 - `Source/Tests/AuRenderTests.cpp`: process-local registration/rendering of the exact
-  built AU, checking source selection, silent/disconnected sidechain, and bypass
-  samples. No installed-component lookup or audio device is involved.
+  built AU, checking source selection, silent/disconnected sidechain, bypass,
+  time-varying samples across transport/reset, MIDI API acceptance, and state into
+  a fresh instance. No installed-component lookup or audio device is involved.
+- `Source/Diagnostics.h`: fixed-capacity render-producer/editor-consumer telemetry.
+- `Source/DiagnosticLog.*`: non-render JSONL formatting/writing, opt-in through the
+  editor. No PCM capture; no automatic logging on project recall.
 - `scripts/tests`: dependency-policy and installer-safety tests in temporary roots.
 - `evaluation/`: ignored private sources/projects/evidence; never auto-record/upload.
 
@@ -95,9 +101,19 @@ Do not manually
 delete/re-sign an installed bundle then expect the helper to treat it as unchanged.
 No automatic uninstall or backup pruning is part of PR 00.
 
+`scripts/au.py validate` requires the reported component identity/version and
+success marker, not just `auval` exit status. A stale registry must be handled by
+a human rescan of Voxide only. The native routing loop bypasses registry discovery
+by registering the exact built component inside the test process.
+
 The Standalone plist declares microphone privacy usage so a manual launch can
 request permission normally. Metadata checks never launch it or grant permission.
 
 No commits, pushes, remote creation, purchases, licensing changes, or publication
 are implied by running the development commands. Use the project plan's per-PR
 validation and agent handoff sections, marking unperformed tests pending.
+
+For PR 01 use `docs/LOGIC_ROUTING.md`: automated engineering validation and manual
+Logic acceptance are separate. Do not reinstate scripted DAW UI traversal or close
+manual gates using native test results. Environment probing is explicit/read-only,
+not part of ordinary checks; it does not identify Logic's selected device settings.

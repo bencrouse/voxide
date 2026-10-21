@@ -36,6 +36,16 @@ class InstallTests(unittest.TestCase):
     def install(self, signer=lambda _: None):
         return au.install(self.source, self.destination, self.state, signer)
 
+    def test_auval_requires_matching_identity_version_and_success(self):
+        output = "VALIDATING AUDIO UNIT: 'aumf' - 'Vx00' - 'Vxid'\nComponent Version: 0.1.0 (0x100)\nAU VALIDATION SUCCEEDED.\n"
+        au.verify_validation_output(output, "0.1.0")
+        with self.assertRaisesRegex(ValueError, "registry version"):
+            au.verify_validation_output(output, "0.0.1")
+        with self.assertRaises(ValueError):
+            au.verify_validation_output(output.replace("Vxid", "NTRD"), "0.1.0")
+        with self.assertRaises(ValueError):
+            au.verify_validation_output(output.replace("AU VALIDATION SUCCEEDED.", "FAILED"), "0.1.0")
+
     def test_install_and_owned_replacement_preserve_other_plugins(self):
         unrelated = self.destination / "nitride.component/user-data"
         unrelated.parent.mkdir(parents=True)
