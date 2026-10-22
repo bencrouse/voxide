@@ -1,0 +1,234 @@
+{
+  "schema": "voxide.annotation.v2",
+  "source_id": "glide-44100",
+  "source_pcm_sha256": "b4bdf356c9ad8e1577e6045df620631fd2fac893d194c6755669761ba9747d37",
+  "annotator_id": "analytic-oracle-v1",
+  "origin": "synthetic",
+  "sample_rate": 44100,
+  "frames": 11025,
+  "grid": [
+    {
+      "sample": 0,
+      "voiced": true,
+      "f0_hz": 220.0,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 441,
+      "voiced": true,
+      "f0_hz": 226.18561073124758,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 882,
+      "voiced": true,
+      "f0_hz": 232.54513864485207,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 1323,
+      "voiced": true,
+      "f0_hz": 239.08347366803866,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 1764,
+      "voiced": true,
+      "f0_hz": 245.8056432152431,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 2205,
+      "voiced": true,
+      "f0_hz": 252.71681605375863,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 2646,
+      "voiced": true,
+      "f0_hz": 259.82230627807155,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 3087,
+      "voiced": true,
+      "f0_hz": 267.1275773959404,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 3528,
+      "voiced": true,
+      "f0_hz": 274.6382465293608,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 3969,
+      "voiced": true,
+      "f0_hz": 282.3600887336473,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 4410,
+      "voiced": true,
+      "f0_hz": 290.2990414379513,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 4851,
+      "voiced": true,
+      "f0_hz": 298.4612090106307,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 5292,
+      "voiced": true,
+      "f0_hz": 306.85286745298197,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 5733,
+      "voiced": true,
+      "f0_hz": 315.4804692249422,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 6174,
+      "voiced": true,
+      "f0_hz": 324.35064820647324,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 6615,
+      "voiced": true,
+      "f0_hz": 333.47022479844173,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 7056,
+      "voiced": true,
+      "f0_hz": 342.846211166918,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 7497,
+      "voiced": true,
+      "f0_hz": 352.4858166349255,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 7938,
+      "voiced": true,
+      "f0_hz": 362.3964532257872,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 8379,
+      "voiced": true,
+      "f0_hz": 372.58574136233034,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 8820,
+      "voiced": true,
+      "f0_hz": 383.06151572633337,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 9261,
+      "voiced": true,
+      "f0_hz": 393.83183128271867,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 9702,
+      "voiced": true,
+      "f0_hz": 404.9049694731244,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 10143,
+      "voiced": true,
+      "f0_hz": 416.2894445836173,
+      "stable": false,
+      "uncertain": false
+    },
+    {
+      "sample": 10584,
+      "voiced": true,
+      "f0_hz": 427.99401029144235,
+      "stable": false,
+      "uncertain": false
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "onset",
+      "kind": "onset",
+      "sample": 0,
+      "uncertainty_samples": 0
+    }
+  ],
+  "resonances_hz": [],
+  "static_shift_ratios": [
+    {
+      "semitones": -24,
+      "ratio": 0.25
+    },
+    {
+      "semitones": -12,
+      "ratio": 0.5
+    },
+    {
+      "semitones": -7,
+      "ratio": 0.6674199270850172
+    },
+    {
+      "semitones": -3,
+      "ratio": 0.8408964152537145
+    },
+    {
+      "semitones": 0,
+      "ratio": 1.0
+    },
+    {
+      "semitones": 3,
+      "ratio": 1.189207115002721
+    },
+    {
+      "semitones": 7,
+      "ratio": 1.4983070768766815
+    },
+    {
+      "semitones": 12,
+      "ratio": 2.0
+    },
+    {
+      "semitones": 24,
+      "ratio": 4.0
+    }
+  ],
+  "scope": "Analytic control truth, not a human vocal annotation or shifter output"
+}

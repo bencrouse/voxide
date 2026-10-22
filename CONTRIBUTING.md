@@ -6,6 +6,7 @@
 make check                                  # Debug AU/app and all tests
 make check-full                             # Debug/Release; focused ASan/TSan
 make routing-check                          # device-free inner loop, no Logic UI
+make evaluation-check                       # immutable analytic fixtures/metric controls
 python3 scripts/check.py --profile release --offline
 python3 scripts/check.py --full --fresh --offline  # new build trees, no deletion
 cmake --preset local-debug

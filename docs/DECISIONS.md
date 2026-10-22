@@ -59,10 +59,11 @@
   fresh-instance state and MIDI API acceptance. Exact delivered MIDI offsets are
   asserted in the production processor, not falsely reported as observed inside
   the opaque native AU. Logic delivery still needs a real capture.
-- **Host gates:** no microphone capture occurred; no live external controller was
-  available. Musical Typing is a labeled manual alternative, not hardware qualification.
-  The abandoned automation reached only an unsaved empty project's New Track sheet.
-  No project file, recorded vocal, Low Latency Mode result, or recall result exists.
+- **Host gates:** the agent's abandoned automation reached only an unsaved empty
+  project's New Track sheet and performed no capture/monitoring. Subsequent user
+  testing supports direct physical-input monitoring with Low Latency Mode off/on
+  and save/quit/reopen; the track-fed mode limitation and remaining checks are in
+  `docs/ROUTING_VALIDATION.md`. No external-controller qualification is claimed.
 - **Discovery:** initial `auval` returned success while reporting cached 0.0.1 for
   the installed 0.1.0 bundle. This is not a discovery pass; validation now checks
   the reported version. No broad cache reset/registrar kill is permitted.
@@ -71,3 +72,44 @@
   JSONL writes to detect short writes. Include prior truncation counts in MIDI
   records. Analysis has explicit note-pair and final-release requirements rather
   than treating arbitrary MIDI traffic as evidence of note-on/off delivery.
+
+## PR 02
+
+- **Numerical contract:** user accepted the plan's numerical targets on 2026-10-21,
+  requesting **±24 semitones**, not the original ±12. E2–C6 input, 44.1/48 kHz and
+  all three harmony voices remain required. Mathematical output endpoints are
+  approximately 20.60–4,186.01 Hz. No automatic reduction if engines fail; no claim
+  of achieved performance. Contract and reports are versioned/hashed.
+- **Boundary:** only offline evaluation tooling, analytic assets and protocols;
+  no production tracking, musical mapping, harmony synthesis or engine integration.
+  Musical/source behavior and new listening/protocol details remain unapproved.
+- **Dependencies/privacy:** standard-library Python only. No package installation,
+  download, audio-library scan, recording, AU install or DAW automation. Private
+  recordings/consent/reviewer identities never enter Git. The user offered resources
+  but had not supplied locations, usage references or reviewer IDs at engineering
+  qualification. Subsequently the user supplied three private AIFF pilots and
+  explicitly approved local mono copies/excerpts. Original hashes and PCM samples
+  are preserved. The user confirms one singer, solo and untuned; dry status remains
+  provisional and actual reviewer IDs remain pending. See the private pilot intake
+  record in `docs/EVALUATION_VALIDATION.md`.
+- **Evidence:** candidate-independent analytic references; ordinary tests never
+  rewrite them. Positive controls and deliberate pitch/octave/resonance/delay faults
+  exercise measurements. PCM output is decoded before null comparison. Missing
+  observations, all-uncertain references, missing listeners or corpus inputs cannot
+  become a pass. Offline autocorrelation is not a live tracker or human pitch truth.
+- **Holdout:** singer-separated splits, exact source/annotation/settings hashes,
+  explicit complete-corpus/settings approval and opt-in access. Metadata QA is not
+  candidate tuning; this is a workflow guard rather than file access security.
+- **Independent review hardening:** v2 control/annotation metadata binds the source
+  PCM/timebase; all 28 WAV bytes remain unchanged. Analytic burst/silence onset
+  references were explicitly corrected under generator v2, not regenerated from
+  candidate output. Shared contract policy governs grading and all holdout approval
+  prerequisites; `pr02-contract-002` changes no approved numerical targets and
+  leaves all outstanding protocol/resource approvals pending. See the review
+  record and final qualification in `docs/EVALUATION_VALIDATION.md`.
+- **Sequencing revision (2026-10-22):** user approved committing/merging PR 02's
+  reviewed engineering foundation and deferring detailed manual annotations to
+  actual tracker development. This explicitly permits PR 03 implementation without
+  pretending the human gates passed. Numerical targets, independent reference/
+  listening requirements, holdout locks and final qualification gates are unchanged;
+  remaining musical semantics are not implicitly approved by this merge.

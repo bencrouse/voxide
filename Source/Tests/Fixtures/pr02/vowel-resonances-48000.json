@@ -1,0 +1,763 @@
+{
+  "schema": "voxide.annotation.v2",
+  "source_id": "vowel-resonances-48000",
+  "source_pcm_sha256": "be7d508c6132d43661a7f92831ebf047c69fb59d80d8c3b5bafadd4d7ec96640",
+  "annotator_id": "analytic-oracle-v1",
+  "origin": "synthetic",
+  "sample_rate": 48000,
+  "frames": 48000,
+  "grid": [
+    {
+      "sample": 0,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 480,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 960,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 1440,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 1920,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 2400,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 2880,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 3360,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 3840,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 4320,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 4800,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 5280,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 5760,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 6240,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 6720,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 7200,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 7680,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 8160,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 8640,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 9120,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 9600,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 10080,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 10560,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 11040,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 11520,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 12000,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 12480,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 12960,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 13440,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 13920,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 14400,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 14880,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 15360,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 15840,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 16320,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 16800,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 17280,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 17760,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 18240,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 18720,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 19200,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 19680,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 20160,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 20640,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 21120,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 21600,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 22080,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 22560,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 23040,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 23520,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 24000,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 24480,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 24960,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 25440,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 25920,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 26400,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 26880,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 27360,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 27840,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 28320,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 28800,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 29280,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 29760,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 30240,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 30720,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 31200,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 31680,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 32160,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 32640,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 33120,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 33600,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 34080,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 34560,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 35040,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 35520,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 36000,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 36480,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 36960,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 37440,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 37920,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 38400,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 38880,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 39360,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 39840,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 40320,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 40800,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 41280,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 41760,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 42240,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 42720,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 43200,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 43680,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 44160,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 44640,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 45120,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 45600,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 46080,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 46560,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 47040,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    },
+    {
+      "sample": 47520,
+      "voiced": false,
+      "f0_hz": null,
+      "stable": true,
+      "uncertain": false
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "onset",
+      "kind": "onset",
+      "sample": 0,
+      "uncertainty_samples": 0
+    }
+  ],
+  "resonances_hz": [
+    650,
+    1100,
+    2450
+  ],
+  "static_shift_ratios": [
+    {
+      "semitones": -24,
+      "ratio": 0.25
+    },
+    {
+      "semitones": -12,
+      "ratio": 0.5
+    },
+    {
+      "semitones": -7,
+      "ratio": 0.6674199270850172
+    },
+    {
+      "semitones": -3,
+      "ratio": 0.8408964152537145
+    },
+    {
+      "semitones": 0,
+      "ratio": 1.0
+    },
+    {
+      "semitones": 3,
+      "ratio": 1.189207115002721
+    },
+    {
+      "semitones": 7,
+      "ratio": 1.4983070768766815
+    },
+    {
+      "semitones": 12,
+      "ratio": 2.0
+    },
+    {
+      "semitones": 24,
+      "ratio": 4.0
+    }
+  ],
+  "scope": "Analytic control truth, not a human vocal annotation or shifter output"
+}

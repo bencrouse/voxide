@@ -1,0 +1,57 @@
+{
+  "schema": "voxide.controls.v2",
+  "source_id": "glide-48000",
+  "source_pcm_sha256": "2fb1be35c566a08168224863564c03b18a178e0c4bf113e772ecb039639fd81c",
+  "sample_rate": 48000,
+  "frames": 12000,
+  "events": [
+    {
+      "id": "event-0",
+      "sample": 7,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 0,
+      "velocity": 80
+    },
+    {
+      "id": "event-1",
+      "sample": 23,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 0,
+      "velocity": 0
+    },
+    {
+      "id": "event-2",
+      "sample": 6000,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 60,
+      "velocity": 80
+    },
+    {
+      "id": "event-3",
+      "sample": 6000,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 60,
+      "velocity": 0
+    },
+    {
+      "id": "event-4",
+      "sample": 11998,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 127,
+      "velocity": 80
+    },
+    {
+      "id": "event-5",
+      "sample": 11999,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 127,
+      "velocity": 0
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "voxide.controls.v2",
+  "source_id": "vowel-resonances-44100",
+  "source_pcm_sha256": "752edcf40d03a6b482c5955e849a571c174e0678c3ee5c073c5317d8d45ece94",
+  "sample_rate": 44100,
+  "frames": 44100,
+  "events": [
+    {
+      "id": "event-0",
+      "sample": 7,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 0,
+      "velocity": 80
+    },
+    {
+      "id": "event-1",
+      "sample": 23,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 0,
+      "velocity": 0
+    },
+    {
+      "id": "event-2",
+      "sample": 22050,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 60,
+      "velocity": 80
+    },
+    {
+      "id": "event-3",
+      "sample": 22050,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 60,
+      "velocity": 0
+    },
+    {
+      "id": "event-4",
+      "sample": 44098,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 127,
+      "velocity": 80
+    },
+    {
+      "id": "event-5",
+      "sample": 44099,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 127,
+      "velocity": 0
+    }
+  ]
+}

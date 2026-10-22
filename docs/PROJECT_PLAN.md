@@ -1,6 +1,9 @@
 # voxide — zero-spend project plan
 
-Status: PR 00 is merged. PR 01 engineering is complete and automatically qualified.
+Status: PR 00 and PR 01 are merged. PR 02 engineering and review fixes are complete
+and automatically qualified. The user approved its engineering merge and deferral
+of detailed annotations until tracker development; full corpus, human-review and
+remaining policy-approval gates stay pending.
 User testing supports direct-input monitoring with Low Latency Mode off/on and
 project recall; remaining host checks and the track-fed mode limitation are recorded
 below. No harmonizer quality or measured monitoring-latency qualification yet.
@@ -56,8 +59,10 @@ In particular, Voxide is an **AU music effect (`aumf`)**, not Nitride's AU instr
 
 ## 2. Quality contract and open user decisions
 
-All numerical targets below are provisional until PR 02 approval. They are
-requirements to test, not capabilities already demonstrated.
+The user approved the plan's numerical targets on 2026-10-21, extending maximum
+shift to ±24 semitones. They are requirements to test, not capabilities already
+demonstrated. New listening/measurement protocol details and musical semantics
+still require the separate approvals recorded in PR 02.
 
 ### Listening standard
 
@@ -78,25 +83,26 @@ requirements to test, not capabilities already demonstrated.
 The target is harmonies retaining the lead's character, not a promise of three
 independently performed singers. Ask whether the user expects that stronger illusion.
 
-### Proposed support envelope
+### Numerical support envelope approved in PR 02
 
-| Item | Proposed requirement |
+| Item | Requirement to qualify |
 | --- | --- |
 | Source | Dry, mono, one singer; no pre-existing harmonies |
 | Input F0 | E2–C6, approximately 82–1,047 Hz |
-| Shift per voice | −12 to +12 semitones, including dynamic changes |
-| Mathematical output extremes | Approximately 41–2,093 Hz; these extremes also require qualification |
+| Shift per voice | −24 to +24 semitones, including dynamic changes |
+| Mathematical output extremes | Approximately 20.6–4,186 Hz; these extremes also require qualification |
 | Project rates | 44.1 and 48 kHz |
 | Required articulation | Normal voiced singing, breathiness, vibrato, register transitions, consonants |
 | Stress material | Fry, growls, whispers, clipping, accompaniment bleed: safe/graceful behavior, with reliable pitch guarantees explicitly decided |
 
-Report common shifts within ±7 separately from octave shifts. Passing the smaller
-range does not qualify the full range. Note names use C4 = MIDI 60 regardless of
+Report common shifts within ±7 separately from octave shifts through ±12 and
+two-octave shifts through ±24. Passing a smaller range does not qualify the full
+range. Note names use C4 = MIDI 60 regardless of
 Logic's configurable octave display.
 
 ### Separate timing budgets
 
-| Quantity | Definition | Proposed gate |
+| Quantity | Definition | Approved numerical gate |
 | --- | --- | --- |
 | Processing delay | Complete plug-in audio delay including engine, adaptation buffers, and intentional lookahead/alignment | Live goal ≤10 ms, ceiling 15 ms; mixing ≤100 ms with accurate PDC |
 | Note recognition | Voiced onset/pitch transition to correct stable tracker/selector decision | P95 ≤30 ms above 150 Hz, ≤50 ms below; cold onset and continuous transitions reported separately |
@@ -113,10 +119,11 @@ device-to-host delay when measuring the physical keyboard experience.
 
 - [ ] Confirm Mac/chip/RAM, macOS, Logic, interface/driver, MIDI controller,
   headphone path, sample rates, normal buffer sizes, and representative session.
-- [ ] Confirm ranges, maximum shifts, source conditions, and whether 96 kHz is
-  essential (not assumed supported by this plan).
-- [ ] Approve latency ceilings and whether lead monitoring must be entirely in
-  software or normally uses the interface's direct path. Direct lead monitoring
+- [x] Approve numerical ranges: E2–C6 input, ±24-semitone shifts, 44.1/48 kHz.
+- [ ] Confirm stress-source guarantees; 96 kHz remains outside the support envelope.
+- [x] Approve the plan's numerical latency ceilings and quality thresholds.
+- [ ] Confirm whether lead monitoring must be entirely in software or normally
+  uses the interface's direct path. Direct lead monitoring
   does not make delayed harmonies low-latency.
 - [ ] Approve musical mapping, exact initial scale list, expression policy, and
   expected behavior on non-scale notes and unsupported/ambiguous source material.
@@ -268,7 +275,7 @@ Follow with randomized live trials by the user and another singer, if available.
 Use free Python/NumPy/SciPy, Praat, Instruments, AU tools, and independently checked
 output-pitch analysis. Do not certify output with Voxide's own tracker alone.
 
-### Proposed final pass gates (freeze in PR 02)
+### Numerical final pass gates approved in PR 02
 
 | Gate | Requirement |
 | --- | --- |
@@ -431,37 +438,97 @@ must not close the manual host gates or justify advancing to engine selection.
 
 Depends on: PR 01 and available recordings/listeners.
 
+**User-approved sequencing revision (2026-10-22):** merge the reviewed/tested PR 02
+engineering foundation now and defer detailed manual annotations to actual tracker
+development. PR 03 development may proceed under that explicit deferral, not a
+claim that the human gates passed. Numerical targets, required expressive cases,
+independent review, holdout safeguards and final quality requirements are unchanged.
+Remaining musical semantics must still be approved before freezing note-selection
+behavior. Full tracking/architecture/product qualification still needs trustworthy
+references; do not use the failed C whistle guide as ground truth.
+
 **Scope / TODO**
-- [ ] Close the user decisions above and freeze acceptance thresholds before tuning.
+- [x] Freeze the user-approved numerical targets, extending shifts to ±24 semitones,
+  in `docs/evidence/pr-02/contract.json`; do not claim an engine meets them.
+- [ ] Close remaining musical/source/listening decisions before tuning or holdout use.
 - [ ] Gather/annotate the no-cost corpus and seal the holdout split; retain rights.
-- [ ] Generate known-F0/formant/noise fixtures from versioned scripts/seeds.
-- [ ] Define JSON manifests for sources, sample-indexed targets/MIDI, configurations,
+- [x] Generate known-F0/resonance/noise fixtures from versioned scripts/seeds.
+- [x] Define JSON manifests for sources, sample-indexed targets/MIDI, configurations,
   metrics, raw reports, listener IDs, and environment/build identities.
-- [ ] Implement basic WAV/control rendering and independent metric/annotation tools;
+- [x] Implement basic WAV/control rendering and independent metric/annotation tools;
   specify uncertainty rules, stable-frame regions, voiced-boundary exclusions,
   recognition settling criterion, and onset timestamp definitions.
-- [ ] Set exact loudness, mix levels, comparison tolerance, listener-session design,
-  and defect severity definitions. No per-engine masking EQ.
+- [x] Document exact proposed RMS/mix levels, comparison tolerance, listener-session
+  design, uncertainty rules and defect severity definitions. No per-engine masking EQ.
+- [ ] Approve the proposed listening/annotation procedure with actual reviewers.
 
-**Validation required to merge**
-- [ ] Re-running fixture generation with the same seed produces identical hashes;
+**Engineering validation required to merge — under the approved sequencing revision**
+- [x] Re-running fixture generation with the same seed produces identical hashes;
   ordinary checks never regenerate expected results.
-- [ ] Two annotators review agreement and uncertain regions; scripted validators
-  reject missing files, bad hashes, invalid note ranges, or inconsistent timestamps.
-- [ ] Known synthetic pitch/delay/formant errors are recovered by measurement tools;
+- [x] Scripted validators reject missing files, bad hashes, invalid note ranges,
+  inconsistent timestamps, unsafe holdout access and unapproved grading contracts.
+- [x] Known synthetic pitch/delay/resonance errors are recovered by measurement tools;
   deliberate off-by-one and wrong-octave controls are detected.
+- [x] Independent code review fixes are re-reviewed and all automated regressions pass.
+
+**Deferred human/qualification gates — remain required, not marked passed**
+- [ ] Two annotators review actual vocal agreement and uncertain regions.
 - [ ] Development/holdout separation and the full budget/criteria have explicit
   approval; unavailable singers/listeners are recorded as blockers, not waived silently.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — approved contract and musical semantics.
-- Learnings/evidence: pending — corpus manifest, annotation disputes, tool calibration.
-- Reflections/next-agent cautions: annotations are estimates; synthetic truth and
-  human judgment serve different purposes. Never tune against a repeatedly opened holdout.
+- Major decisions: numerical plan targets approved, with ±24-semitone shifts at
+  the user's request. Other musical semantics remain open. No DSP/engine/product
+  changes; Python tooling is standard-library-only, offline and does not access
+  devices, install packages, discover recordings or operate Logic. See `docs/EVALUATION.md`.
+  User approved engineering merge and deferring detailed annotations to tracker
+  development; this changes sequencing, not targets or final acceptance requirements.
+- Learnings/evidence: 28 versioned mono PCM24 analytic probes span both rates,
+  including two-octave output extremes, exact controls and oracle references.
+  Post-review `make evaluation-check` passed 37 tests and 14 calibration measurements
+  with stable source fingerprints; evidence: `build/evaluation-checks/20261021T183802Z-23a2dc5c/`.
+  Post-review offline Debug/Release (5/5 each) and ASan/TSan (2/2 each) passed; evidence:
+  `build/checks/20261021T183812Z-afea1991/`. See `docs/EVALUATION_VALIDATION.md`.
+  Independent review found seven tooling/schema issues; fixes include bound PCM/
+  timebase metadata, application chronology, shared contract enforcement, complete
+  holdout approval checks and corrected analytic onset references. Additional
+  multi-octave/overflow guards were added. Generator v2 changes no WAV bytes and
+  preserves the original baseline privately. Independent focused rereview found no
+  remaining concrete issues; all final post-review reruns passed.
+  The user subsequently supplied three AIFF pilots and explicitly permitted local
+  mono copies/excerpts. Lossless conversion and three 12-second slices passed
+  sample-identity/format checks; all originals remain unchanged. The user confirms
+  solo, untuned recordings of one singer; dry status stays provisional. Three
+  development-only sources are registered privately, with no holdout, actual
+  annotation-reviewer assignments or completed annotations. The user passed the
+  initial source-audio listening check for all three; automated pitch proposals
+  remain separate, unverified annotation aids, not reference truth or product tests.
+  A private voice-plus-whistle packet is ready at `evaluation/pr-02/listen-pitch-001/`
+  for coarse single-user review. The user reports a/b satisfactory and c less steady
+  with possible unintended notes. C needs issue localization/attribution; retain it
+  as a challenge case. No proposal has been accepted as human reference truth.
+  The user clarifies C's issue is in the gappy/off-timed whistle, and the singing
+  intentionally includes rhythm and bends. Treat C as required expressive input,
+  not an excluded bad take. The offline review aid needs a cleaner comparison;
+  this is not an established Voxide render/latency failure or a reason to snap bends.
+  A bounded shorter-window/gating comparison exposed remaining false-tone versus
+  gap/timing tradeoffs and was not promoted as a fix. No more user listening on
+  that guide is requested. Manual/independent references remain needed for C;
+  preserve the source and failed diagnostics rather than tuning away expression.
+  Do not infer permission to inspect
+  unrelated audio libraries.
+- Reflections/next-agent cautions: engineering test success does not complete the
+  PR's human/approval gates or unlock engine selection. Annotation agreement is not
+  truth, uncertain frames are excluded rather than counted correct, and missing
+  estimates remain failures in the denominator. Holdout is singer-separated and
+  requires a complete corpus, explicit settings approval and an unchanged seal;
+  this is a workflow guard, not an OS sandbox. Never tune on repeatedly opened holdout.
 
 ### PR 03 — Causal F0/voicing tracking and deterministic harmony selection
 
-Depends on: PR 02.
+Depends on: PR 02 engineering foundation. Detailed vocal references are deferred
+into tracker development by the user-approved PR 02 sequencing revision, but remain
+required before claiming actual vocal accuracy or closing qualification go-gates.
 
 **Scope / TODO**
 - [ ] Implement a bounded causal YIN-family baseline and one multi-candidate causal
@@ -503,7 +570,7 @@ Depends on: PR 02; may proceed independently of PR 03 once fixtures are ready.
   document corresponding 44.1 kHz choices. Enable formant compensation explicitly.
 - [ ] Rubber Band: short/medium window, formant preservation, fixed-block adapter;
   query start delay with initial ratio set. Keep its dependency out of the product.
-- [ ] Render static 0/±3/±7/±12 semitones and changing ratios, one and three instances,
+- [ ] Render static 0/±3/±7/±12/±24 semitones and changing ratios, one and three instances,
   time ratio 1. Use synthetic truth and manually checked real-vocal reference F0.
 - [ ] Measure queried and actual delay, ratio-change settling, formants, artifacts,
   peak callback cost, state reset, and output duration/tail behavior.

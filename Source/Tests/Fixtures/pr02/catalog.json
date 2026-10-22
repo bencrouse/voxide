@@ -1,0 +1,568 @@
+{
+  "schema": "voxide.fixtures.v1",
+  "generator": "voxide.analytic-fixtures.v2",
+  "seed": 1448040521,
+  "pcm": "mono PCM24",
+  "cases": [
+    {
+      "id": "sine-low-44100",
+      "case": "sine-low",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "sine-low-44100.wav",
+          "sha256": "608fe5d9f1a3cffa9b57e2033f6be0c7e484bef9fe82c6f6406c8b4dd50a5fcf"
+        },
+        "reference": {
+          "path": "sine-low-44100.json",
+          "sha256": "91b677d4cdaab9f7881868ec6d20af18c2b2b44cdad87cf14585daa5bef5f35d"
+        },
+        "controls": {
+          "path": "sine-low-44100-controls.json",
+          "sha256": "c11bc6889859d223d12f7a506cb99ef03bd666e8d5dab4cd0cc56a123a24a817"
+        }
+      }
+    },
+    {
+      "id": "sine-mid-44100",
+      "case": "sine-mid",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "sine-mid-44100.wav",
+          "sha256": "782df536c9fb9de5d2eee8cedc641d77dc6c295973c70fd94bad3c9335d7e64e"
+        },
+        "reference": {
+          "path": "sine-mid-44100.json",
+          "sha256": "8377ea4f975502ddd7a2912a299459724e8bcd347af85af0b7b7e0f7d52e6c0c"
+        },
+        "controls": {
+          "path": "sine-mid-44100-controls.json",
+          "sha256": "422dc411069421cfd5ed3e509a9707c34eba941ef2fc63936178f9b801e02561"
+        }
+      }
+    },
+    {
+      "id": "sine-high-44100",
+      "case": "sine-high",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "sine-high-44100.wav",
+          "sha256": "8f3b7f4d9f57aaafb836b90ef95e6c8d242f7b20c51aec9123e4535329bf62a8"
+        },
+        "reference": {
+          "path": "sine-high-44100.json",
+          "sha256": "25aa4e6d914481c9f2612e8fe430b003493abc6bcad28eaa05c012831319d7fa"
+        },
+        "controls": {
+          "path": "sine-high-44100-controls.json",
+          "sha256": "d2e17f9bfa2c2a6b2c4054317dd96998a1fa33d49b1f2b3c63bd19547ac82c4f"
+        }
+      }
+    },
+    {
+      "id": "output-low-44100",
+      "case": "output-low",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "output-low-44100.wav",
+          "sha256": "275f790426264c023089d26ac8f27575abb66efd874b46d5829781c03c7d71db"
+        },
+        "reference": {
+          "path": "output-low-44100.json",
+          "sha256": "528e78fd0f43672e540c8cbc4f0278bcbef3cd5ed64f6e55f88997625b72821b"
+        },
+        "controls": {
+          "path": "output-low-44100-controls.json",
+          "sha256": "3851b1486bced43174a668cb208bb1f10c1f5973a8213de5d84250aac8587219"
+        }
+      }
+    },
+    {
+      "id": "output-high-44100",
+      "case": "output-high",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "output-high-44100.wav",
+          "sha256": "f391a1a2d3a4d80be88fd5736f62006ebcdeef5803093c9a48e6d744808724f3"
+        },
+        "reference": {
+          "path": "output-high-44100.json",
+          "sha256": "03214216e2c11470cc3d6cf29130be4d4f0aa8f8179e5dc127638b6a2e8980f8"
+        },
+        "controls": {
+          "path": "output-high-44100-controls.json",
+          "sha256": "35c31161236e9b1165e103e86cd2e82d54bcbad0d4891e5ef3bb4e9be30dabbb"
+        }
+      }
+    },
+    {
+      "id": "missing-fundamental-44100",
+      "case": "missing-fundamental",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "missing-fundamental-44100.wav",
+          "sha256": "ebb0c7f34e57792b0b2512357d6c028976288587daff161f8c0cc9e4feb7e5e2"
+        },
+        "reference": {
+          "path": "missing-fundamental-44100.json",
+          "sha256": "75bce22a06a497e7dfc45b6b25e9531018c936107020fcaa94101cf21182e341"
+        },
+        "controls": {
+          "path": "missing-fundamental-44100-controls.json",
+          "sha256": "bfba8d750df0e7c0435d19b9d67840e55049d8347a883df74ad25e7e723f4051"
+        }
+      }
+    },
+    {
+      "id": "pitch-step-44100",
+      "case": "pitch-step",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "pitch-step-44100.wav",
+          "sha256": "f809625d196410074fc5768b26515bbea0a2adb7eb1f8100110213ee5e1c0c79"
+        },
+        "reference": {
+          "path": "pitch-step-44100.json",
+          "sha256": "0c0990d1e7694e732b8d15fac7675972fa0ec15ba781ca11f8a340bf012016a1"
+        },
+        "controls": {
+          "path": "pitch-step-44100-controls.json",
+          "sha256": "70ecc04f115570774b3fde13c126502da350d65e235b44d30c4ab82700bfe288"
+        }
+      }
+    },
+    {
+      "id": "glide-44100",
+      "case": "glide",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "glide-44100.wav",
+          "sha256": "511328a05fd57eca84049cadec2a5ef00987fc7fca8192fc9bbf010e7a70620a"
+        },
+        "reference": {
+          "path": "glide-44100.json",
+          "sha256": "c62648e62788d684d78dbddc43e223a4f4b2221f5167aa4bb24b551b9d2775be"
+        },
+        "controls": {
+          "path": "glide-44100-controls.json",
+          "sha256": "81311c0e69802981a0b1fc8a3fa53378a5bbbd793887b469a40e90d34326a1ca"
+        }
+      }
+    },
+    {
+      "id": "vibrato-44100",
+      "case": "vibrato",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "vibrato-44100.wav",
+          "sha256": "19c96272087bd9e72dc836b45dbe30749cc8c697eaaf2d8561b03ba2b12084ae"
+        },
+        "reference": {
+          "path": "vibrato-44100.json",
+          "sha256": "cbe76ce0d79dff520a4816e7954125ec71da1349559b575af31f6fdbf112bbca"
+        },
+        "controls": {
+          "path": "vibrato-44100-controls.json",
+          "sha256": "901ef813a8d37d4c88865d5f4f3023f154f4fec93eaaf61598b83904958d9cec"
+        }
+      }
+    },
+    {
+      "id": "vowel-resonances-44100",
+      "case": "vowel-resonances",
+      "sample_rate": 44100,
+      "frames": 44100,
+      "files": {
+        "audio": {
+          "path": "vowel-resonances-44100.wav",
+          "sha256": "b01000d65b09c13f2d05087ac860aac5914e1889fa2a8936240d914fd7f6e96d"
+        },
+        "reference": {
+          "path": "vowel-resonances-44100.json",
+          "sha256": "2c91ae959a969567cef9dbe2840d6dbb7d2814ad6e04b7168221f927ecc3d4c9"
+        },
+        "controls": {
+          "path": "vowel-resonances-44100-controls.json",
+          "sha256": "a0ff650a6e23a9c5bac12be9963b68025514c450b5bb4d30fc5e3dbcf7cebd4f"
+        }
+      }
+    },
+    {
+      "id": "noise-bursts-44100",
+      "case": "noise-bursts",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "noise-bursts-44100.wav",
+          "sha256": "78f94e821e806ff4377119f174b6ade0238a800e6d8fa89c912c6a05f95bc9d8"
+        },
+        "reference": {
+          "path": "noise-bursts-44100.json",
+          "sha256": "5b08d446224a0586fede1fc67fbe51b570729ad7f055b542c5f4f88ce0fda140"
+        },
+        "controls": {
+          "path": "noise-bursts-44100-controls.json",
+          "sha256": "4c2bc10526e09947cac46cd1795742485e731fd5840de844a291131b5227981b"
+        }
+      }
+    },
+    {
+      "id": "silence-44100",
+      "case": "silence",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "silence-44100.wav",
+          "sha256": "6e31679668f9f845e37cd3dfb40af3dca0cdc17cad6a4f15fc37da1d345a16a0"
+        },
+        "reference": {
+          "path": "silence-44100.json",
+          "sha256": "49305d23578ae0dbf0537c05b3d49ae46f693947e8a8a811292a60f961d081ee"
+        },
+        "controls": {
+          "path": "silence-44100-controls.json",
+          "sha256": "afb292248be4eb52a8b416d45a6e85c4e811e5daadb8fe3176c669db8294a816"
+        }
+      }
+    },
+    {
+      "id": "level-step-44100",
+      "case": "level-step",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "level-step-44100.wav",
+          "sha256": "6e5dbebf2d67fe21e8f692204e653e25f387b4aa107049e0a8e815aced692549"
+        },
+        "reference": {
+          "path": "level-step-44100.json",
+          "sha256": "6cc9903114d9d9d530b7c85bc687f07c7aa692e02cb6d9c4c2195f8ba7cf21d2"
+        },
+        "controls": {
+          "path": "level-step-44100-controls.json",
+          "sha256": "d46af605ad4b7e6971fc78a5f7012590cd15e61c70423ddf725dd44cfd66caaa"
+        }
+      }
+    },
+    {
+      "id": "bleed-44100",
+      "case": "bleed",
+      "sample_rate": 44100,
+      "frames": 11025,
+      "files": {
+        "audio": {
+          "path": "bleed-44100.wav",
+          "sha256": "086f20f7d222b26aeab5d78a41c24cebc32e3d70aeac05dfa69943984a924527"
+        },
+        "reference": {
+          "path": "bleed-44100.json",
+          "sha256": "1f61eec2a81f597d0c488f087815fcf1494e21c46ca4c13ffa42306365753efe"
+        },
+        "controls": {
+          "path": "bleed-44100-controls.json",
+          "sha256": "ccececbd2d9b3df26b4bc7756f6dcf467ce3180ba461b76c2e04659183d8d81b"
+        }
+      }
+    },
+    {
+      "id": "sine-low-48000",
+      "case": "sine-low",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "sine-low-48000.wav",
+          "sha256": "f8a0dae6585a1de99eef7f842b8711be2179c9ad1d7a65dee87f26bc1a7b77dd"
+        },
+        "reference": {
+          "path": "sine-low-48000.json",
+          "sha256": "344d44deb03fe5f8978551f0037957a2ec3baa2123d9c2efc72b3a6c3f27bb28"
+        },
+        "controls": {
+          "path": "sine-low-48000-controls.json",
+          "sha256": "d208ea3b93ab279a02418cb8b33f28afebb0e7dbba57f737eddb6c5ea1ce04d6"
+        }
+      }
+    },
+    {
+      "id": "sine-mid-48000",
+      "case": "sine-mid",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "sine-mid-48000.wav",
+          "sha256": "30933dbf957b5e857c2ff82f13dfa0bcd1e43b61062aa83144be0d3887804068"
+        },
+        "reference": {
+          "path": "sine-mid-48000.json",
+          "sha256": "77491ad66dc76ae10002170dbf5319085025d0ca303717936e9a3a3a48592b74"
+        },
+        "controls": {
+          "path": "sine-mid-48000-controls.json",
+          "sha256": "598ca7adda9f79a914b9948960cb3598cac1ed9ddf91fe580f9445e21281b81a"
+        }
+      }
+    },
+    {
+      "id": "sine-high-48000",
+      "case": "sine-high",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "sine-high-48000.wav",
+          "sha256": "bacfd497148f610a9941f92f17f8acad744bd92e5b2322833300adc4de463ce0"
+        },
+        "reference": {
+          "path": "sine-high-48000.json",
+          "sha256": "9a1b8343d00250e8fda5751e1802764912e7e10ebad072d1b477239fe4611307"
+        },
+        "controls": {
+          "path": "sine-high-48000-controls.json",
+          "sha256": "7648dece9e4d5dd58a26e12a97a6d78e2dd667e6daec9460e881dd52547c731b"
+        }
+      }
+    },
+    {
+      "id": "output-low-48000",
+      "case": "output-low",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "output-low-48000.wav",
+          "sha256": "2d265eba727813ad4bad5ac6dde4518eb858c556dc975ee8130563064dcedc9b"
+        },
+        "reference": {
+          "path": "output-low-48000.json",
+          "sha256": "b113ea9810af68b5425d286b0d49d9ee92123537dd36c858feeea77c155c5ef6"
+        },
+        "controls": {
+          "path": "output-low-48000-controls.json",
+          "sha256": "2c32cf439fa151abcbe79304ef5ab931c02f5ebef97efacc6c500b87e224d08d"
+        }
+      }
+    },
+    {
+      "id": "output-high-48000",
+      "case": "output-high",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "output-high-48000.wav",
+          "sha256": "d691374711016dc1cfec69a087e5924ddf0546fdc1a650c25cd845bbb9ef2791"
+        },
+        "reference": {
+          "path": "output-high-48000.json",
+          "sha256": "84f4926504addfb921fb3d3d95102d52196ca838ab049ab76a2838f9b8dcd62d"
+        },
+        "controls": {
+          "path": "output-high-48000-controls.json",
+          "sha256": "57bf03714865ad900c428604eeb7f98cdb9de3c9d867a3ce5de7fbce2ff133a1"
+        }
+      }
+    },
+    {
+      "id": "missing-fundamental-48000",
+      "case": "missing-fundamental",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "missing-fundamental-48000.wav",
+          "sha256": "9d67a647e784e5ae5136d804aab66738a87e24ecdc4f242fe5a551283f5b367a"
+        },
+        "reference": {
+          "path": "missing-fundamental-48000.json",
+          "sha256": "6d98e0581bfd149c0d4534585c8f569298898c4bfcf64407ffacc8b14611232b"
+        },
+        "controls": {
+          "path": "missing-fundamental-48000-controls.json",
+          "sha256": "e239d329603b432fe0e67a7ad1f1ae0f8659db2bf5035198a802bc51a416b5ba"
+        }
+      }
+    },
+    {
+      "id": "pitch-step-48000",
+      "case": "pitch-step",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "pitch-step-48000.wav",
+          "sha256": "341c052e80fbe78c48c6b10c55a5f2b42a089929b9307135ecdcfb3c6ffc624c"
+        },
+        "reference": {
+          "path": "pitch-step-48000.json",
+          "sha256": "bafb1b309e57d73c425bf84b5b02c40f8ed5879eb064cfdabb795079e8eea307"
+        },
+        "controls": {
+          "path": "pitch-step-48000-controls.json",
+          "sha256": "e00730e4388b106d07ea7468d8aaec81b46bcbe3d639985416db21ec6d7ba378"
+        }
+      }
+    },
+    {
+      "id": "glide-48000",
+      "case": "glide",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "glide-48000.wav",
+          "sha256": "8a923c43a5ed4fd282792c3b9edd1018a07f9ae550546cc0325853c54ca78442"
+        },
+        "reference": {
+          "path": "glide-48000.json",
+          "sha256": "f25bf9952a005474cf7bc100c1aca620b4cd507bce1507a795babc4492f93e49"
+        },
+        "controls": {
+          "path": "glide-48000-controls.json",
+          "sha256": "ad81b1135cda2e6b79285b924e371281af2113adf4af792348e77f76c382724c"
+        }
+      }
+    },
+    {
+      "id": "vibrato-48000",
+      "case": "vibrato",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "vibrato-48000.wav",
+          "sha256": "498c48ba19743bc28bf1892c8ffdd433e6aef134bb7e992ef81a104e792d8f78"
+        },
+        "reference": {
+          "path": "vibrato-48000.json",
+          "sha256": "13c80ec61f6f7a4ff56528dd7c17dd5a537feac51bdaaf9b3d6c4fe703d6d4dd"
+        },
+        "controls": {
+          "path": "vibrato-48000-controls.json",
+          "sha256": "c2e98cf881375c8ed49d9636c865292ccc0dc6fdf4b2debba9002d900a71d8cb"
+        }
+      }
+    },
+    {
+      "id": "vowel-resonances-48000",
+      "case": "vowel-resonances",
+      "sample_rate": 48000,
+      "frames": 48000,
+      "files": {
+        "audio": {
+          "path": "vowel-resonances-48000.wav",
+          "sha256": "cf7bb9cfac572188398f6a7133a85f75b8a4957673963ccccdbc9d1c63675c67"
+        },
+        "reference": {
+          "path": "vowel-resonances-48000.json",
+          "sha256": "6f80766f6ad513ada6d6a024f9ec6d3e07e19a3640e6290f3704096ea0be1165"
+        },
+        "controls": {
+          "path": "vowel-resonances-48000-controls.json",
+          "sha256": "626691ae747c47c624747b373329a464e8bd34af2ad22de06ab8cf001cafb066"
+        }
+      }
+    },
+    {
+      "id": "noise-bursts-48000",
+      "case": "noise-bursts",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "noise-bursts-48000.wav",
+          "sha256": "10c307f23c9944b0a2db777aa5510675f8ac2b79bd3ca45d4d1ec2965b9d1c02"
+        },
+        "reference": {
+          "path": "noise-bursts-48000.json",
+          "sha256": "013035fce56a014e876466b3fc300073d31726d32161eba28a7a06c33d578287"
+        },
+        "controls": {
+          "path": "noise-bursts-48000-controls.json",
+          "sha256": "749da2fbfe5ea8e37f863a6fbab2baf6104ad904fdedad2690af0b30c1eb4fb3"
+        }
+      }
+    },
+    {
+      "id": "silence-48000",
+      "case": "silence",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "silence-48000.wav",
+          "sha256": "f27e40254118cc4e1e454b49530984228887d369ad25c9409d89f8bbf4cba3aa"
+        },
+        "reference": {
+          "path": "silence-48000.json",
+          "sha256": "1d55a90514dc46ac11e46db0e185235ac0a40ae8d91191a2e80197e3f0d75791"
+        },
+        "controls": {
+          "path": "silence-48000-controls.json",
+          "sha256": "7a4830c876968756f3fc18bbb14251d3bdf3d6d41279e178f6656f01bf7dc1ed"
+        }
+      }
+    },
+    {
+      "id": "level-step-48000",
+      "case": "level-step",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "level-step-48000.wav",
+          "sha256": "1c62ff18736ea2183acbd193a7fe0636352cc2ea13c7ec93707870f0b225c086"
+        },
+        "reference": {
+          "path": "level-step-48000.json",
+          "sha256": "9917baf7a2bf89ac3729e52dd3e402a5df943522441076a48f0f80cbde4dd3b2"
+        },
+        "controls": {
+          "path": "level-step-48000-controls.json",
+          "sha256": "40f6be9a7f8f52d9172e049bae55436130e3b90ebe8dc26cdf2120f0f21476bd"
+        }
+      }
+    },
+    {
+      "id": "bleed-48000",
+      "case": "bleed",
+      "sample_rate": 48000,
+      "frames": 12000,
+      "files": {
+        "audio": {
+          "path": "bleed-48000.wav",
+          "sha256": "fcb2a8e1b020dd084c1949c000096f24357abec2e0e2f04f9f02ffa0dd4bfe73"
+        },
+        "reference": {
+          "path": "bleed-48000.json",
+          "sha256": "33b4f617308216ebce98e29f69caa332bb4dea7613011a8d111516b6cbffdfd4"
+        },
+        "controls": {
+          "path": "bleed-48000-controls.json",
+          "sha256": "c513bafad16653433e745f5dda4f4c904aa04f8a0e2779bdf5afc171ee93ee87"
+        }
+      }
+    }
+  ]
+}

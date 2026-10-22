@@ -1,0 +1,57 @@
+{
+  "schema": "voxide.controls.v2",
+  "source_id": "sine-low-44100",
+  "source_pcm_sha256": "b71e6576c943a33ab56bf64698cffd55144327dbd7abeb3bf59fb50d998fd54e",
+  "sample_rate": 44100,
+  "frames": 11025,
+  "events": [
+    {
+      "id": "event-0",
+      "sample": 7,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 0,
+      "velocity": 80
+    },
+    {
+      "id": "event-1",
+      "sample": 23,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 0,
+      "velocity": 0
+    },
+    {
+      "id": "event-2",
+      "sample": 5512,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 60,
+      "velocity": 80
+    },
+    {
+      "id": "event-3",
+      "sample": 5512,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 60,
+      "velocity": 0
+    },
+    {
+      "id": "event-4",
+      "sample": 11023,
+      "kind": "note_on",
+      "channel": 1,
+      "note": 127,
+      "velocity": 80
+    },
+    {
+      "id": "event-5",
+      "sample": 11024,
+      "kind": "note_off",
+      "channel": 1,
+      "note": 127,
+      "velocity": 0
+    }
+  ]
+}
