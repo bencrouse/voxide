@@ -22,6 +22,12 @@ struct DiagnosticEvent
     double sampleRate = 0.0;
     float mainPeak = 0.0f, sidePeak = 0.0f, leftPeak = 0.0f, rightPeak = 0.0f;
     std::uint64_t sourceHash = 0, leftHash = 0, rightHash = 0;
+    double pitchHz = 0, pitchConfidence = 0, targetMidi[3] {};
+    std::uint64_t pitchBegin = 0, pitchEnd = 0, pitchAvailable = 0;
+    std::uint8_t pitchVoiced = 0, targetActive[3] {}, musicalMidiKnown = 1, musicalOverflow = 0;
+    std::uint32_t trackingEpoch = 0;
+    std::uint32_t musicalKeyPresses = 0;
+    std::uint16_t musicalPhysicalKeys = 0, musicalSustainedKeys = 0, musicalSoundingPitches = 0;
 };
 static_assert(std::is_trivially_copyable_v<DiagnosticEvent>);
 

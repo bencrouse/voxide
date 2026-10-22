@@ -2,9 +2,11 @@
 #include <array>
 #include <cstdlib>
 #include <iostream>
+void runTrackingTests();
 
 int main()
 {
+    runTrackingTests();
     const std::array<float, 5> source { 0.0f, 0.25f, -0.5f, 1.0f, -1.0f };
     std::array<float, 5> left {}, right {};
     voxide::passThrough(source.data(), left.data(), right.data(), 5);

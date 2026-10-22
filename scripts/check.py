@@ -81,10 +81,15 @@ def main():
                 env["TSAN_OPTIONS"] = "halt_on_error=1"
             selection = ["-R", "^(dsp|processor)$"] if profile in ("asan", "tsan") else []
             run(profile + "-test", ["ctest", "--test-dir", str(build_dir), "--output-on-failure", "--no-tests=error", *selection], env)
+            if profile == "release":
+                run("release-tracking-research", [sys.executable, "scripts/tracking_evaluation.py",
+                    "--binary", str(build_dir / "voxide_tracking_probe")])
             configuration = "Release" if profile == "release" else "Debug"
             binaries = [build_dir / "voxide_dsp_tests",
+                        build_dir / "libvoxide_allocation_audit.dylib",
                         build_dir / "voxide_processor_tests_artefacts" / configuration / "voxide_processor_tests"]
             if profile in ("debug", "release"):
+                binaries.append(build_dir / "voxide_tracking_probe")
                 binaries.append(build_dir / "voxide_au_render_tests")
                 binaries.append(build_dir / "voxide_artefacts" / configuration
                                 / "AU/voxide.component/Contents/MacOS/voxide")

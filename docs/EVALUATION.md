@@ -54,6 +54,12 @@ permits the engineering merge and PR 03 development, **not** holdout access,
 unapproved musical semantics, a reduced quality target or final product acceptance.
 All pending approvals and reference requirements remain explicitly pending.
 
+PR 03 subsequently records user-approved starter musical semantics in
+`docs/evidence/pr-03/musical-contract.json`; this resolves the corresponding starter
+decisions above, not the remaining measurement/listening/resource approvals.
+`docs/TRACKING.md` documents compiled causal-tracker research, native traces and
+known timing misses. PR 02's frozen contract/fixtures remain unchanged.
+
 ## Commands
 
 ```sh

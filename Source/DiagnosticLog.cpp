@@ -39,6 +39,8 @@ bool DiagnosticLog::start(const juce::File& directory, const juce::String& insta
     auto* header = new juce::DynamicObject();
     header->setProperty("kind", "header");
     header->setProperty("schema", "voxide.routing.v1");
+    header->setProperty("midi_state_schema", "voxide.midi-state.v1");
+    header->setProperty("held_keys_semantics", "legacy diagnostic bitset; use musical counts for release validation");
     header->setProperty("instance", instance);
     header->setProperty("version", build::version);
     header->setProperty("build", build::diagnosticBuild);
@@ -98,6 +100,27 @@ void DiagnosticLog::writeEvent(const DiagnosticEvent& event)
     row->setProperty("transport_known", event.transportKnown != 0);
     row->setProperty("playing", event.playing != 0);
     row->setProperty("held_keys", static_cast<int>(event.heldKeys));
+    if (event.kind == DiagnosticEvent::Kind::audio)
+    {
+        row->setProperty("pitch_hz", event.pitchHz);
+        row->setProperty("tracking_epoch", static_cast<int>(event.trackingEpoch));
+        row->setProperty("pitch_confidence", event.pitchConfidence);
+        row->setProperty("pitch_voiced", event.pitchVoiced != 0);
+        row->setProperty("pitch_support_begin", static_cast<juce::int64>(event.pitchBegin));
+        row->setProperty("pitch_support_end", static_cast<juce::int64>(event.pitchEnd));
+        row->setProperty("pitch_available", static_cast<juce::int64>(event.pitchAvailable));
+        row->setProperty("musical_midi_known", event.musicalMidiKnown != 0);
+        row->setProperty("musical_key_presses", static_cast<int>(event.musicalKeyPresses));
+        row->setProperty("musical_physical_keys", event.musicalPhysicalKeys);
+        row->setProperty("musical_sustained_keys", event.musicalSustainedKeys);
+        row->setProperty("musical_sounding_pitches", event.musicalSoundingPitches);
+        row->setProperty("musical_overflow", event.musicalOverflow != 0);
+        for (int i = 0; i < 3; ++i)
+        {
+            row->setProperty("target_midi_" + juce::String(i + 1), event.targetMidi[i]);
+            row->setProperty("target_active_" + juce::String(i + 1), event.targetActive[i] != 0);
+        }
+    }
     row->setProperty("held_known", event.heldKnown != 0);
     row->setProperty("midi_truncated_blocks", static_cast<juce::int64>(event.midiTruncatedBlocks));
     if (event.kind == DiagnosticEvent::Kind::audio)

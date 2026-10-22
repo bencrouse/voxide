@@ -113,3 +113,28 @@
   pretending the human gates passed. Numerical targets, independent reference/
   listening requirements, holdout locks and final qualification gates are unchanged;
   remaining musical semantics are not implicitly approved by this merge.
+
+## PR 03
+
+- **Approved musical defaults (2026-10-22):** user accepted scale third/fifth/octave
+  defaults, continuous scale-source expression with hysteresis, absolute MIDI
+  newest-three/stable-slot targets with repeat counts/sustain, inactive uncertain
+  targets, unchanged lead and disabling rather than clamping out-of-range shifts.
+  User additionally requested broad exotic scales. Implemented 41 built-in 12-TET
+  sets plus any custom pitch-class set and all roots; do not claim microtonal/raga/
+  maqam completeness. Octaves are independent of degree cardinality. See the
+  versioned `docs/evidence/pr-03/musical-contract.json` and `docs/TRACKING.md`.
+- **Algorithm boundary:** fixed-storage causal YIN baseline and bounded
+  multi-candidate variant; no offline Viterbi, future context or correction of lead.
+  Thresholds/hysteresis/window constants are engineering choices, not perceptually
+  approved numbers. Multi-candidate is an experimental default, not a proven winner.
+- **Research versus acceptance:** final candidate analytic stable-frame results do
+  not establish actual vocal accuracy. Recognition timing misses remain architecture
+  blockers. All permitted development vocals, including rhythmic/bending c, remain
+  required and ungraded without human reference truth; no holdout or live-quality
+  gate is unlocked. No new dependencies, purchase, install, recording or Logic use.
+- **Engineering/research merge approval (2026-10-22):** after independent review,
+  fixes, rereviews and full qualification, the user approved a local commit and
+  merge of PR 03. Recognition timing misses and deferred reference/listening/Logic
+  gates remain open; this is not architecture or product acceptance. Nothing is
+  pushed or installed, and private evaluation data remains excluded from Git.

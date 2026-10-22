@@ -1,9 +1,13 @@
 # voxide — zero-spend project plan
 
-Status: PR 00 and PR 01 are merged. PR 02 engineering and review fixes are complete
-and automatically qualified. The user approved its engineering merge and deferral
+Status: PR 00 through PR 02 are merged locally. PR 02 engineering and review fixes
+are complete and automatically qualified. The user approved its merge and deferral
 of detailed annotations until tracker development; full corpus, human-review and
 remaining policy-approval gates stay pending.
+PR 03 causal tracking and target selection are implemented, independently reviewed
+and automatically qualified on `pr-03-causal-tracking-selection`. The user approved
+its local engineering/research commit and merge; no audible harmonies. Timing misses
+and deferred human/host gates still block architecture/product qualification.
 User testing supports direct-input monitoring with Low Latency Mode off/on and
 project recall; remaining host checks and the track-fed mode limitation are recorded
 below. No harmonizer quality or measured monitoring-latency qualification yet.
@@ -531,31 +535,65 @@ into tracker development by the user-approved PR 02 sequencing revision, but rem
 required before claiming actual vocal accuracy or closing qualification go-gates.
 
 **Scope / TODO**
-- [ ] Implement a bounded causal YIN-family baseline and one multi-candidate causal
+- [x] Implement a bounded causal YIN-family baseline and one multi-candidate causal
   variant; document window/hop, history, smoothing, and any lookahead separately.
-- [ ] Produce timestamped F0/confidence/voicing, with defined low-confidence behavior.
-- [ ] Implement scale-degree offsets and absolute MIDI targets for three slots;
+- [x] Produce timestamped F0/confidence/voicing, with defined low-confidence behavior.
+- [x] Implement scale-degree offsets and absolute MIDI targets for three slots;
   deterministic allocation, duplicate notes, note-off, overflow, and >3-held-note policy.
-- [ ] Define vibrato/scoop handling, scale-boundary hysteresis, and silence/seek/reset
+- [x] Define vibrato/scoop handling, scale-boundary hysteresis, and silence/seek/reset
   behavior without processing the original lead.
 
 **Validation required to merge**
-- [ ] Exact expected-note tests cover approved scales/roots, accidentals, ties,
+- [x] Exact expected-note tests cover approved scales/roots, accidentals, ties,
   limits, rapid changes, duplicate/overlapping MIDI, event ordering, and releases.
-- [ ] Cold and continuous recognition response, F0 accuracy, octave errors, voicing
-  errors, and false triggers measured per register on development material.
-- [ ] Vibrato around note boundaries does not chatter; fast deliberate changes are
-  not hidden by excessive smoothing. Missing-fundamental cases are included.
-- [ ] Block partitions 32/64/128/257/512/1024 and varying sequences preserve event
+- [x] Cold/continuous response, F0/octave/voicing/false-trigger metrics per register
+  on analytic development material, both compiled variants; approved private vocals
+  produce ungraded causal traces only, never fabricated reference truth.
+- [ ] Trustworthy real-vocal per-register accuracy/response and independent human
+  expression/listening qualification (explicitly deferred, not claimed passed).
+- [x] Boundary-vibrato no-chatter and immediate deliberate anchor-change tests;
+  analytic rhythmic bends/missing fundamentals retained. Tracker response lag and
+  offset voicing hangover are measured failures, not smoothed away or hidden.
+- [x] Block partitions 32/64/128/257/512/1024 and varying sequences preserve event
   semantics; reset/seek does not use future samples or stale history.
-- [ ] Allocation-audit self-test detects deliberate render allocations, then reports
+- [x] Allocation-audit self-test detects deliberate render allocations, then reports
   none in exercised tracker/selector callbacks; sanitizer tests pass.
-- [ ] Report any target misses honestly. A reproducible research result may merge,
+- [x] Report any target misses honestly. A reproducible research result may merge,
   but unresolved required tracking failures block the architecture go-decision.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — tracker variant, confidence/hysteresis/voice-allocation policy.
-- Learnings/evidence: pending — failure excerpts and per-register timing distributions.
+- Major decisions: approved musical defaults with broad 12-TET/custom scales;
+  independent degree/octave controls; fixed-storage YIN and multi-candidate variants,
+  2-sample preprocessing, newest-anchored 512-sample comparisons and ~5 ms hop.
+  Engineering constants, reset/overflow/state/telemetry details and exact semantics
+  are documented in `docs/TRACKING.md` and the PR 03 musical contract.
+- Learnings/evidence: compiled analytic per-register research is reproducible with
+  `make tracking-check`, full native checks with `python3 scripts/check.py --full
+  --offline`. Cold recognition dwell completion ~60–69.84 ms misses requirements;
+  stable-frame accuracy excludes transitions and cannot establish expressive/live
+  quality. Earlier exploratory failures and all private c traces are retained.
+  AU remains dry, zero added audio delay; decision delay is not PDC. No commit,
+  merge, push, install or Logic operation is implied by implementation completion.
+  Pre-review native qualification: `build/checks/20261022T184815Z-2f9d18f8/environment.json`
+  (Debug/Release 5/5 each, focused ASan/TSan 2/2 each, stable source snapshot).
+  Compiled research: `build/tracking-checks/20261022T184949Z-1d67e5d9/report.json`;
+  140 analytic case/variant runs, six private ungraded vocal traces, no holdout use.
+  PR 02 regression/calibration: `build/evaluation-checks/20261022T184819Z-52b195b6/report.json`.
+  Independent Herdr review subsequently found six concrete issues, all implemented
+  with targeted regressions; see `docs/PR03_CODE_REVIEW.md`. Revised metrics also fix
+  stale/dropped decisions, byte binding and the analytic generator's unclipped bends/
+  integer onsets. Focused rereviews found no remaining concrete issues. Final
+  post-fix native qualification passed at
+  `build/checks/20261022T191729Z-d1d453c9/environment.json` (Debug/Release 5/5 each,
+  ASan/TSan 2/2 each, 83 Python tests, stable source). Compiled research:
+  `build/tracking-checks/20261022T191837Z-e08aa2c3/report.json` (140 case/variant
+  runs, six private ungraded traces, corrected register-boundary requirements).
+  PR 02 calibration/regression also passed at
+  `build/evaluation-checks/20261022T191732Z-b5c88f9d/report.json`.
+  Numerical recognition misses and deferred human/Logic gates remain open.
+  User approved local commit/merge as an engineering/research milestone on
+  2026-10-22, explicitly retaining these limitations. No push, AU install or Logic
+  operation is authorized by that approval.
 - Reflections/next-agent cautions: MIDI does not eliminate source-pitch tracking;
   offline Viterbi accuracy is not live causal performance.
 

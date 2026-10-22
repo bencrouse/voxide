@@ -35,7 +35,7 @@ if(voxide_dirty)
 endif()
 configure_file(Source/BuildInfo.h.in generated/BuildInfo.h @ONLY)
 
-add_library(voxide_dsp STATIC Source/DSP/PassThrough.cpp)
+add_library(voxide_dsp STATIC Source/DSP/PassThrough.cpp Source/DSP/PitchTracker.cpp Source/DSP/HarmonySelector.cpp)
 target_include_directories(voxide_dsp PUBLIC Source/DSP)
 target_compile_options(voxide_dsp PRIVATE -Wall -Wextra -Wpedantic)
 
@@ -69,13 +69,19 @@ target_sources(voxide PRIVATE Source/PluginEntry.cpp)
 target_link_libraries(voxide PRIVATE voxide_processor)
 
 enable_testing()
-add_executable(voxide_dsp_tests Source/Tests/PassThroughTests.cpp)
-target_link_libraries(voxide_dsp_tests PRIVATE voxide_dsp)
+add_library(voxide_allocation_audit SHARED Source/Tests/AllocationAudit.cpp)
+if(VOXIDE_SANITIZER)
+    # Sanitizer malloc interceptors take precedence over dyld interposition.
+    # Audit in ordinary Debug/Release; do not interpose sanitizer internals.
+    target_compile_definitions(voxide_allocation_audit PUBLIC VOXIDE_SANITIZED=1)
+endif()
+add_executable(voxide_dsp_tests Source/Tests/PassThroughTests.cpp Source/Tests/TrackingTests.cpp)
+target_link_libraries(voxide_dsp_tests PRIVATE voxide_dsp voxide_allocation_audit)
 add_test(NAME dsp COMMAND voxide_dsp_tests)
 juce_add_console_app(voxide_processor_tests PRODUCT_NAME "voxide_processor_tests")
-target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp)
+target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp)
 target_compile_definitions(voxide_processor_tests PRIVATE VOXIDE_TEST_OUTPUT_DIR="${PROJECT_BINARY_DIR}/test-output/diagnostics")
-target_link_libraries(voxide_processor_tests PRIVATE voxide_processor)
+target_link_libraries(voxide_processor_tests PRIVATE voxide_processor voxide_allocation_audit)
 add_test(NAME processor COMMAND voxide_processor_tests)
 add_executable(voxide_au_render_tests Source/Tests/AuRenderTests.cpp)
 target_link_libraries(voxide_au_render_tests PRIVATE "-framework AudioToolbox" "-framework CoreFoundation")
@@ -90,3 +96,5 @@ add_test(NAME bundle_metadata COMMAND "${Python3_EXECUTABLE}"
 
 add_executable(voxide_environment Source/Tools/EnvironmentProbe.cpp)
 target_link_libraries(voxide_environment PRIVATE "-framework CoreAudio" "-framework CoreMIDI" "-framework CoreFoundation")
+add_executable(voxide_tracking_probe Source/Tools/TrackingProbe.cpp)
+target_link_libraries(voxide_tracking_probe PRIVATE voxide_dsp)

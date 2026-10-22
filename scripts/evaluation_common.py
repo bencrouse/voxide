@@ -76,7 +76,12 @@ def contained(root, name):
 
 
 def read_pcm(path):
-    with wave.open(str(path), "rb") as stream:
+    with Path(path).open("rb") as source:
+        return read_pcm_stream(source)
+
+
+def read_pcm_stream(source):
+    with wave.open(source, "rb") as stream:
         rate, channels, width, frames = (stream.getframerate(), stream.getnchannels(),
                                           stream.getsampwidth(), stream.getnframes())
         require(rate in (44100, 48000) and channels == 1 and width in (2, 3, 4),
@@ -104,7 +109,15 @@ def wav_identity(path):
 
 
 def read_wav(path):
-    info, raw = read_pcm(path)
+    return decode_pcm(*read_pcm(path))
+
+
+def read_wav_bytes(data):
+    from io import BytesIO
+    return decode_pcm(*read_pcm_stream(BytesIO(data)))
+
+
+def decode_pcm(info, raw):
     width = info["bits"] // 8
     scale = float(1 << (8 * width - 1))
     samples = [int.from_bytes(raw[i:i + width], "little", signed=True) / scale

@@ -3,7 +3,8 @@
 A vocal harmonizer project for Logic Pro, intended to keep the original lead and
 generate three harmony voices with key/scale and MIDI control.
 
-**Currently only a pass-through shell. No pitch tracking or harmonies yet.**
+**Causal pitch tracking and three-voice target selection are implemented; audio is
+still dry pass-through. No audible harmonies yet.**
 PR 00 establishes builds and the AU; PR 01 adds routing diagnostics and native
 automated checks, with a separate human-operated Logic checklist. Nothing here
 demonstrates professional vocal quality or acceptable live-monitoring latency.
@@ -11,6 +12,11 @@ demonstrates professional vocal quality or acceptable live-monitoring latency.
 PR 02 adds offline evaluation fixtures and measurement/corpus tooling. The numerical
 target now includes ±24-semitone shifts; no pitch shifter has been implemented or
 qualified. Human corpus/annotation/listening approvals remain separate gates.
+
+PR 03 adds two causal YIN variants, 41 built-in 12-TET scale sets plus custom pitch
+classes, all roots, independent degree/octave offsets, and sustained absolute-MIDI
+targets. Tracking response requirements are **not met**; real-vocal accuracy and
+Logic/live monitoring remain unqualified. See [tracking research](docs/TRACKING.md).
 
 ## Local development
 
@@ -23,6 +29,7 @@ make check
 make check-full
 make routing-check
 make evaluation-check
+make tracking-check
 ```
 
 Checks do not install plug-ins, launch Logic, access the microphone, or change
@@ -61,10 +68,11 @@ second channel is deliberately ignored. A selected silent/disconnected sidechain
 produces silence, not automatic fallback: JUCE's AU wrapper enables both buses, so
 enablement cannot identify a connection. The user's Logic captures deliver audio
 on Main while Side remains silent, despite selecting a source in Logic's Side Chain menu.
-The source choice is saved in plug-in state. MIDI is observed for diagnostics but
-does not generate sound or MIDI output. The editor's optional local metadata log
+All musical/source parameters are saved in plug-in state; legacy shell states load
+with musical defaults. MIDI controls target decisions but generates no sound or
+MIDI output. The editor's optional local metadata log
 contains bounded audio/MIDI summaries, not PCM; logging stops when the editor closes.
-These are development diagnostics, not harmony features.
+The editor exposes target controls and callback snapshots, not audible harmonies.
 
 ## Routing development loop
 

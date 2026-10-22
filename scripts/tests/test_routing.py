@@ -26,7 +26,9 @@ class RoutingTests(unittest.TestCase):
             dict(context, kind="midi", sequence=1, offset=7, prefix="903c50", midi_size=3),
             dict(context, kind="midi", sequence=2, offset=23, prefix="803c00", midi_size=3),
             dict(context, kind="audio", sequence=3, source_hash="1234", left_hash="1234", right_hash="1234",
-                 main_peak=0.125, side_peak=0, left_peak=0.125, right_peak=0.125, non_finite_observations=0),
+                 main_peak=0.125, side_peak=0, left_peak=0.125, right_peak=0.125, non_finite_observations=0,
+                 musical_midi_known=True, musical_key_presses=0, musical_physical_keys=0,
+                 musical_sustained_keys=0, musical_sounding_pitches=0, bypassed=False),
             {"kind": "end", "last_sequence": 3, "dropped_records_total": 0, "dropped_during_capture": 0},
         ]
 
@@ -36,7 +38,9 @@ class RoutingTests(unittest.TestCase):
         return routing.analyze(path, **options)
 
     def test_valid_capture_and_requirements(self):
-        result = self.analyze(self.capture(), require_audio=True, require_midi=True, require_offsets=True,
+        rows = self.capture()
+        rows[0]["midi_state_schema"] = "voxide.midi-state.v1"
+        result = self.analyze(rows, require_audio=True, require_midi=True, require_offsets=True,
                               require_notes=True, require_released=True)
         self.assertTrue(result["exact_selected_dry_stereo"])
         self.assertEqual(result["midi_records"], 2)
@@ -86,8 +90,33 @@ class RoutingTests(unittest.TestCase):
         rows[2]["prefix"] = "903c00"  # Zero-velocity note-on is a release.
         self.assertEqual(self.analyze(rows, require_notes=True)["note_pairs"], 1)
         rows[3]["held_keys"] = 1
+        rows[0]["midi_state_schema"] = "voxide.midi-state.v1"
+        rows[3].update(musical_key_presses=1, musical_physical_keys=1, musical_sounding_pitches=1)
         with self.assertRaisesRegex(ValueError, "Held keys remain"):
             self.analyze(rows, require_released=True)
+
+    def test_release_uses_repeat_and_sustain_counts_not_legacy_bitset(self):
+        for presses, physical, sustained in ((1, 1, 0), (0, 0, 1)):
+            rows = self.capture()
+            rows[0]["midi_state_schema"] = "voxide.midi-state.v1"
+            rows[3].update(held_keys=0, musical_key_presses=presses, musical_physical_keys=physical,
+                           musical_sustained_keys=sustained, musical_sounding_pitches=1)
+            with self.assertRaisesRegex(ValueError, "Held keys remain"):
+                self.analyze(rows, require_released=True)
+
+    def test_release_requires_known_unbypassed_authoritative_counts(self):
+        with self.assertRaisesRegex(ValueError, "authoritative"):
+            self.analyze(self.capture(), require_released=True)
+        self.assertEqual(self.analyze(self.capture())["status"], "valid_capture")
+        for change in ("unknown", "bypassed", "missing", "inconsistent"):
+            rows = self.capture()
+            rows[0]["midi_state_schema"] = "voxide.midi-state.v1"
+            if change == "unknown": rows[3]["musical_midi_known"] = False
+            if change == "bypassed": rows[3]["bypassed"] = True
+            if change == "missing": del rows[3]["musical_key_presses"]
+            if change == "inconsistent": rows[3]["musical_physical_keys"] = 1
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                self.analyze(rows, require_released=True)
 
     def test_note_offsets_cannot_be_satisfied_by_a_controller(self):
         rows = self.capture()

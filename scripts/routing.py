@@ -99,7 +99,7 @@ def analyze(path, require_audio=False, require_midi=False, require_offsets=False
     if len(blocks) != len(audio):
         raise ValueError("Duplicate audio-block identity")
     note_messages = []
-    active_notes = set()
+    active_notes = {}
     note_pairs = 0
     for row in midi:
         block = blocks.get(row["block"])
@@ -117,9 +117,9 @@ def analyze(path, require_audio=False, require_midi=False, require_offsets=False
             note_messages.append(row)
             key = (message[0] & 0x0f, message[1])
             if message[0] & 0xf0 == 0x90 and message[2] != 0:
-                active_notes.add(key)
-            elif key in active_notes:
-                active_notes.remove(key)
+                active_notes[key] = active_notes.get(key, 0) + 1
+            elif active_notes.get(key, 0) > 0:
+                active_notes[key] -= 1
                 note_pairs += 1
     if (any(not row.get("held_known") for row in audio)
             or len({row.get("midi_truncated_blocks") for row in audio}) != 1):
@@ -137,8 +137,25 @@ def analyze(path, require_audio=False, require_midi=False, require_offsets=False
         raise ValueError("Required MIDI was not observed")
     if require_notes and not note_pairs:
         raise ValueError("Required matching MIDI note-on/off was not observed")
-    if require_released and audio[-1]["held_keys"] != 0:
-        raise ValueError("Held keys remain at capture end")
+    if rows[0].get("midi_state_schema") == "voxide.midi-state.v1":
+        for row in audio:
+            fields = ("musical_key_presses", "musical_physical_keys", "musical_sustained_keys", "musical_sounding_pitches")
+            counts = [row.get(field) for field in fields]
+            if any(not isinstance(count, int) or isinstance(count, bool) or count < 0 for count in counts):
+                raise ValueError("Missing/invalid authoritative musical MIDI counts")
+            presses, physical, sustained, sounding = counts
+            if not (physical <= presses <= 2048 * 65535 and physical + sustained <= 2048
+                    and 0 <= sounding <= min(128, physical + sustained)
+                    and (presses == 0) == (physical == 0)
+                    and (sounding == 0) == (physical + sustained == 0)):
+                raise ValueError("Inconsistent musical MIDI counts")
+    if require_released:
+        if rows[0].get("midi_state_schema") != "voxide.midi-state.v1":
+            raise ValueError("Release validation requires authoritative musical counts; legacy bitsets are insufficient")
+        if audio[-1].get("musical_midi_known") is not True or audio[-1].get("bypassed", True):
+            raise ValueError("Musical MIDI state is unknown or bypassed; release cannot be certified")
+        if audio[-1]["musical_key_presses"] != 0 or audio[-1]["musical_sounding_pitches"] != 0:
+            raise ValueError("Held keys remain or sustained pitches still sound at capture end")
     offset_messages = note_messages if require_notes else midi
     if require_offsets and not any(row["offset"] > 0 for row in offset_messages):
         raise ValueError("Required within-block MIDI offset was not observed")
@@ -153,6 +170,8 @@ def analyze(path, require_audio=False, require_midi=False, require_offsets=False
         "note_pairs": note_pairs,
         "incomplete_tail_records": rows[-1].get("incomplete_tail_records", 0),
         "last_held_keys": audio[-1]["held_keys"], "sources": sorted({row["source"] for row in audio}),
+        "last_musical_key_presses": audio[-1].get("musical_key_presses"),
+        "last_musical_sounding_pitches": audio[-1].get("musical_sounding_pitches"),
         "midi_prefixes": [row["prefix"] for row in midi],
         "scope": "Plug-in route only; not proof of audible lead count, Logic routing, monitoring latency, or external MIDI hardware",
     }

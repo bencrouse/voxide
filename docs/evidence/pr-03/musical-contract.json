@@ -1,0 +1,32 @@
+{
+  "schema": "voxide.musical-contract.v1",
+  "id": "pr03-musical-001",
+  "approval": {"status": "approved", "by": "user", "date": "2026-10-22", "scope": "Initial scale/MIDI/uncertainty/range rules approved, with broad exotic-scale support requested"},
+  "scope": "Causal source tracking and three target decisions only; unchanged original lead; no harmony synthesis, lead tuning or automatic key detection",
+  "scale_policy": {
+    "temperament": "12-tone equal temperament only; named traditional sets are approximations, not full raga/maqam or microtonal systems",
+    "catalog_source": "Source/DSP/HarmonySelector.cpp",
+    "catalog_entries_including_custom": 42,
+    "roots": "All 12 chromatic roots",
+    "custom": "12 independently editable root-relative pitch classes; empty set disables all scale targets",
+    "offsets": "Three signed zero-based degree displacements plus independent signed octave offsets",
+    "default_degrees": [2, 4, 0],
+    "default_octaves": [0, 0, 1],
+    "accidentals": "Nearest scale anchor; exact ties downward; source deviation remains continuous in the harmony targets",
+    "expression": "Target = measured continuous source MIDI + scale interval. No correction of original lead or snapping away bends/vibrato",
+    "engineering_hysteresis": "Retain anchor until another is 0.30 semitone closer; 15-cent band on either side of midpoint; no extra dwell or F0 smoothing"
+  },
+  "midi_policy": {
+    "targets": "Absolute held MIDI pitches; no input MIDI pitch-bend/aftertouch mapping in PR03",
+    "allocation": "Newest three distinct sounding pitches; surviving pitches retain slots; newest unassigned pitches fill lowest free slots. Older held pitches return when slots free",
+    "duplicates": "Count repeated note-ons per channel/pitch; one note-off releases one count; same pitch on multiple channels occupies one slot",
+    "sustain": "Per-channel CC64; CC120 kills channel immediately, CC123 releases keys respecting sustain, CC121 releases pedal but not physical keys; velocity-zero note-on is note-off",
+    "ordering": "Host buffer order at equal sample offsets; events applied before that sample's analysis",
+    "overflow": "4096 musical events per callback, independent of 64 diagnostic records; invalid offsets, event or counter overflow clear notes and mark MIDI unknown until processor/system reset. Safety ceiling is intentionally not partition invariant"
+  },
+  "uncertainty": "Unvoiced/uncertain source disables all pitched targets; lead is unchanged; no hold-last-target through uncertainty",
+  "range": "Disable each target requiring a shift outside inclusive +/-24 semitones; do not clamp; MIDI source bends may move a target in/out of range",
+  "reset": "Reset, source/tracker change, state recall, bypass transition, transport stop/backward/discontinuity clear tracker history and transient MIDI. Silence clears source anchor, not physically held MIDI",
+  "engineering_constants": "Tracker windows/thresholds and hysteresis magnitude are versioned engineering choices, not perceptually qualified values",
+  "remaining_gates": "Frozen PR02 numerical requirements, measurement/listening/resource approvals, actual annotations, holdout safeguards, live Logic and final product qualification remain pending"
+}

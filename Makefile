@@ -2,7 +2,7 @@ SHELL := /bin/zsh
 PROFILE ?= debug
 JOBS ?= 6
 
-.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check install-au validate-au reload-au
+.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check tracking-check install-au validate-au reload-au
 help:
 	@echo "make check       Debug build/tests (no install or audio device)"
 	@echo "make check-full  Debug/Release + focused ASan/TSan (no install)"
@@ -11,6 +11,7 @@ help:
 	@echo "make routing-check  Native AU/processor routing checks; no Logic/device/UI"
 	@echo "make routing-fixtures  New private WAV/MIDI test kit; no recording"
 	@echo "make evaluation-check  PR02 immutable synthetic fixtures/metric calibration"
+	@echo "make tracking-check  PR03 compiled causal tracker research; offline, no device"
 	@echo "Offline check: python3 scripts/check.py --full --offline"
 
 configure:
@@ -29,6 +30,10 @@ routing-fixtures:
 	python3 scripts/routing.py prepare
 evaluation-check:
 	python3 scripts/evaluation.py check
+tracking-check:
+	cmake --preset local-release -DVOXIDE_OFFLINE=ON
+	cmake --build --preset local-release --parallel $(JOBS) --target voxide_tracking_probe
+	python3 scripts/tracking_evaluation.py
 install-au:
 	$(MAKE) build PROFILE=release
 	python3 scripts/au.py install

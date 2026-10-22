@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+void runTrackingProcessorTests();
 
 
 namespace
@@ -44,6 +45,7 @@ int main()
     try
     {
         runDiagnosticsTests();
+        runTrackingProcessorTests();
         // No audio device, microphone, GUI window, install, or host is opened.
         voxide::Processor processor;
         require(processor.acceptsMidi() && !processor.producesMidi() && !processor.isMidiEffect(),
@@ -92,7 +94,7 @@ int main()
         processor.getStateInformation(second);
         require(first == second, "Malformed state changed source");
         auto invalidState = first;
-        static_cast<unsigned char*>(invalidState.getData())[invalidState.getSize() - 1] = 2;
+        static_cast<unsigned char*>(invalidState.getData())[invalidState.getSize() - 1] = 0xff;
         processor.setStateInformation(invalidState.getData(), static_cast<int>(invalidState.getSize()));
         require(processor.sourceParameter().getIndex() == 1, "Invalid source choice accepted");
         constexpr char legacy[] = "voxide-shell-v1";

@@ -8,6 +8,8 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 namespace
 {
@@ -48,6 +50,8 @@ struct Input
         return noErr;
     }
 };
+
+AudioUnitParameterID sourceId(AudioUnit);
 
 struct Transport
 {
@@ -116,14 +120,7 @@ void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
     }
     if (sideSelected)
     {
-        UInt32 bytes = 0;
-        checked(AudioUnitGetPropertyInfo(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
-                                         0, &bytes, nullptr), "parameter list size");
-        require(bytes == sizeof(AudioUnitParameterID), "Expected the single vocal-source parameter");
-        AudioUnitParameterID sourceParameter = 0;
-        checked(AudioUnitGetProperty(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
-                                     0, &sourceParameter, &bytes), "parameter list");
-        checked(AudioUnitSetParameter(unit, sourceParameter, kAudioUnitScope_Global, 0, 1.0f, 0), "select sidechain");
+        checked(AudioUnitSetParameter(unit, sourceId(unit), kAudioUnitScope_Global, 0, 1.0f, 0), "select sidechain");
     }
     const UInt32 bypass = bypassed ? 1u : 0u;
     checked(AudioUnitSetProperty(unit, kAudioUnitProperty_BypassEffect, kAudioUnitScope_Global,
@@ -165,12 +162,18 @@ void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
 
 AudioUnitParameterID sourceId(AudioUnit unit)
 {
-    UInt32 size = sizeof(AudioUnitParameterID);
-    AudioUnitParameterID result = 0;
+    UInt32 size = 0;
+    checked(AudioUnitGetPropertyInfo(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
+                                     0, &size, nullptr), "parameter list size");
+    require(size == 23 * sizeof(AudioUnitParameterID), "Unexpected tracking parameter count");
+    std::vector<AudioUnitParameterID> ids(size / sizeof(AudioUnitParameterID));
     checked(AudioUnitGetProperty(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
-                                 0, &result, &size), "source parameter");
-    require(size == sizeof(result) && result == 449045605u, "Source parameter ID changed");
-    return result;
+                                 0, ids.data(), &size), "source parameter");
+    require(ids.front() == 449045605u, "Legacy source automation index moved");
+    std::sort(ids.begin(), ids.end());
+    require(std::adjacent_find(ids.begin(), ids.end()) == ids.end(), "Duplicate AU parameter ID");
+    require(std::find(ids.begin(), ids.end(), 449045605u) != ids.end(), "Source parameter ID changed");
+    return 449045605u;
 }
 
 void stateRoundTrip(AudioComponent component)

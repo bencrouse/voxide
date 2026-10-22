@@ -14,6 +14,13 @@ can be revoked by the user if it is no longer wanted.
 test proves Logic's routing graph, Low Latency Mode, physical monitoring, project
 recall, or audible lead count. Those observations belong to the checklist below.
 
+PR 03 tightens `--require-released`: new logs must contain authoritative musical
+key-press and sounding-pitch counters, both zero with known, unbypassed MIDI state.
+The old held-key bitset cannot certify repeated-note or sustain releases. Legacy
+captures remain usable for routing analysis, not this stronger release gate. A
+future new Logic capture requires a separately authorized AU install; native review
+and checks do not install anything. See `docs/PR03_CODE_REVIEW.md`.
+
 ## Automated loop
 
 ```sh
