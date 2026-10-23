@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--profile", choices=["debug", "release", "asan", "tsan"])
     parser.add_argument("--offline", action="store_true", help="Require cached dependencies")
     parser.add_argument("--engines", action="store_true", help="Also run isolated PR04 engine checks/research; never links them into the AU")
+    parser.add_argument("--interactions", action="store_true", help="Also run PR05 three-voice interaction qualification; isolated from the AU")
     parser.add_argument("--fresh", action="store_true", help="Build in new per-run directories without deleting anything")
     parser.add_argument("--jobs", type=int, default=6)
     args = parser.parse_args()
@@ -106,6 +107,10 @@ def main():
             if args.full: engine_command.append("--full")
             if args.offline: engine_command.append("--offline")
             run("isolated-engine-checks", engine_command)
+        if args.interactions:
+            command = [sys.executable, "scripts/interaction_evaluation.py", "check", "--offline", "--jobs", str(args.jobs)]
+            if args.full: command.append("--full")
+            run("isolated-interaction-checks", command)
         metadata["source_unchanged"] = source_fingerprint() == metadata["files"]
         if not metadata["source_unchanged"]:
             raise RuntimeError("Project files changed during checks; rerun against a stable snapshot")

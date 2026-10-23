@@ -260,6 +260,15 @@ warm-up/preallocation strategy would be separate evidence, not an assumed fix.
 
 ## Final engineering qualification — 2026-10-23
 
+**PR05 follow-up:** source/raw-log inspection found that the PR04 offline sink
+requests up to 1024 samples even when fewer are reported available. The Rubber
+Band pin returns the actual count but logs a `RingBuffer::read` warning. Therefore
+these historical callback timings/allocation observations include possible
+wrapper-induced diagnostic I/O; they must not be attributed solely to native FFT
+initialization or used as a blanket engine verdict. PR05's integrated wrapper now
+bounds retrieval by `available()` and remeasures it. PR04 source/evidence is kept
+unchanged rather than silently rewriting a qualified snapshot.
+
 `python3 scripts/check.py --full --offline --engines` passed against unchanged
 sources. Product regressions and isolated engine contracts passed in Debug,
 Release, ASan and TSan. The normal allocation auditor self-verified; sanitizer

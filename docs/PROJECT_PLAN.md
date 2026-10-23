@@ -8,6 +8,11 @@ PR 03 causal tracking and target selection are implemented, independently review
 and automatically qualified on `pr-03-causal-tracking-selection`. The user approved
 its local engineering/research commit and merge; no audible harmonies. Timing misses
 and deferred human/host gates still block architecture/product qualification.
+PR 04 is merged locally at `997e884` as a reviewed engineering/research milestone,
+retaining candidate-engine failures. PR 05 interaction engineering implementation
+and automated qualification are complete on `pr-05-three-voice-interaction` as a
+negative research milestone; the user approved a branch-only commit. No engine or architecture is selected;
+quality/timing and human/host gates remain open.
 User testing supports direct-input monitoring with Low Latency Mode off/on and
 project recall; remaining host checks and the track-fed mode limitation are recorded
 below. No harmonizer quality or measured monitoring-latency qualification yet.
@@ -672,35 +677,79 @@ the actual-vocal part is not invented from old whistle guides or tracker output.
 
 Depends on: PRs 03–04.
 
+Research integration remains separate from the AU/Standalone until the later
+architecture go-decision. Existing tracker/engine/human/host failures remain gates,
+not assumptions that can be inherited as passes. No commit/merge/push or installation
+is authorized by the implementation request.
+
 **Scope / TODO**
-- [ ] Integrate shared tracking/selection with three independent shifting states,
+- [x] Integrate shared tracking/selection with three independent shifting states,
   explicit source-time alignment, bounded ratio transitions, and controlled summing.
-- [ ] Compare engine-native versus one common confidence/voicing-aware consonant
+- [x] Implement and render engine-native versus one common confidence/voicing-aware consonant
   treatment; crossfade mixed boundaries and control reinforced consonants.
-- [ ] Log source timestamp, F0/confidence, target, applied ratio/time, voicing state,
+- [x] Log source timestamp, F0/confidence, target, applied ratio/time, voicing state,
   and output alignment into bounded non-render-consumed telemetry.
-- [ ] Run oracle F0 + prescribed targets; live F0 + prescribed targets; and complete
+- [x] Run oracle F0 + prescribed targets; live F0 + prescribed targets; and complete
   scale/MIDI modes. Render upper/lower/mixed three-voice voicings and exposed stems.
-- [ ] Define lead alignment and accurate latency reporting. If distinct live/mix
-  configurations are necessary, make the switch explicit/stopped, persist it,
-  and qualify both; do not switch quality secretly during offline bounce.
+- [x] Define explicit 15/100 ms fixed reserves and lead alignment/latency reporting;
+  make configuration changes explicit/stopped, persist settings and qualify both
+  as experiments, retaining failures. No hidden offline-bounce quality switch.
+- [ ] Accept a live/mix configuration or consonant policy. No tested complete live
+  path qualifies; the policy comparison is not an accepted consonant workaround.
 
 **Validation required to merge**
-- [ ] Note-transition tests expose stale-F0/control alignment; all three voices
-  change consistently without unwanted assignments, clicks, bursts, or flams.
-- [ ] Breathy vowels, z/s/sh, plosives, silence, phrase tails, and noise/bleed stress
-  cases are checked in stems and the sum; no consonant copying/gating workaround
-  is accepted without evaluating the complete blend.
-- [ ] Lead unity/null test passes with documented delay; summed output is finite
+- [x] Execute transition/source-time/three-voice assignment tests and expose missed
+  deadlines, slow MIDI application and native repeatability failures explicitly.
+- [ ] All three voices meet complete quality/response gates without unwanted
+  clicks/bursts/flams or assignments; analytical failures and listening gates remain.
+- [x] Check analytic breathy/z/s/sh/plosive/silence/phrase-tail/noise/bleed cases in
+  native/treated stems and both complete sums; retain raw and proxy evidence.
+- [ ] Actual-vocal articulation/listening qualifies the complete blend; no common
+  consonant copying/gating treatment is accepted from synthetic proxies alone.
+- [x] Lead unity/null test passes with documented delay; summed output is finite
   and respects fixed gain/headroom without adding a masking limiter.
-- [ ] Three-voice delay/response/CPU and correctness tables are produced for all
+- [x] Three-voice delay/response/CPU and correctness tables are produced for all
   retained configurations; direct-lead and software-aligned routes are distinguished.
-- [ ] ASan/TSan and self-verifying allocation checks pass for processing, reset,
-  automation, and state handoff; framework caveats are documented separately.
+- [x] ASan/TSan, deterministic adapter allocation controls, malformed automation,
+  stopped reconstruction and concurrent handoff tests pass. Native callback
+  allocation failures are separate, retained candidate gates—not zero-allocation passes.
+- [ ] Native processing meets zero-allocation and complete performance/quality
+  requirements; all 208 Rubber Band cases still allocate on callbacks after the
+  retrieval-caller logging correction. Logic/device acceptance remains pending.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — timestamp contract, consonant policy, lead alignment.
-- Learnings/evidence: pending — ablations localizing tracker/selector/shifter failures.
+- Major decisions: separate `InteractionEvaluation/` project using unchanged PR03
+  tracker/selector and PR04 adapters/pins; exactly three independent instances.
+  Explicit source anchor, analysis reserve, fixed 15/100 ms total delivery presets,
+  bounded log-ratio transitions, unity direct/aligned lead and controlled sums.
+  One common 10 ms confidence/voicing crossfade policy is an ablation, not an
+  accepted consonant workaround. Stopped reset reconstructs graphs rather than
+  trusting PR04's failed dynamic native reset. See `docs/INTERACTION_EVALUATION.md`
+  and `docs/evidence/pr-05/protocol.json` for precise clock/gain/lifecycle scope.
+- Learnings/evidence: final full source-stable product/interaction Debug/Release/
+  ASan/TSan qualification passed at `build/checks/20261023T160144Z-90bc0fa8/environment.json`
+  and `build/interaction-checks/20261023T160242Z-0053b0ee/report.json`. 112 Python
+  regressions (nine PR05), seven native tests/profile and concurrent Release native
+  tests pass. Corrected full matrix: **520/520 renders**, 60/60 instrument calibration
+  at `build/interaction-research/20261023T160456Z-ffcc2998/report.json`.
+  All lead/null/headroom/tail/control-chronology checks pass, but 280 delivery cases,
+  208 allocation cases and all 120 complete MIDI response cases fail; all 480
+  non-impulse cases have sparse stable-pitch misses. Six native-repeat comparisons
+  fail with identical native input/control hashes. Shared consonant treatment can
+  reinforce s/sh relative to native treatment and is not selected. No range, voice
+  count or numerical target was reduced. PR02 regression/calibration passed at
+  `build/evaluation-checks/20261023T163326Z-66004dd1/report.json`.
+  Private preflight at ignored `evaluation/pr-05/20261023T163326Z-a32800d3/` retains
+  three sources pending actual human references, including c, with full provenance.
+  See `docs/INTERACTION_EVALUATION.md` for tables, superseded snapshots, corrected
+  sparse-dwell observer and retrieval-availability fix. That caller fix removes
+  Rubber Band diagnostic I/O; prior PR04 callback evidence has a documented caveat,
+  not a silent engine attribution. No independent PR05 review has occurred.
+  Implementation/automated validation are complete as negative research; no engine
+  or policy acceptance, merge/push, AU install, Logic/device operation or downstream
+  architecture go-decision is implied. User subsequently approved a branch-only
+  commit on 2026-10-23 to preserve the negative research milestone before a bounded
+  architecture investigation; no merge to main is authorized.
 - Reflections/next-agent cautions: acceptable individual voices may fail as a sum;
   bypassing consonants and delaying a lead are audible architecture decisions.
 

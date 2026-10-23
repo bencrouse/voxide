@@ -23,6 +23,11 @@ renders and honest quality/timing/allocation comparisons. Neither dependency is
 linked into the AU or Standalone. Candidate failures are retained, not product
 passes; no engine is selected. See [engine comparison](docs/ENGINE_EVALUATION.md).
 
+PR 05 adds an isolated three-voice interaction processor: oracle/live/scale/MIDI
+ablations, fixed-deadline delivery, direct/aligned lead stems, and a common
+consonant-policy comparison. The product AU remains dry; no engine or treatment
+is selected. See [interaction research](docs/INTERACTION_EVALUATION.md).
+
 ## Local development
 
 Requires Apple Silicon, macOS 15+, a macOS SDK/Clang (Command Line Tools), CMake

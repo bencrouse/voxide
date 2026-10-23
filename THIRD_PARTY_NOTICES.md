@@ -98,3 +98,7 @@ the complete upstream inventories before any distribution, not just this summary
 These local evaluators do **not** authorize proprietary distribution or App Store
 publication of Rubber Band-linked software. Before sharing source/binaries or linking
 a selected engine into the product, revisit the full applicable licensing obligations.
+
+PR 05 reuses these exact verified pins in separate `InteractionEvaluation/` native
+research executables with three independent mono instances. It adds no dependency,
+FFT/resampler choice, distribution authorization or product AU/Standalone linkage.

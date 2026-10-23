@@ -1,0 +1,22 @@
+{
+  "schema": "voxide.interaction-protocol.v1",
+  "id": "pr05-interaction-001",
+  "scope": "Engineering interaction/consonant research, not human or architecture acceptance",
+  "rates": [44100, 48000],
+  "configurations": "All five pinned PR04 configurations, unchanged dependencies",
+  "profiles": {"live": "fixed 15ms total harmony delivery reserve", "mix": "fixed 100ms total harmony delivery reserve"},
+  "modes": ["oracle F0 + prescribed absolute targets", "live F0 + same prescribed targets", "complete live scale", "complete live MIDI"],
+  "voicings": {"upper": [3,7,12], "lower": [-12,-7,-3], "mixed": [-24,7,24]},
+  "voices": 3,
+  "policies": ["engine native", "10ms confidence/voicing crossfade to one shared attenuated dry consonant budget"],
+  "source": "Versioned analytic speech-like suite including E2/C6, pitch steps, breathy, z/s/sh, plosive, bend, ending, silence and bleed; unity impulses separately",
+  "full_matrix_cases": 520,
+  "lead": "Unprocessed unity direct and exactly delayed lead stems; separate direct and aligned sums; direct path is not a single-PDC-compatible route",
+  "gains": {"lead":1,"each_harmony":0.3333333333333333,"unvoiced_dry_each_before_harmony_gain":0.3333333333333333},
+  "clock": "Live pitch support midpoint as explicit engineering source anchor, decision available only at support end; input analysis reserve = support/2 + hop. Native processing clock subtracts engine controlLag. No backdating; all observer and reserve delays included",
+  "transitions": "Rate-limited log-pitch control at 2400 semitones/second, fixed native quantum; sample-domain 10ms linear activation/voicing crossfades",
+  "pitch_observer": "8192-sample independent offline instrument (the calibrated PR04 full-range instrument) on a sparse 50ms observation grid; full 10ms source reference/quantum telemetry retained. Transition-spanning windows remain descriptive, not proof of vocal truth. Completed dwell/window/callback availability included in response; all unresolved events retained",
+  "negative_results": "Underflow emits safe zero but advances absolute output index; late native audio is counted/discarded, never shifts the later timeline. Failures stay failures",
+  "lifecycle": "Explicit stopped-only graph reconstruction instead of trusting failed native dynamic reset. No implicit quality switch or framework/device operation",
+  "human_gates": "Actual vocal references/listening, consonant intelligibility, Logic, physical monitoring, engine selection and architecture acceptance remain pending"
+}
