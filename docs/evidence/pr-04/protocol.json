@@ -1,0 +1,22 @@
+{
+  "schema": "voxide.engine-research-protocol.v1",
+  "id": "pr04-oracle-001",
+  "scope": "Isolated native research, not an approved perceptual/listening protocol or product architecture decision",
+  "numerical_contract": "docs/evidence/pr-02/contract.json",
+  "sample_rates": [44100, 48000],
+  "signalsmith_windows_hops_samples": [[512,128],[1024,256],[2048,512]],
+  "signalsmith_options": {"formant_factor":1,"compensate_pitch":true,"split_computation":false,"seed":1448040521,"fft":"Apple Accelerate via pinned Signalsmith Linear"},
+  "rubberband_options": {"engine":"R3 Finer","windows":["short","standard (plan medium comparator)"],"quantum":128,"process":"RealTime","pitch":"HighConsistency","formants":"Preserved","threading":"Never","fft":"Apple vDSP","resampler":"built-in BQ"},
+  "shifts_semitones": [-24,-12,-7,-3,0,3,7,12,24],
+  "instances": [1,3],
+  "time_ratio":1,
+  "full_matrix_cases":930,
+  "sources": "Versioned 1-second band-limited harmonic low/mid/high analytic probes; synthetic impulse, level step and 9-event ratio sweep; read-only frozen PR02 formant/noise/silence/missing-fundamental/bend/glide/bleed probes",
+  "controls": "Immutable sample-indexed oracle ratio/F0 controls. Signalsmith aligned to its input-latency processing clock; Rubber Band incoming-source clock. Initial ratio set before padding/delay queries. No unreviewed tracker/whistle proposal as truth",
+  "latency": "Raw output offset, startup pad/trim and native/callback availability clocks separate. Unity impulse correlation only; shifted amplitude-step timing uses RMS. Offline observer lookahead/dwell never backdated or called intrinsic latency",
+  "raw_format": "Mono IEEE float32 WAV and native float32 payload, unchanged amplitudes; no per-voice normalization/limiter or automatic audio playback",
+  "correctness": "Append-only artifacts, compiled source identity, canonical verified dependency trees, complete output/control timeline validation, deterministic transport control, FIFO wrap, fresh/reset native comparisons against frozen tolerances, source/binary fingerprints",
+  "negative_results": "Native repeatability, accuracy, formant, allocation and timing failures remain failures even when adapter functional/sanitizer checks pass. Retain failed raw outputs and do not discard an engine family from one configuration",
+  "human_evidence": "Development only. Explicit permission/hash-bound corpus selection and two completed registered agreeing human annotations required; current missing references remain pending. Uncertain frames excluded and expressive unstable frames reported separately, not tuned away",
+  "architecture_acceptance":"pending; no product engine selected, no holdout access, install, Logic operation or distribution authorization"
+}

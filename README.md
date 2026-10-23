@@ -10,13 +10,18 @@ automated checks, with a separate human-operated Logic checklist. Nothing here
 demonstrates professional vocal quality or acceptable live-monitoring latency.
 
 PR 02 adds offline evaluation fixtures and measurement/corpus tooling. The numerical
-target now includes ±24-semitone shifts; no pitch shifter has been implemented or
+target now includes ±24-semitone shifts; no product pitch shifter is integrated or
 qualified. Human corpus/annotation/listening approvals remain separate gates.
 
 PR 03 adds two causal YIN variants, 41 built-in 12-TET scale sets plus custom pitch
 classes, all roots, independent degree/octave offsets, and sustained absolute-MIDI
 targets. Tracking response requirements are **not met**; real-vocal accuracy and
 Logic/live monitoring remain unqualified. See [tracking research](docs/TRACKING.md).
+
+PR 04 adds **isolated** Signalsmith/Rubber Band evaluators, oracle-controlled file
+renders and honest quality/timing/allocation comparisons. Neither dependency is
+linked into the AU or Standalone. Candidate failures are retained, not product
+passes; no engine is selected. See [engine comparison](docs/ENGINE_EVALUATION.md).
 
 ## Local development
 
@@ -30,6 +35,7 @@ make check-full
 make routing-check
 make evaluation-check
 make tracking-check
+make engine-check        # separate cached native engine checks and oracle matrix
 ```
 
 Checks do not install plug-ins, launch Logic, access the microphone, or change
@@ -41,6 +47,12 @@ After the first dependency download, use the verified local cache offline:
 ```sh
 python3 scripts/check.py --full --offline
 ```
+
+To include PR 04 in the same full source-snapshot check, add `--engines`. On first
+use only, explicitly acquire the three free pinned evaluator-source archives:
+`python3 scripts/engine_dependencies.py --destination build/engine-release/_deps`.
+No pip/Homebrew package, paid license, AU installation or audio-device access is
+needed. Subsequent `make engine-check` runs offline from that verified cache.
 
 ## Explicit local AU install
 

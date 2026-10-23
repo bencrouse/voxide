@@ -601,33 +601,70 @@ required before claiming actual vocal accuracy or closing qualification go-gates
 
 Depends on: PR 02; may proceed independently of PR 03 once fixtures are ready.
 
+Engineering implementation is on `pr-04-isolated-engine-comparison`, based on the
+merged PR 03 `510f556`. This is isolated research, not integration or architecture
+acceptance. Existing deferred human-reference/listening/host gates remain open;
+the actual-vocal part is not invented from old whistle guides or tracker output.
+
 **Scope / TODO**
-- [ ] Build separate Signalsmith and Rubber Band evaluators using the same source,
+- [x] Build separate Signalsmith and Rubber Band evaluators using the same source,
   sample-indexed reference F0/targets, output format, and measurement schema.
-- [ ] Signalsmith: evaluate 512/128, 1024/256, 2048/512 window/hop at 48 kHz;
+- [x] Signalsmith: implement 512/128, 1024/256, 2048/512 window/hop at 48 kHz;
   document corresponding 44.1 kHz choices. Enable formant compensation explicitly.
-- [ ] Rubber Band: short/medium window, formant preservation, fixed-block adapter;
+- [x] Rubber Band: short/standard (medium comparator), formant preservation, fixed-block adapter;
   query start delay with initial ratio set. Keep its dependency out of the product.
-- [ ] Render static 0/±3/±7/±12/±24 semitones and changing ratios, one and three instances,
-  time ratio 1. Use synthetic truth and manually checked real-vocal reference F0.
-- [ ] Measure queried and actual delay, ratio-change settling, formants, artifacts,
+- [x] Implement the complete 930-case static/dynamic 0/±3/±7/±12/±24 matrix, one and
+  three instances, time ratio 1, with independent analytic truth/instrument controls.
+- [x] Implement permission/hash-bound private development support requiring two
+  completed, registered, agreeing human F0 annotations; keep missing references pending.
+- [ ] Obtain actual reviewed real-vocal references/listening evidence (still deferred;
+  required expressive/rhythmic c is retained, not tuned or declared unsupported).
+- [x] Implement queried/actual delay, ratio-change settling, synthetic formants, artifact proxies,
   peak callback cost, state reset, and output duration/tail behavior.
 
 **Validation required to merge**
-- [ ] Unity/control delay and synthetic output pitch/formants match independently
+- [x] Unity/control delay and synthetic output pitch/formants match independently
   calculated expectations or are explicitly recorded as candidate failures.
-- [ ] Repeat renders identify determinism; varying block lengths and FIFO wrap
-  do not drop/repeat samples or produce unexplained timing differences.
-- [ ] Impulse tests are used at unity; non-unity timing uses suitable envelopes/
+- [x] Repeat renders identify native determinism failures; deterministic transport,
+  varying block lengths, native input/control chronology and FIFO wrap pass without
+  dropping/repeating samples. Native waveform/reset failures remain explicitly open.
+- [ ] Native repeatability/reset and complete quality/timing gates pass; intermittent
+  Signalsmith fresh-instance variation and Rubber Band dynamic reset differences remain
+  failed candidate gates, not adapter passes or approved architecture decisions.
+- [x] Impulse tests are used at unity; non-unity timing uses suitable envelopes/
   known transitions rather than invalid raw-waveform correlation assumptions.
-- [ ] Optimized Release measurements retain raw timings and failed cases; source
+- [x] Optimized Release measurements retain raw timings and failed cases; source
   inspection/allocation tests identify callback hazards. Do not time sanitizer builds.
-- [ ] Report evidence by configuration. Discarding an engine requires a reproducible
+- [x] Report evidence by configuration. Discarding an engine requires a reproducible
   failure or documented incompatible delay, not a name/marketing preference.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — viable configuration shortlist and isolated-engine limitations.
-- Learnings/evidence: pending — pinned revisions, raw oracle renders and measurements.
+- Major decisions: separate evaluator CMake project; no engine linked to AU/Standalone.
+  Signalsmith Stretch 1.4.0 tag/Linear 0.6.4, Rubber Band 4.0.0 R3 short/standard,
+  explicit formant preservation, source/processing/output/availability clocks distinct.
+  No product engine selected; see `docs/ENGINE_EVALUATION.md` and the versioned
+  `docs/evidence/pr-04/protocol.json` for exact scope and licensing/evidence boundaries.
+- Learnings/evidence: engineering implementation/review/qualification completed
+  2026-10-23. Independent read-only OpenCode review in the bottom-right Herdr pane
+  found seven defects plus a follow-up test race; all eight were fixed and verified
+  by re-review with no remaining concrete blockers. Twenty Python regressions and
+  concurrent Release native/negative-control tests pass. Full stable-source product
+  and engine Debug/Release/ASan/TSan checks pass at
+  `build/checks/20261023T134518Z-016aaf92/environment.json` and
+  `build/engine-checks/20261023T134622Z-40c258f2/report.json`.
+  Corrected 930-case research completed with zero native render errors and 60/60
+  instrument calibrations at `build/engine-research/20261023T134741Z-81ad9ed5/report.json`.
+  Per-configuration failures, unresolved observers and raw evidence are preserved;
+  see `docs/ENGINE_EVALUATION.md` for the full table and limitations. No candidate
+  passes all numerical gates. Native reset differences affect overlapping audio,
+  not just padding. PR 02 regression/calibration also passed at
+  `build/evaluation-checks/20261023T135351Z-65e2904e/report.json`.
+  Private preflight retains three sources pending actual human references under
+  ignored `evaluation/pr-04/20261023T135351Z-84ae23f2/`, with complete build provenance.
+  Product source, fixtures and approved contracts are unchanged. User approved local
+  commit/merge on 2026-10-23 as an engineering/research milestone, retaining all
+  negative candidate results and deferred human/Logic gates. No push, installation,
+  host acceptance or engine selection is authorized by that approval.
 - Reflections/next-agent cautions: defaults are not low-latency proof; Rubber Band
   is a quality comparator, not a presumed live solution; oracle tests bypass real tracking.
 

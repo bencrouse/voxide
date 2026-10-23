@@ -51,6 +51,50 @@ existing macOS SDK; they are not copied into the repository.
 ## No other adopted packages in PR 00
 
 Python scripts use the standard library; CMake, Git, and Apple's tools are existing
-local prerequisites. No pip/conda/Homebrew install is run. Signalsmith, its FFT
-dependency, and Rubber Band are not yet fetched/linked. Later PRs must pin and audit
-them; Rubber Band's GPL/public source is not a proprietary commercial license.
+local prerequisites. No pip/conda/Homebrew install is run. The PR 04 inventory below
+supersedes the original bootstrap-only inventory; Rubber Band's GPL/public source
+is not a proprietary commercial license.
+
+## PR 04 — evaluator-only dependencies (not linked to the product)
+
+All are fetched from official GitHub repositories at full immutable revisions and
+verified by archive SHA-256. Complete upstream license files remain in each verified
+source tree. `cmake/engine-dependencies.json` is the machine-readable inventory;
+`scripts/engine_dependencies.py` also verifies every extracted file, including hidden
+files, against the pinned archive on every configure. Edits are refused and preserved.
+There is no upstream build-system download, package-manager install or paid license.
+
+| Package | Pin | Terms and selected use |
+| --- | --- | --- |
+| Signalsmith Stretch 1.4.0 tag | `a670068d9aeb64913331d5cc29337b19a457a7df` | MIT, `LICENSE.txt`; copyright 2022 Geraint Luff / Signalsmith Audio Ltd.; separate native evaluator only |
+| Signalsmith Linear 0.6.4 | `de55e6a50ffcf6f8f43f649692d94691c7025151` | MIT, `LICENSE.txt`; copyright 2025 Signalsmith Audio; Stretch FFT dependency, Apple Accelerate backend |
+| Rubber Band 4.0.0 | `1d95888bec3ae0a17c0c4af791810d5a63f6bc35` | GPL-2.0-or-later, `COPYING`; Particular Programs Ltd.; separate local comparator, no commercial license assumed |
+
+Archive hashes, in the same order:
+
+```
+948b8382bb13f316d13536cdfe06111789a538e8fee7f7a531ee2aec94de1747
+cc39693d5c8bc96451b5503819bb82b2d88c1df450183c55595e5d9d4b517012
+0d6fe8fcc54d8e0b7da1a67ebdb0129dd62f983ecbfb66650c65f977d46fe20f
+```
+
+Official source/license locations:
+- `https://github.com/Signalsmith-Audio/signalsmith-stretch` / `LICENSE.txt` at the pin.
+- `https://github.com/Signalsmith-Audio/linear` / `LICENSE.txt` at the pin.
+- `https://github.com/breakfastquay/rubberband` / `COPYING`, `README.md`,
+  `COMPILING.md` and `single/RubberBandSingle.cpp` at the pin.
+
+The Stretch tag is named 1.4.0 while its header's static version array still reads
+1.3.2. We preserve/report the exact source pin rather than changing upstream code or
+pretending that string is an independent version verification.
+
+Rubber Band uses its supported single-compilation-unit build: R3, `NO_THREADING`,
+Apple vDSP FFT and built-in BQ resampler. No FFTW, IPP, Speex, libsamplerate, SLEEF,
+libsndfile, Vamp, LADSPA/LV2 or extra SDK is selected. Unused bundled notices and demo
+assets stay in the upstream archive; demo recordings are not imported into the corpus.
+Apple Accelerate is an existing system framework, not vendored into Git. Preserve
+the complete upstream inventories before any distribution, not just this summary.
+
+These local evaluators do **not** authorize proprietary distribution or App Store
+publication of Rubber Band-linked software. Before sharing source/binaries or linking
+a selected engine into the product, revisit the full applicable licensing obligations.

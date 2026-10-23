@@ -31,6 +31,7 @@ def main():
     parser.add_argument("--full", action="store_true", help="Debug/Release plus focused ASan/TSan")
     parser.add_argument("--profile", choices=["debug", "release", "asan", "tsan"])
     parser.add_argument("--offline", action="store_true", help="Require cached dependencies")
+    parser.add_argument("--engines", action="store_true", help="Also run isolated PR04 engine checks/research; never links them into the AU")
     parser.add_argument("--fresh", action="store_true", help="Build in new per-run directories without deleting anything")
     parser.add_argument("--jobs", type=int, default=6)
     args = parser.parse_args()
@@ -100,6 +101,11 @@ def main():
             dependency_manifest = build_dir / "_deps/juce-source.sha256"
             if dependency_manifest.exists():
                 metadata.setdefault("dependency_content", {})[profile] = dependency_manifest.read_text().splitlines()
+        if args.engines:
+            engine_command = [sys.executable, "scripts/engine_evaluation.py", "check", "--jobs", str(args.jobs)]
+            if args.full: engine_command.append("--full")
+            if args.offline: engine_command.append("--offline")
+            run("isolated-engine-checks", engine_command)
         metadata["source_unchanged"] = source_fingerprint() == metadata["files"]
         if not metadata["source_unchanged"]:
             raise RuntimeError("Project files changed during checks; rerun against a stable snapshot")
