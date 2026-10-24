@@ -1,0 +1,13 @@
+{
+  "schema": "voxide.studio-playback-export-protocol.v1",
+  "id": "pr06a-clip-c-half-level-001",
+  "approval": "User explicitly selected Half-level export (Recommended) after the original clip-c comparison was withheld",
+  "source_trial": "pr06a-clip-c-001",
+  "playback_gain": 0.5,
+  "applies_to": "Every retained comparison preview: common dry, both complete mixes, and all three mix-gain harmony stems per candidate",
+  "unchanged": "DSP outputs, source attenuation, relative mix, alignment, duration, voicing and the original 0.5 playable peak ceiling",
+  "authorization": "New single-use private export receipt binds this protocol, original report, archive integrity manifest and original consumed render claim; all retained inputs must match the bound archive",
+  "validation": "Revalidate archived source/proposal/permission, compiled identity and source/binary provenance; finite samples, exact duration, lead null, fixed sum, controls, delivery and finish tail before export. Untrimmed intended previews must remain strictly below digital full scale. Trimmed previews must meet the unchanged 0.5 ceiling.",
+  "publication": "Separate append-only playback-half package, with original withheld-run reference, raw artifact identities, common playback gain and checks. Original report/failure and consumed render receipt stay unchanged.",
+  "not_authorized": ["DSP rerender", "automatic playback", "arbitrary or per-candidate gains", "normalization/limiting/clipping", "changed relative mix or safety ceiling", "additional sources/engines/settings", "formal quality acceptance", "commit/merge/push"]
+}

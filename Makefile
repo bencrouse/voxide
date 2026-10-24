@@ -2,7 +2,7 @@ SHELL := /bin/zsh
 PROFILE ?= debug
 JOBS ?= 6
 
-.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check tracking-check engine-check interaction-check install-au validate-au reload-au
+.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check tracking-check engine-check interaction-check architecture-check install-au validate-au reload-au
 help:
 	@echo "make check       Debug build/tests (no install or audio device)"
 	@echo "make check-full  Debug/Release + focused ASan/TSan (no install)"
@@ -14,6 +14,7 @@ help:
 	@echo "make tracking-check  PR03 compiled causal tracker research; offline, no device"
 	@echo "make engine-check  PR04 isolated Debug/Release/ASan/TSan and complete oracle matrix (offline)"
 	@echo "make interaction-check  PR05 isolated three-voice profiles, policies and full interaction matrix"
+	@echo "make architecture-check  Bounded offline architecture diagnostics and four-profile safety checks"
 	@echo "Offline check: python3 scripts/check.py --full --offline"
 
 configure:
@@ -40,6 +41,8 @@ engine-check:
 	python3 scripts/engine_evaluation.py check --full --offline --jobs $(JOBS)
 interaction-check:
 	python3 scripts/interaction_evaluation.py check --full --offline --jobs $(JOBS)
+architecture-check:
+	python3 scripts/architecture_evaluation.py --check
 install-au:
 	$(MAKE) build PROFILE=release
 	python3 scripts/au.py install

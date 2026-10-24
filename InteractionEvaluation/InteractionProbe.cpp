@@ -1,4 +1,5 @@
 #include "InteractionProcessor.h"
+#include "EngineeringProbe.h"
 #include "AllocationAudit.h"
 #include <algorithm>
 #include <bit>
@@ -110,10 +111,25 @@ int main(int argc,char** argv)
     try
     {
         if (argc==2 && std::string(argv[1])=="--self-test") { selfTest(); return 0; }
-        require(argc==11,"Usage: interaction <rate> <window> <hop> <mode0..3> <treatment0..1> <profile0..1> <events> <prefix> <blocks-csv> <tail-frames> < mono-f32");
+        if (argc==7 && std::string(argv[1])=="--engineering")
+            return runEngineering({integer(argv[2]),integer(argv[3]),integer(argv[4])},integer(argv[5]),argv[6]);
+        if (argc==2 && std::string(argv[1])=="--describe")
+        {
+            std::cout<<"{\"schema\":\"voxide.interaction-capabilities.v1\",\"engine\":\""<<engines::engineName()
+                <<"\",\"compiled_source_identity\":\""<<VOXIDE_INTERACTION_SOURCE_IDENTITY<<"\",\"profile\":\""<<VOXIDE_INTERACTION_PROFILE
+                <<"\",\"sanitizer\":\""<<VOXIDE_INTERACTION_SANITIZER<<"\",\"audit_available\":"<<(audit::available?"true":"false")
+                <<",\"shift_limits\":[12,24],\"inactive_uncertain_supported\":true,\"engineering_probe_v1\":true}\n";
+            return 0;
+        }
+        require(argc==11 || argc==13,"Usage: interaction <rate> <window> <hop> <mode0..3> <treatment0..1> <profile0..1> <events> <prefix> <blocks-csv> <tail-frames> [<shift-limit12or24> <inactive-uncertain0or1>] < mono-f32");
         require(std::endian::native==std::endian::little && sizeof(float)==4,"Requires little-endian float32");
         Settings s; s.engine={integer(argv[1]),integer(argv[2]),integer(argv[3])};
         s.mode=static_cast<Mode>(integer(argv[4])); s.treatment=static_cast<Treatment>(integer(argv[5])); s.profile=static_cast<Profile>(integer(argv[6]));
+        if (argc==13)
+        {
+            s.shiftLimit=integer(argv[11]); const int inactive=integer(argv[12]);
+            require(inactive==0 || inactive==1,"Invalid uncertainty policy"); s.inactiveUncertain=inactive!=0;
+        }
         auto events=loadEvents(argv[7]);
         std::vector<int> blocks; std::istringstream partition(argv[9]); std::string token;
         while (std::getline(partition,token,',')) { const int n=integer(token); require(n>=1 && n<=4096,"Invalid callback size"); blocks.push_back(n); }
@@ -181,6 +197,7 @@ int main(int argc,char** argv)
             <<"\",\"sample_rate\":"<<s.engine.rate<<",\"window\":"<<s.engine.window<<",\"hop\":"<<s.engine.hop<<",\"mode\":"<<static_cast<int>(s.mode)
             <<",\"treatment\":"<<static_cast<int>(s.treatment)<<",\"reserve_profile\":"<<static_cast<int>(s.profile)<<",\"source_frames\":"<<input.size()<<",\"zero_tail\":"<<tail
             <<",\"output_frames\":"<<total<<",\"latency_samples\":"<<processor.latencySamples()<<",\"analysis_delay_samples\":"<<processor.analysisDelaySamples()
+            <<",\"shift_limit\":"<<s.shiftLimit<<",\"inactive_uncertain\":"<<(s.inactiveUncertain?"true":"false")
             <<",\"lead_gain\":1,\"harmony_gain_each\":0.333333333333333333,\"ramp_semitones_per_second\":2400,\"crossfade_ms\":10,\"audit_available\":"<<(audit::available?"true":"false")
             <<",\"finish_allocations\":"<<finishAllocations<<",\"unrendered_finish_peak\":"<<counts.unrenderedFinishPeak
             <<",\"telemetry_dropped\":"<<counts.telemetryDropped<<",\"bad_events\":"<<counts.badEvents<<",\"late_controls\":"<<counts.lateControls

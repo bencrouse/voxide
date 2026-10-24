@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 #include <thread>
 #include <vector>
 
@@ -71,7 +72,11 @@ void contracts()
         allocations=audit::end();
         if (audit::available) check(allocations==0,"Interaction adapter/selector allocated in render");
         check(p.stats().underflows==std::array<std::uint64_t,3>{} && p.stats().lateControls==0 && p.stats().missingMetadata==0,"Sufficient-reserve transport failed");
-        p.stop(); check(p.resetStopped(),"Stopped reset rejected"); p.start();
+        p.stop();
+        bool rejected=false;
+        try { p.start(); } catch (const std::logic_error&) { rejected=true; }
+        check(rejected && !p.running(),"Finalized stream was restarted without reconstruction");
+        check(p.resetStopped(),"Stopped reset rejected"); p.start();
         for (int i=0;i<rate/3;++i) check(p.push(0).sumAligned==0,"Reset leaked prior audio");
         p.stop();
     }
@@ -174,5 +179,39 @@ void completeModes()
         p.stop();
     }
 }
+void studioScope()
+{
+    for (int rate : {44100,48000})
+    {
+        Settings s; s.engine.rate=rate; s.shiftLimit=12; s.inactiveUncertain=true;
+        Processor p(s,transport);
+        check(p.post(pitch(0,220)),"Studio pitch handoff failed");
+        Event targets; targets.kind=Event::Kind::targets; targets.targetMidi={45,69,81};
+        check(p.post(targets),"Studio targets handoff failed");
+        check(p.post(pitch(rate/4,0,false)),"Studio uncertainty handoff failed");
+        p.start(); std::array<unsigned,3> seen{}; bool inactive=false;
+        for (int i=0;i<rate/2;++i)
+        {
+            const auto out=p.push(.05f);
+            const auto at=static_cast<std::int64_t>(i)-p.latencySamples();
+            if (at>rate*.28) for (float v:out.voices) check(v==0,"Uncertain pitched harmony did not fade inactive");
+            Telemetry t;
+            while (p.readTelemetry(t)) if (t.kind==Telemetry::Kind::control)
+            {
+                check(std::abs(t.appliedShift)<=12.000001,"Studio ratio exceeded +/-12");
+                if (t.source>rate/10 && t.source<rate/5)
+                {
+                    if (t.voice<2) check(t.active && std::abs(t.appliedShift-(t.voice==0?-12:12))<1e-8,"Inclusive octave target rejected");
+                    else check(!t.active && t.appliedShift==0,"Out-of-range target was clamped or active");
+                    ++seen[static_cast<std::size_t>(t.voice)];
+                }
+                if (t.source>rate*.28) { check(!t.voiced && !t.active,"Uncertain source retained a pitched target"); inactive=true; }
+            }
+        }
+        for (auto n:seen) check(n>0,"Studio boundary control not exercised");
+        check(inactive && p.stats().rejectedTargets>0,"Studio uncertainty/range rejection was not exercised");
+        p.stop();
+    }
 }
-int main() { contracts(); controlsAndPolicy(); concurrency(); malformedControls(); completeModes(); std::cout<<"Three-voice transport, lead null, ramps, policy, lifecycle and SPSC contracts passed\n"; }
+}
+int main() { contracts(); controlsAndPolicy(); concurrency(); malformedControls(); completeModes(); studioScope(); std::cout<<"Three-voice transport, lead null, ramps, policy, lifecycle, studio scope and SPSC contracts passed\n"; }

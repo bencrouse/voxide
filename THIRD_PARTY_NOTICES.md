@@ -102,3 +102,8 @@ a selected engine into the product, revisit the full applicable licensing obliga
 PR 05 reuses these exact verified pins in separate `InteractionEvaluation/` native
 research executables with three independent mono instances. It adds no dependency,
 FFT/resampler choice, distribution authorization or product AU/Standalone linkage.
+
+The bounded `ArchitectureEvaluation/` diagnostics reuse the same pins and compare
+Signalsmith Linear's existing built-in FFT with Accelerate. They add no dependency
+or upstream-source patch and remain isolated local research, including the same
+Rubber Band GPL obligations; they do not authorize product linkage/distribution.

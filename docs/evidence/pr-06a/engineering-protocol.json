@@ -1,0 +1,22 @@
+{
+  "schema": "voxide.studio-engineering-protocol.v1",
+  "id": "pr06a-engineering-001",
+  "scope": "Bounded engineering suitability comparison after initial favorable listening; no sound tuning, engine selection, new preset or private rerender",
+  "candidates": [{"engine": "signalsmith", "window": 2048, "hop": 512}, {"engine": "rubberband", "window": 1, "hop": 128}],
+  "rates": [44100, 48000],
+  "callback_frames": [128, 512],
+  "fresh_processes_per_point": 2,
+  "native_invocations": 16,
+  "captures_per_invocation": ["cold", "after stopped graph reconstruction", "warm-process fresh graph"],
+  "capture_count": 48,
+  "workload": "Fixed generated mono harmonic E2/A3/C6, noise/consonant-like interval, intentional bend and low-register ending; 5 seconds primary plus 0.6 supplied zero tail. Never reads an input audio file.",
+  "musical": "Scale C major, three voices, unchanged lead, native consonants/formant preservation, +/-12 guard, inactive uncertain targets and fixed 100ms reserve. Voicings: third/fifth/octave at 0s; -octave/unity/+octave at 1.6s; lower third/fifth/-octave at 2.8s; initial voicing restored at 4s.",
+  "cpu": "Optimized unsanitized audited Release only, sequential runs without concurrent qualification builds/profilers/sanitizers. Native callback time includes actual shared tracker/selector, three engines, bounded adaptation, hash/audit and preallocated output capture; telemetry consumer/file work excluded. Retain all cold/steady callbacks, nearest-rank p99.9, max and overdue count, not a Logic/hardware deadline guarantee.",
+  "lifecycle": "Finalize, assert restart rejection, stopped graph reconstruction (not native engine.reset), then identical eventful workload; independently fresh graph after prior workloads. Record stopped allocations/cost separately; they are not allowed inside a callback. No warm/prime workaround.",
+  "repeatability": "Compare all ten raw channels and exact input/control hashes: cold vs reconstructed, cold vs warm-fresh, reconstructed vs warm-fresh, and cold captures across two independent processes. Fixed max_abs 1e-6 and RMS 1e-7, exact lengths; retain every failed channel.",
+  "partition_comparison": "Also compare first-process cold captures at 128 versus 512 callbacks for each engine/rate; no additional renders or retuning",
+  "gates": {"callback_allocation_calls_max": 0, "occupancy_p999_max_exclusive": 0.5, "overdue_callbacks_max": 0, "nonfinite_samples_max": 0, "max_abs": 0.000001, "rms": 0.0000001, "primary_missing_or_late_samples_max": 0},
+  "not_established": ["actual-vocal repeatability", "full pitch/formant/articulation qualification", "live or MIDI-mode acceptance", "audio-thread reset/state handoff or host seek behavior", "Logic PDC/bounce/soak", "global engine determinism", "memory/leak or universal hardware certification"],
+  "privacy": "No private recording or derivative audio input, clip c, holdout or playback. Existing private metadata may be reviewed only inside ignored evaluation; public results here are newly generated synthetic evidence.",
+  "stop": "One fixed comparison, no corrective tuning loop. Candidate technical failures stay failed. Recommend next verification subject to user authorization; no AU integration or automatic clip-c approval."
+}

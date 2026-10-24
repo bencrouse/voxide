@@ -1,0 +1,49 @@
+{
+  "schema": "voxide.studio-listening-protocol.v1",
+  "id": "pr06a-listening-001",
+  "status": "proposal_requires_explicit_trial_approval",
+  "scope_path": "docs/evidence/pr-06a/studio-scope.json",
+  "reference": {"artist": "Brian Eno", "album": "Another Day on Earth", "track": "Bottomliners", "begin_seconds": 90, "end_seconds": 120, "user_priority": "processed vocal character", "assistant_auditioned": false, "audio_acquisition": "none; do not download/copy the album or infer exact settings/algorithm"},
+  "candidates": [
+    {"id": "signalsmith-2048-512", "engine": "signalsmith", "window": 2048, "hop": 512, "backend": "existing Accelerate", "formants": "unchanged PR04 preservation", "consonants": "native; not the unselected shared dry-copy policy", "basis_case_ids": ["case-0136", "case-0137", "case-0396", "case-0397"], "known_limitations": "Synthetic scale/native/mix upper/lower delivery passes at both rates; sparse pitch misses remain. No actual-vocal or global repeatability/formant acceptance."},
+    {"id": "rubberband-r3-short", "engine": "rubberband", "window": 1, "hop": 128, "backend": "existing R3 short RealTime/HighConsistency/no-threading", "formants": "unchanged PR04 preservation", "consonants": "native; not the unselected shared dry-copy policy", "basis_case_ids": ["case-0188", "case-0189", "case-0448", "case-0449"], "known_limitations": "Same delivery subset passes; callback allocations, reset and quality failures remain. Fresh graph per render; no priming workaround or product go."}
+  ],
+  "basis_report": "build/interaction-research/20261023T160456Z-ffcc2998/report.json",
+  "initial_trial": {
+    "source": "one explicitly selected existing permitted 12-second development excerpt; propose a, with exact identity/hash only in ignored private proposal",
+    "sample_rate": "native registered rate (existing excerpt is 48000); no resampling for this first listen",
+    "target_key_scale": "user selection required; no key detection or claim that an unconfirmed test key matches the song",
+    "degrees": [2, 4, 0],
+    "octaves": [0, 0, 1],
+    "voicing": "approved PR03 third/fifth/octave above, same for both candidates; preserves continuous source deviation",
+    "processing_reserve_ms": 100,
+    "shift_guard_semitones": [-12, 12],
+    "source_gain": "one attenuation-only source-derived scalar min(1, 10^(-24/20)/source_rms), identical for both candidates, dry and all stems; never fit candidate outputs",
+    "lead_gain": 1,
+    "harmony_gain_each": 0.3333333333333333,
+    "lead_route": "software aligned; exact declared delay, unchanged scaled source PCM",
+    "zero_tail_seconds": 0.6,
+    "corrective_retests_max": 1
+  },
+  "private_route": {
+    "purpose": "development listening preference only, no reference-based pitch/quality grades",
+    "requires": ["explicit user trial/protocol approval bound to scope/protocol/private proposal hashes", "exact approved development source/consent/audio hash and key/scale", "source/header/payload revalidation at execution", "current compiled identity and full build/source/dependency provenance", "finite, duration, lead-null, fixed-timeline and headroom checks before playable export"],
+    "annotation_exception": "PROPOSED for this listening-only route; requires explicit approval before implementation/use. Existing formal preflight remains unchanged and still requires two completed agreeing human references.",
+    "no_annotations_means": "human pitch accuracy and formal vocal quality remain pending; no oracle fabricated from the tracker",
+    "evidence_root": "evaluation/pr-06a/ (ignored)",
+    "holdout": "not permitted; no discovery or holdout opening",
+    "source_qa": "dry status provisional; do not denoise, retune, remove bends or repair the source"
+  },
+  "safe_export": {
+    "raw": "retain failures privately, never overwrite an existing evidence run",
+    "playable_export_peak_max": 0.5,
+    "normalization": "no per-candidate/voice output normalization, gain fitting, limiting, clipping, EQ or masking effects",
+    "files": "same-gain dry comparison, aligned lead, three harmony stems, complete sum and settings/evidence index; no album audio",
+    "failure": "nonfinite, missing/late primary output, wrong duration, bad lead null, unsafe peak or metadata/provenance mismatch withholds that candidate's playable export; retain exact failure, no automatic repair",
+    "playback": "never automatic; user opens local previews at low volume after checks; export checks cannot guarantee headphone safety"
+  },
+  "feedback": {"questions": ["Which candidate's processed character is more useful, or neither?", "Where do articulation, rhythm/bends or note stability sound wrong?", "Would this texture be useful in a recorded-vocal production?"], "record": "private preference plus timestamps; user is not represented as an independent listener or pitch annotator", "grading": "no automatic similarity/naturalness score and no PR06B/product acceptance"},
+  "before_progressing": ["include development challenge c under explicit approval, without flattening or exclusion", "synthetic E2/C6 and inclusive +/-12 boundary/dynamic controls at both rates", "retain all known technical failures; obtain credible resolution before PR06B", "no new configuration sweep if neither candidate is useful"],
+  "implementation_status": "proposal/preparation only; no approved listening-only renderer or source exception implemented by this document",
+  "not_authorized": ["private rendering before approval", "automatic playback/capture", "AU install/Logic/device operation", "holdout access/uploads", "new engine/preset/upstream patch", "lead tuning/effects", "commit/merge/push"]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "voxide.studio-listening-extension.v1",
+  "id": "pr06a-clip-c-001",
+  "approval": {"by": "user", "date": "2026-10-24", "basis": "Explicit yes to rendering clip c with both candidates, the same diagnostic C-major settings, listening-only without annotations or automatic playback"},
+  "base_scope_sha256": "aa244021646efb53cfe87dc45db4fba602d43d81babf2cec3d4094c4a7b4a7f6",
+  "base_protocol_sha256": "8649bbafaa240aea6ed67c660280ddfec6bedbb9f9c50ae07ce72f6805c59db2",
+  "source_index": 2,
+  "source_label": "c",
+  "source": "Exact third registered development excerpt in the same approved pilot corpus; source/consent/audio hashes remain in the separate private proposal/receipt. Native mono 48000 Hz, 576000 frames.",
+  "purpose": "Verify usefulness on the required rhythmic/pitch-bending challenge, not exaggerate a small preference difference or flatten the performance",
+  "candidates": ["signalsmith-2048-512", "rubberband-r3-short"],
+  "key_scale": {"root": 0, "scale": 0, "label": "C major diagnostic", "diagnostic_only": true},
+  "settings": "All DSP, voicing, fixed gains, source attenuation policy, uncertainty/range guards, 100ms alignment, tail and safe-export checks unchanged from pr06a-listening-001",
+  "annotation_exception": "Explicitly approved for this one listening-only comparison; no source/target pitch truth or formal accuracy grade",
+  "claim_policy": "One new source-specific approval.v2 receipt and exclusive render claim; do not modify/reuse the consumed excerpt-a receipt",
+  "not_authorized": ["other sources or holdout", "new presets/engines/voicings/keys", "flattening bends or altering rhythmic articulation", "automatic playback/capture", "AU installation/Logic/device operations", "formal qualification or engine selection", "commit/merge/push"]
+}

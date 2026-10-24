@@ -1,17 +1,21 @@
 # voxide
 
-A vocal harmonizer project for Logic Pro, intended to keep the original lead and
-generate three harmony voices with key/scale and MIDI control.
+A vocal harmonizer project for Logic Pro, keeping the original lead and generating
+three harmony voices. **Current priority: recorded vocals, scale mode, inclusive
+±12-semitone support and an intentionally processed vocal character.** Live use,
+MIDI-mode qualification and ±24 coverage are deferred, not achieved or cancelled.
 
-**Causal pitch tracking and three-voice target selection are implemented; audio is
-still dry pass-through. No audible harmonies yet.**
+**Causal pitch tracking and three-voice target selection are implemented. Product
+AU audio remains dry pass-through; harmonies exist only in isolated research and
+approved local listening files, not the installed plug-in.**
 PR 00 establishes builds and the AU; PR 01 adds routing diagnostics and native
 automated checks, with a separate human-operated Logic checklist. Nothing here
 demonstrates professional vocal quality or acceptable live-monitoring latency.
 
-PR 02 adds offline evaluation fixtures and measurement/corpus tooling. The numerical
-target now includes ±24-semitone shifts; no product pitch shifter is integrated or
-qualified. Human corpus/annotation/listening approvals remain separate gates.
+PR 02 adds offline evaluation fixtures and measurement/corpus tooling. Its original
+±24-semitone contract/results are preserved as historical baselines; they are not
+silently regraded against the new first-milestone scope. No product pitch shifter
+is integrated or qualified. Human reference/listening approvals remain separate.
 
 PR 03 adds two causal YIN variants, 41 built-in 12-TET scale sets plus custom pitch
 classes, all roots, independent degree/octave offsets, and sustained absolute-MIDI
@@ -27,6 +31,63 @@ PR 05 adds an isolated three-voice interaction processor: oracle/live/scale/MIDI
 ablations, fixed-deadline delivery, direct/aligned lead stems, and a common
 consonant-policy comparison. The product AU remains dry; no engine or treatment
 is selected. See [interaction research](docs/INTERACTION_EVALUATION.md).
+
+The subsequent [bounded architecture investigation](docs/ARCHITECTURE_INVESTIGATION.md)
+found a faster schedule but no configuration meeting live timing, quality and
+safety together. That combined-scope no-go remains. The user's subsequent
+2026-10-24 decision prioritizes a separate studio milestone; it does not select
+an engine or erase quality/safety failures.
+
+The artistic reference is Brian Eno's **“Bottomliners,” 1:30–2:00**, primarily its
+processed vocal character, not exact harmony notes or a verified hardware recipe.
+Current phase is **PR06A: a small, safely prepared development listening prototype**,
+followed by **PR06B: formal studio qualification** if warranted. AU integration
+remains blocked until an explicit studio go-decision. The new preview has not
+been auditioned by the assistant; formal private preflight is unchanged and no
+album audio has been copied here.
+See [the current plan](docs/PROJECT_PLAN.md) and
+[the recorded direction](docs/DECISIONS.md#studio-first-direction--user-clarification-2026-10-24).
+The [PR06A pilot protocol](docs/STUDIO_PILOT.md) names two existing candidates and
+versions the listening/scope documents. The user explicitly approved excerpt a
+in diagnostic C major for a listening-only comparison without pitch annotations.
+The metadata command still cannot render/play audio; a separate receipt-gated
+renderer must pass safety checks before exporting any local preview. No automatic
+playback, formal pitch grade or product acceptance is implied. The approved
+comparison is now available under ignored
+`evaluation/pr-06a/listening-20261024T151731Z-aecf92a7/previews/`; both candidates
+passed export checks. Initial user feedback is positive, with a Rubber Band
+preference, a seemingly small difference and no distracting artifacts reported on
+this comparison. Formal qualification/engine selection remain pending, and Rubber
+Band callback allocations remain a failed product gate. See the pilot note
+for the two mix filenames, validation and manual low-volume listening guidance.
+The subsequent fixed synthetic engineering comparison favors Signalsmith 2048/512
+for further tests: lower observed callback cost and no callback allocations. Both
+engines pass stopped-reconstruction/repeat checks in that set; Rubber Band still
+allocates during callbacks. This is a provisional engineering lead, not product
+selection or Logic qualification. The user has separately approved clip c under
+the same diagnostic C-major listening-only settings; it uses a new source-bound
+receipt, not the consumed excerpt-a approval. Its initial comparison is withheld:
+Signalsmith passes export checks, while the Rubber Band mix exceeds the conservative
+preview-level ceiling without observed digital full-scale overs. The user has now
+approved a separate common half-level export of the retained comparison, without
+DSP rerender or changed relative mix. Its nine validated previews are ready at
+`evaluation/pr-06a/playback-half-20261024T183809Z-647c08bb/previews/`. Manually listen
+at low volume to `00-dry.wav`, `signalsmith-2048-512-mix.wav` and
+`rubberband-r3-short-mix.wav`; report preference and timestamped articulation/bend
+or note defects. Clip-c feedback again slightly favors Rubber Band, but the user
+finds the difference minimal and non-decisive for choosing an engine. Signalsmith
+remains the provisional engineering lead, not a final selection. The original
+withheld result stays unchanged; no formal quality decision is implied. See the
+pilot note for evidence and limitations.
+The [bounded verification proposal](docs/STUDIO_VERIFICATION.md) next isolates
+meter/tracker/native pitch errors before eventful-delivery checks. Its synthetic
+matrix is execution-approved but not yet implemented/executed; private vocal
+repeats and Logic/PDC testing remain separately approval-gated. Delivery and a
+favorable listen are not pitch qualification or permission to integrate the product.
+All five tooling review findings are now fixed and independently closed, with
+165 Python/full-product checks passing. See the
+[repair record](docs/evidence/pr-06a/review-fixes-001.md). Next is the approved
+synthetic-only meter calibration, not another listening comparison.
 
 ## Local development
 

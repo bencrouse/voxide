@@ -35,7 +35,8 @@ bool validHarmony(const HarmonyConfig& h)
 void validate(const Settings& s)
 {
     if ((s.engine.rate != 44100 && s.engine.rate != 48000)
-        || static_cast<unsigned>(s.mode)>3 || static_cast<unsigned>(s.treatment)>1 || static_cast<unsigned>(s.profile)>1)
+        || static_cast<unsigned>(s.mode)>3 || static_cast<unsigned>(s.treatment)>1 || static_cast<unsigned>(s.profile)>1
+        || (s.shiftLimit!=12 && s.shiftLimit!=24))
         throw std::invalid_argument("Unsupported interaction settings");
     if (!validHarmony(s.harmony)) throw std::invalid_argument("Invalid harmony settings");
 }
@@ -43,7 +44,8 @@ void validate(const Settings& s)
 bool Settings::operator==(const Settings& o) const noexcept
 {
     return engine.rate==o.engine.rate && engine.window==o.engine.window && engine.hop==o.engine.hop
-        && mode==o.mode && treatment==o.treatment && profile==o.profile && harmony==o.harmony;
+        && mode==o.mode && treatment==o.treatment && profile==o.profile && harmony==o.harmony
+        && shiftLimit==o.shiftLimit && inactiveUncertain==o.inactiveUncertain;
 }
 struct Processor::State
 {
@@ -71,6 +73,7 @@ struct Processor::State
     int latency = 0, analysis = 0, quantum = 0, lag = 0, offset = 0, fill = 0;
     double voicedWeight = 0;
     bool failedClosed = false;
+    bool finalized = false;
     Stats counts;
 
     State(Settings s, Factory factory) : config(s)
@@ -221,9 +224,10 @@ struct Processor::State
                     const auto& selected=selector.targets()[v]; active[v]=selected.active && !failedClosed; target=selected.midi;
                 }
                 const double delta=target-frame.midi;
-                if (delta < -24.000001 || delta > 24.000001) { active[v]=false; ++counts.rejectedTargets; }
-                else desired[v]=std::clamp(delta,-24.0,24.0);
+                if (delta < -config.shiftLimit-.000001 || delta > config.shiftLimit+.000001) { active[v]=false; ++counts.rejectedTargets; }
+                else desired[v]=std::clamp(delta,-static_cast<double>(config.shiftLimit),static_cast<double>(config.shiftLimit));
             }
+            if (config.inactiveUncertain && !voiced) active[v]=false;
             shift[v]=approach(shift[v],desired[v],2400.0*quantum/config.engine.rate);
             for (int i=0;i<quantum;++i) counts.inputHashes[v]=(counts.inputHashes[v]^std::bit_cast<std::uint32_t>(block[static_cast<std::size_t>(i)]))*1099511628211ull;
             for (double value : {shift[v],voiced?frame.hz:0.0}) counts.controlHashes[v]=(counts.controlHashes[v]^std::bit_cast<std::uint64_t>(value))*1099511628211ull;
@@ -301,7 +305,11 @@ bool Processor::resetStopped()
     // native reset state. Allocation/cost belongs to stopped lifecycle, not render.
     return configureStopped(state->config);
 }
-void Processor::start() noexcept { state->playing.store(true,std::memory_order_release); }
+void Processor::start()
+{
+    if (state->finalized) throw std::logic_error("Finalized graph requires stopped reset/reconfiguration before restart");
+    state->playing.store(true,std::memory_order_release);
+}
 void Processor::stop()
 {
     if (!running()) return;
@@ -311,6 +319,7 @@ void Processor::stop()
         float value=0;
         while (state->audio[v].pop(value)) state->counts.unrenderedFinishPeak=std::max(state->counts.unrenderedFinishPeak,std::abs(value));
     }
+    state->finalized=true;
     state->playing.store(false,std::memory_order_release);
 }
 Output Processor::push(float x) { return state->push(x); }

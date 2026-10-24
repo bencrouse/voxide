@@ -10,9 +10,41 @@ its local engineering/research commit and merge; no audible harmonies. Timing mi
 and deferred human/host gates still block architecture/product qualification.
 PR 04 is merged locally at `997e884` as a reviewed engineering/research milestone,
 retaining candidate-engine failures. PR 05 interaction engineering implementation
-and automated qualification are complete on `pr-05-three-voice-interaction` as a
-negative research milestone; the user approved a branch-only commit. No engine or architecture is selected;
-quality/timing and human/host gates remain open.
+and automated qualification are complete on `pr-05-three-voice-interaction` at
+`dda47a7` as a negative research milestone, initially committed branch-only. The
+user has now authorized its local merge as a dependency of the architecture/PR06A
+research branch. No engine/architecture is selected; quality/timing and human/host
+gates remain open.
+The authorized bounded architecture investigation is complete on
+`research-architecture-feasibility`, now user-authorized for local commit/merge
+with the reviewed PR06A tooling. It corrects overly broad timing
+interpretations but finds no technical survivor for the tested combined live/mixing
+scope. See `docs/ARCHITECTURE_INVESTIGATION.md`; its results remain unchanged.
+**Current direction (user clarification, 2026-10-24): studio-first, scale-first,
+three harmony voices, minimum ±12 semitones, intentionally processed vocal character.**
+PR06A's approved excerpt-a/C-major listening-only comparison is rendered. The user
+reports good sound, a Rubber Band preference with a seemingly small difference,
+and no distracting artifacts on this example. The bounded engineering comparison
+now favors Signalsmith 2048/512: zero callback allocations and lower callback cost;
+both candidates pass stopped-reconstruction/repeat checks in this synthetic set.
+The separately approved clip-c trial ran under unchanged diagnostic C-major
+settings. Signalsmith passes export checks; Rubber Band exceeds the conservative
+preview-level ceiling (no observed digital full-scale overs). The user explicitly
+approved a separate common 0.5 playback export from retained outputs; its nine
+validated previews have received user feedback: a tentative Rubber Band preference,
+but a minimal, explicitly non-decisive sound difference. Engineering suitability
+therefore remains the practical discriminator. The original withheld run stays
+unchanged; Signalsmith is provisional and any product go remains pending.
+The bounded verification proposal is now drafted in `docs/STUDIO_VERIFICATION.md`:
+meter/pitch attribution before eventful delivery, with separate private-replay and
+evaluation-host approvals. No proposed verification runs have been executed.
+The user has approved synthetic-only execution. Five PR06A tooling review defects
+are now repaired, regressed and independently closed; 165 Python/full-product
+checks pass. Stage A implementation/calibration is next; none of its proposed
+captures has executed. See `docs/evidence/pr-06a/review-fixes-001.md`.
+PR06B must still establish a studio go-decision. Live, MIDI-first and
+±24 coverage are deferred, not qualified. See the decision below and
+`docs/DECISIONS.md` for approval/protocol boundaries.
 User testing supports direct-input monitoring with Low Latency Mode off/on and
 project recall; remaining host checks and the track-fed mode limitation are recorded
 below. No harmonizer quality or measured monitoring-latency qualification yet.
@@ -20,9 +52,13 @@ Created 2026-10-20.
 
 ## 1. Brief and hard boundaries
 
-Build a basic, professional-quality vocal harmonizer for Logic Pro: **one original
-lead plus exactly three available generated harmony voices**, key/scale control
-and MIDI control, usable for both live monitoring and mixing.
+Build a vocal harmonizer for Logic Pro: **one unchanged original lead plus exactly
+three available generated harmony voices**. The first useful milestone prioritizes
+**recorded vocals, user-selected key/scale, inclusive ±12-semitone support and an
+appealing deliberately processed harmony character**. MIDI mode, live use and
+±24-semitone coverage remain later goals. The original combined brief and earlier
+qualification results are historical evidence, not claims that this studio milestone
+already works or completes every original requirement.
 
 - **No money may be spent.** No commercial SDK purchase, paid evaluation, paid
   plug-in, subscription, signing membership, cloud service, hardware purchase, or
@@ -36,9 +72,34 @@ and MIDI control, usable for both live monitoring and mixing.
   Proposed baseline: arm64, macOS 15+, C++20, CMake 3.24+. Confirm the actual Mac
   before freezing this support profile. Standalone/headless targets are development
   and evaluation tools, not additional product promises.
-- A mixing-only result is not a successful completion of the requested product.
-  Do not silently narrow the range, increase latency, reduce harmony count, or
-  relax quality to manufacture a pass. Escalate a demonstrated conflict to the user.
+- A clearly labeled studio-first result can satisfy the newly prioritized milestone,
+  **not** the full original live/MIDI/±24 brief. This user-approved sequencing/range
+  revision does not allow further silent narrowing, extra latency, fewer voices,
+  unsafe output or weaker pitch correctness to manufacture a pass.
+
+### Current milestone and artistic reference — 2026-10-24
+
+The user selected scale mode over MIDI-first, identified recorded-vocal processing
+as higher priority than live singing, and made ±12 semitones the minimum acceptable
+range. They cited Brian Eno's *Another Day on Earth*, **“Bottomliners,” 1:30–2:00**,
+primarily for its **processed vocal character**, not specific harmony note choices.
+The reference has not been auditioned/analyzed by the assistant; no exact voicing,
+effect chain or DigiTech algorithm/provenance has been established. It is an
+artistic reference, not a request to copy the recording or recreate hardware.
+
+| First milestone: retained | Deferred, not passed | Still needs explicit protocol/qualification |
+| --- | --- | --- |
+| Unchanged lead + three available harmonies; E2–C6; 44.1/48 kHz | ±24 coverage beyond the required inclusive ±12 | Versioned studio contract/tool support; no edits to historical baselines |
+| User-selected key/scale; existing expression/range-handling semantics | MIDI-first UI/control qualification; existing state/IDs retained | Pilot root/scale/voicing and safe uncertain-source behavior |
+| Recorded-vocal processing; ≤100 ms complete studio delay with accurate PDC | Live processing/monitoring and MIDI-response go-gates | Recorded onset/transition and first-syllable/tail correctness; no newly approved response threshold |
+| Intended notes, intelligibility, bends/rhythm, finite safe output, headroom and reproducibility | A requirement to make three indistinguishable human singers | Deliberate electronic character versus unwanted artifacts; revised timbre/formant/listening rubric |
+| Zero spend, existing engine families, privacy and approval boundaries | Product integration until PR06B's studio go | Development listening-only protocol/source approval; formal references/listeners/host evidence |
+
+No new engine, configuration winner, effect, private rendering/playback exception,
+purchase, installation or code change is authorized by this documentation request.
+The immediate deliverable is a bounded pilot plan (PR06A), followed by separate
+formal studio qualification (PR06B). `docs/DECISIONS.md` records the conversation
+and distinguishes confirmed direction from proposed trial details.
 
 ### Repository and Nitride reference
 
@@ -68,17 +129,25 @@ In particular, Voxide is an **AU music effect (`aumf`)**, not Nitride's AU instr
 
 ## 2. Quality contract and open user decisions
 
-The user approved the plan's numerical targets on 2026-10-21, extending maximum
-shift to ±24 semitones. They are requirements to test, not capabilities already
-demonstrated. New listening/measurement protocol details and musical semantics
-still require the separate approvals recorded in PR 02.
+The original PR02 numerical contract was approved on 2026-10-21 with ±24-semitone
+shifts. Preserve it and all reports against it. The 2026-10-24 studio-first decision
+changes the first milestone to inclusive ±12 and defers live/MIDI-first/±24 gates;
+it is not an automatic revision of executable contracts or a passing qualification.
+PR06A must version the new scope/protocol before rendering. Unchanged numerical
+correctness/safety requirements remain; revised timbre scoring and any studio-specific
+response criteria require explicit approval rather than a silent threshold edit.
 
 ### Listening standard
 
 - Correct intended notes with no octave jumps, semitone chatter, unintended voice
   reassignment, or lingering wrong notes.
-- Recognizable singer/vowel identity; no conspicuous chipmunk, hollow, metallic,
-  buzzy, phasey, or watery coloration.
+- For the studio pilot, seek a musically useful **intentional processed vocal
+  character**. Electronic coloration alone is not a defect or proof of success;
+  evaluate consistency, vowel/articulation readability and the user's reference
+  preference. The former naturalness-first prohibition on conspicuous metallic/
+  buzzy/phasey coloration is not an absolute artistic rule for this milestone.
+  Original numerical formant/listening scores remain historical until a revised
+  rubric is explicitly approved; no formant processing change is implied here.
 - Consistent expression policy for vibrato, scoops, dynamics, and endings.
 - Intelligible consonants/breaths without chirps, smeared attacks, missing syllables,
   or exaggerated stacked sibilance.
@@ -89,27 +158,36 @@ still require the separate approvals recorded in PR 02.
 - Exposed harmonies and a fixed representative mix are usable without repair or
   masking processing failures with other effects.
 
-The target is harmonies retaining the lead's character, not a promise of three
-independently performed singers. Ask whether the user expects that stronger illusion.
+The first target is deliberately processed harmonies, not three independently
+performed or indistinguishable human singers. The lead remains unchanged; do not
+apply processing to it merely because an album passage is the timbral reference.
 
-### Numerical support envelope approved in PR 02
+### First studio milestone support envelope (historical PR02 contract preserved)
 
 | Item | Requirement to qualify |
 | --- | --- |
 | Source | Dry, mono, one singer; no pre-existing harmonies |
 | Input F0 | E2–C6, approximately 82–1,047 Hz |
-| Shift per voice | −24 to +24 semitones, including dynamic changes |
-| Mathematical output extremes | Approximately 20.6–4,186 Hz; these extremes also require qualification |
+| Shift per voice | Inclusive −12 to +12 semitones, including dynamic changes; smaller support is unacceptable |
+| Mathematical output extremes | Approximately 41.2–2,093 Hz for this milestone; qualify these endpoints too |
 | Project rates | 44.1 and 48 kHz |
 | Required articulation | Normal voiced singing, breathiness, vibrato, register transitions, consonants |
 | Stress material | Fry, growls, whispers, clipping, accompaniment bleed: safe/graceful behavior, with reliable pitch guarantees explicitly decided |
 
-Report common shifts within ±7 separately from octave shifts through ±12 and
-two-octave shifts through ±24. Passing a smaller range does not qualify the full
-range. Note names use C4 = MIDI 60 regardless of
-Logic's configurable octave display.
+Report common shifts within ±7 separately from octave shifts through ±12. Passing
+±7 does not qualify this milestone. Earlier two-octave/±24 results remain available
+and are not regraded or promoted; ±24 support is deferred, not achieved. Note names
+use C4 = MIDI 60 regardless of Logic's configurable octave display.
 
 ### Separate timing budgets
+
+The existing numerical budgets below remain the **historical original targets**.
+The first studio milestone retains the ≤100 ms complete processing ceiling with
+accurate PDC. Live input/monitoring and MIDI response are deferred for its go-gate,
+not marked passed. Recognition and first-correct-output clocks must still be
+reported; a studio-specific timing/measurement rubric is pending PR06A approval.
+Do not hide wrong note transitions by subtracting analysis/observer delay, and do
+not assume compensation repairs missing syllables or makes live audio faster.
 
 | Quantity | Definition | Approved numerical gate |
 | --- | --- | --- |
@@ -128,18 +206,24 @@ device-to-host delay when measuring the physical keyboard experience.
 
 - [ ] Confirm Mac/chip/RAM, macOS, Logic, interface/driver, MIDI controller,
   headphone path, sample rates, normal buffer sizes, and representative session.
-- [x] Approve numerical ranges: E2–C6 input, ±24-semitone shifts, 44.1/48 kHz.
+- [x] Original numerical approval: E2–C6 input, ±24 shifts, 44.1/48 kHz. User later
+  set inclusive ±12 as the first milestone minimum; E2–C6 and both rates remain.
 - [ ] Confirm stress-source guarantees; 96 kHz remains outside the support envelope.
 - [x] Approve the plan's numerical latency ceilings and quality thresholds.
 - [ ] Confirm whether lead monitoring must be entirely in software or normally
   uses the interface's direct path. Direct lead monitoring
   does not make delayed harmonies low-latency.
-- [ ] Approve musical mapping, exact initial scale list, expression policy, and
-  expected behavior on non-scale notes and unsupported/ambiguous source material.
+- [x] Approve starter mapping/expression/uncertainty/range policies and broad scale
+  coverage in PR03 (2026-10-22); retain those semantics for scale-first work.
+  Stress-source guarantees and the new studio listening protocol remain pending.
 - [x] User confirmed local-only use for now under JUCE's AGPLv3 option. Revisit
   source/notice obligations before sharing; no paid license fallback is assumed.
 - [ ] Confirm no-cost recordings and independent listeners available. Missing
   resources remain blocked gates, not permission to invent results.
+- [x] Select studio-first recorded-vocal processing and scale-first mode; identify
+  “Bottomliners,” 1:30–2:00, as a processed-character reference (2026-10-24).
+- [ ] Approve the versioned studio pilot/listening rubric and exact source handling
+  before private rendering; this documentation does not bypass current preflight.
 
 ## 3. Architecture evidence and zero-cost shortlist
 
@@ -176,6 +260,14 @@ Commercial licensing is outside the zero-spend plan.
 Do not expand the active comparison beyond these two engines during this study.
 If neither qualifies, produce an evidence-backed no-go or ask for a new bounded
 requirement/research decision. A from-scratch PSOLA engine is not an automatic PR.
+
+**Studio-first follow-up:** PR06A may propose a small comparison of the existing
+slower/mixing configurations under the revised first-milestone priorities. They
+are candidates, not accepted fixes: common-shift quality, allocations/reset and
+repeatability failures are not erased by deferring live use or ±24. No new engine,
+upstream patch or open-ended preset/algorithm search is approved. The actual
+PR04/05 Rubber Band comparator is pinned R3 `RubberBandStretcher`; the earlier
+LiveShifter discussion above is source context, not permission to switch APIs.
 
 ### Commercial material retained only as context
 
@@ -258,6 +350,15 @@ commands below are proposed deliverables, not files/tools already available.
 
 ### Reproducible corpus and listening method
 
+**Two stages, not a replacement of human evidence:** PR06A's small development
+preference pilot comes first; the corpus/reference and independent-listener work
+below remains formal PR06B qualification work, not a prerequisite for merely
+documenting the direction. A listening-only private-render route without pitch
+annotations needs its own explicitly approved protocol before implementation or
+use. Current preflight still requires completed human references. Do not fabricate
+them, treat informal preference as pitch truth, silently bypass the preflight, or
+consume holdout material for the pilot. Missing formal resources stay pending.
+
 Target 24 dry 10–15-second excerpts from six volunteer singers plus two user-session
 passages, preferably mono 24-bit/48 kHz without tuning/compression/reverb/denoising.
 Cover registers, vowels, legato, leaps, fast syllables, scoops/vibrato, breathiness,
@@ -281,10 +382,25 @@ approximately 45-minute sessions. An administrator retains the identity key.
 This is not formal MUSHRA: no perfect unprocessed transformed performance exists.
 Follow with randomized live trials by the user and another singer, if available.
 
+The preceding naturalness-first scoring/session design is the original proposal.
+PR06A must propose a studio rubric for intended processed character, articulation,
+pitch/expression stability and usefulness; PR06B freezes/approves it before formal
+listening. Reference affinity is not permission to omit critical defect checks,
+weaken numerical pitch targets, or claim the reference's exact sound was recreated.
+Live trials are deferred beyond the first studio milestone.
+
 Use free Python/NumPy/SciPy, Praat, Instruments, AU tools, and independently checked
 output-pitch analysis. Do not certify output with Voxide's own tracker alone.
 
 ### Numerical final pass gates approved in PR 02
+
+This table preserves the original baseline, not a new executable studio contract.
+Correctness/safety/lead/headroom/reproducibility requirements are retained. PR06A
+must explicitly map each gate to unchanged, deferred or pending studio-protocol
+approval; naturalness/formant scoring cannot be silently relabeled as passed.
+The studio go-gate does not require deferred live/MIDI/±24 qualification, but still
+requires the full declared ±12 scope and all approved studio gates. A pilot liking
+does not waive callbacks, host behavior, formal references or independent listening.
 
 | Gate | Requirement |
 | --- | --- |
@@ -753,51 +869,265 @@ is authorized by the implementation request.
 - Reflections/next-agent cautions: acceptable individual voices may fail as a sum;
   bypassing consonants and delaying a lead are audible architecture decisions.
 
-### PR 06 — Blind comparison and architecture go/no-go
+### Architecture follow-up — bounded investigation completed, no go to integration
 
-Depends on: PR 05 and independent volunteers.
+Historical conclusion for the original combined live/mixing brief. The later
+2026-10-24 studio-first decision permits the separate PR06A feasibility pilot
+below, not an override of these failed results or a studio product go-decision.
+
+- [x] Validate independent analytic steady/response controls before further renders;
+  distinguish source support, applied musical state, native setter and audible
+  observation. Unobservable vocal/low-frequency response remains pending.
+- [x] Compare one zero-input-hold, source-referenced schedule and only one additional
+  Signalsmith preset (256/32), retaining the original numerical requirements.
+  Oracle sampled delivery reaches 6–6.53 ms and setter response 3.33–4.33 ms, but
+  steady-quality and E2 nonfinite failures disqualify that fast preset.
+- [x] After oracle timing passed, execute one unchanged-tracker trailing-history
+  schedule; high-register cold recognition remains 40–44.90 ms, not qualified.
+  No further tracker tuning or parameter sweep was performed.
+- [x] Replay exact retained native calls with matching hashes across FFT backends.
+  Built-in FFT removes the observed Accelerate fresh/warm repeat discrepancy in
+  this limited diagnostic; it does not remove quality/safety failures or qualify
+  general determinism. No backend is selected.
+- [x] Capture Rubber Band allocation stacks and compare cold/reconstructed/primed
+  eventful states. Same-instance priming can remove allocations in the changing
+  case but breaks fresh-state waveform equivalence; it is not an accepted fix.
+  Correct the separate finalized-stream restart guard in the PR05 wrapper.
+- [x] Pass 120 Python regressions, product full qualification, isolated Debug/
+  Release/ASan/TSan contracts and native safety probes. Final 72-case bounded batch
+  retains 66 finite completions and six raw nonfinite failures. Gates remain
+  failed even though engineering/sanitizer checks pass.
+- [ ] Identify a candidate satisfying quality and live timing simultaneously.
+  **No survivor; stop further integration under this tested scope.** A mixing-only
+  result, altered observer, silent requirement reduction, excluded clip c or extra
+  tuning is not an architecture go-decision. Further research/requirement decisions
+  need explicit user authorization; universal impossibility is not established.
+- Evidence: `build/checks/20261023T195433Z-cfca9f27/environment.json`,
+  `build/architecture-checks/20261023T195433Z-ec6fbbed/report.json` and
+  `build/architecture-research/20261023T200037Z-24be1cb2/report.json`.
+  Method, source/provenance boundaries, exact caveats and stop decision are in
+  `docs/ARCHITECTURE_INVESTIGATION.md`; frozen protocol is
+  `docs/evidence/architecture/protocol.json`. No new commit/merge/push, AU install,
+  Logic/device operation or private-audio access occurred.
+
+### PR 06A — Studio-first timbre and feasibility pilot (next)
+
+Depends on: retained PR03–05/architecture evidence and the 2026-10-24 direction.
+This splits the former PR06; it does not renumber PRs 00–05 or call their failed
+gates passed. The old combined live/mixing no-go remains valid for its scope.
 
 **Scope / TODO**
-- [ ] Freeze configurations, open holdout once, render coded listening sets, and
-  run the predeclared independent-listener protocol.
-- [ ] Include known synthetic desired outputs and degraded anchors; optionally
-  include already-owned Waves/ Melodyne references with matching targets/settings.
-  If absent, disclose it; no purchase or trial dependence.
-- [ ] Combine ratings, duplicate consistency, timestamped defects, objective
-  metrics, latency/CPU, and license findings. Report per-singer and worst-case results.
-- [ ] Allow **one bounded development-data tuning/retest cycle**, with fresh or
-  separately reserved holdout material. Preserve original failures and results.
-- [ ] Select a free engine/configuration only if evidence supports all approved
-  gates, or publish an explicit no-go/requirement-conflict report for user decision.
+- [x] Draft/version a studio scope/protocol alongside, **not over**, the historical
+  PR02/03 contracts. Record ±12 inclusive, E2–C6, both rates, three harmonies,
+  unchanged lead, scale-first and ≤100 ms complete studio delay/PDC. Existing
+  scripts still use the historical contract until explicitly updated/tested.
+- [x] Map retained pitch/correctness, finite-output, headroom, expression,
+  reproducibility, callback and host gates separately from deferred live/MIDI/±24
+  gates. Propose the processed-character/formant/listening rubric and explicit
+  recorded-vocal onset/transition criteria for approval; no new numerical targets
+  or formant-control algorithm are inferred from the artistic reference.
+- [x] Obtain explicit approval for the small listening protocol and selected
+  development sources. If proposing listening-only renders without annotations,
+  implement a separately labeled permission/hash-bound route only after approval;
+  do not weaken the current formal/private-reference preflight. No holdout access.
+- [x] Propose at most **two existing slower/mixing configurations** and one
+  short pilot passage for the initial comparison, using existing approved scale
+  semantics and fixed declared voicings. No new engine/preset/parameter sweep.
+  Retain current formant-preservation settings unless a change is separately approved.
+- [ ] Separate oracle/prescribed controls (where trustworthy references exist) from
+  tracked scale-mode output to localize failures. An oracle-only win cannot qualify
+  the product. Without trustworthy F0 references, keep numerical vocal accuracy
+  pending rather than presenting automatic tracker proposals as truth.
+- [x] After finite/headroom checks, prepare a small local listening set with lead,
+  three voice stems and the complete blend, dry comparison, fixed shared gains,
+  disclosed delay alignment and exact settings/build/input identities. No per-voice
+  normalization, clipping/limiting, masking effects or album-audio copying. Do not
+  initiate playback, capture or installation without explicit coordination.
+- [x] Ask the user whether the deliberately processed character is useful and
+  request timestamped defects. User reports good sound, prefers Rubber Band, and
+  hears no distracting artifacts; no timestamps or numerical ratings supplied.
+  This is development preference, not independent listening/product acceptance.
+- [ ] Before progressing, include the approved expressive/rhythmic c development
+  challenge plus low/high register and inclusive ±12 boundary controls. The first
+  attractive passage must not stand in for the required support/expressive envelope.
+  The c listening challenge is complete; full musical output/envelope correctness
+  is not. Transport-stub guard checks and bounded engineering samples do not close
+  this criterion. See the proposed staged checks in `docs/STUDIO_VERIFICATION.md`.
+- [ ] Allow one bounded development correction/retest only after diagnosing a
+  concrete defect. Preserve the original comparison; stop for a new user decision
+  if neither candidate offers a credible studio path. No endless tuning loop.
 
-**Validation required to merge**
-- [ ] Randomization/identity-key separation, loudness/alignment, duplicates, and
-  listener independence are documented; score aggregation is independently checked.
-- [ ] Decisions include uncertainty/confidence intervals and do not hide failed
-  octave shifts, registers, cases, or individual listener disagreements in averages.
-- [ ] User approves go/no-go. A negative report can merge, but **PRs 07–10 do not
-  proceed without a go-decision**. No commercial fallback or unbounded custom DSP.
+**Validation / exit criteria**
+- [ ] Contract/protocol deltas, source permission, safe preparation and evidence
+  labels are reviewed; historical contracts/fixtures/results remain immutable.
+- [x] Existing engineering checks and any new scope/protocol/privacy regressions
+  pass. Wrong notes, lost bends/rhythm, nonfinite output or unsafe levels remain
+  defects even if the user likes an electronic texture.
+- [x] Report separately: user timbre preference; objective pass/fail/pending;
+  exact ≥±12 coverage; source-time/duration/tail correctness; measured processing
+  delay; native allocation/reset/repeatability and untested host behavior.
+  Synthetic engineering results pass for Signalsmith at both tested rates/buffers;
+  Rubber Band callback allocations fail. Actual-vocal/full-support/host/formal
+  qualification is still explicitly pending, not inferred from the pilot.
+- [ ] User decides whether the pilot merits PR06B. A positive preference result
+  authorizes neither AU integration nor a final engine selection; unresolved
+  technical blockers require a credible bounded resolution, not a checkbox waiver.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — chosen engine/configuration or explicit blocker.
-- Learnings/evidence: pending — anonymized scores, raw defect log, selection rationale.
-- Reflections/next-agent cautions: preferences are not pass criteria; a good demo
-  or reference product's failure cannot override the agreed requirements.
+- Major decisions: studio-first/scale-first/processed-character direction confirmed;
+  approved Signalsmith 2048/512 versus Rubber Band R3 short on excerpt a, native
+  consonants, unchanged formant settings and **C major diagnostic**. The user
+  explicitly approved listening-only unannotated rendering on 2026-10-24; this is
+  not a source-key or formal-quality claim. Both approved previews pass safe-export
+  engineering checks. Initial user feedback is positive, with a Rubber Band
+  preference and a seemingly small difference; formal measurements remain pending.
+  `docs/STUDIO_PILOT.md` explains rationale
+  and implementation gaps; `docs/evidence/pr-06a/studio-scope.json` and
+  `listening-protocol.json` version the proposal without altering historical gates.
+- Learnings/evidence: 131 Python regressions and full product qualification pass at
+  `build/checks/20261024T151422Z-4b56080d/environment.json`; isolated four-profile
+  contracts/16 synthetic guard runs pass at
+  `build/studio-native-checks/20261024T151422Z-d822e13c/report.json`.
+  Approved private comparison: ignored
+  `evaluation/pr-06a/listening-20261024T151731Z-aecf92a7/report.json`, with complete
+  provenance and nine hash-verified preview files under `previews/`. No automatic
+  playback, fabricated pitch truth or formal quality pass. Rubber Band callback
+  allocations still fail; actual-vocal accuracy/repeatability and host acceptance
+  remain pending. No corrective private rerender was needed. The metadata-only
+  preparer stays separate from receipt-gated `scripts/studio_listening.py`; the
+  formal private preflight remains unchanged. Only excerpt a was accessed.
+  Follow-up synthetic engineering matrix completed at
+  `build/studio-engineering/20261024T173710Z-7dee2ad8/report.json`: 16 invocations,
+  48 captures, 60 exact repeat/reconstruction/partition comparisons. Both engines
+  have zero observed overdue callbacks; Signalsmith has zero callback allocations
+  while Rubber Band allocates in every capture. Stopped reconstruction passes for
+  both; native-reset and actual audio-thread host handoff are not thereby qualified.
+  136 Python/product checks and isolated four-profile probe safety pass at
+  `build/checks/20261024T173235Z-bc6e8e1b/environment.json` and
+  `build/studio-engineering-checks/20261024T173235Z-93c09625/report.json`.
+- Clip-c execution: original source-specific trial is retained at ignored
+  `evaluation/pr-06a/listening-20261024T180305Z-d5b0ddb2/`; both native runs complete,
+  Signalsmith passes safe-export checks, Rubber Band's mix exceeds the extra 0.5
+  preview ceiling. No full-scale overs were found in intended previews. Package
+  withheld; no gain fitting, rerender or automatic playback. Exact private peak
+  diagnostics and original artifacts are retained. 139 Python/full-product checks
+  pass at `build/checks/20261024T180129Z-236f32fa/environment.json`; DSP binaries
+  remain unchanged from the four-profile-qualified engineering build.
+- Approved common fixed **0.5 playback export** completed from retained clip-c
+  outputs at `evaluation/pr-06a/playback-half-20261024T183809Z-647c08bb/previews/`.
+  Nine finite, hash/sample-verified WAVs each retain 12.6 seconds and meet the
+  unchanged 0.5 ceiling; dry, both mixes and all mix-gain stems share the same trim.
+  No DSP rerender, limiter, altered relative mix or per-candidate normalization.
+  The original 243-artifact archive/withheld report and consumed source approvals
+  stay unchanged. Additive protocol/receipt, consumed export claim and private
+  `export-validation.json`/package integrity bind this new playback-only result.
+  Full product/four-profile checks and **148 Python tests** pass at
+  `build/checks/20261024T183649Z-e1476dbc/environment.json`; native binaries unchanged.
+- Clip-c feedback received: tentative Rubber Band preference, but the user calls
+  the difference minimal and does not care which is selected on subjective sound.
+  Bound private `user-feedback-001.json` is appended to the half-level package;
+  no new artifact absence, articulation/bend rating or formal quality pass is
+  inferred. Do not repeat fine-grained A/B tuning to force a stronger preference.
+- Verification-gap review/proposal complete: `docs/STUDIO_VERIFICATION.md` and
+  `docs/evidence/pr-06a/signalsmith-verification-proposal.json`. Retained synthetic
+  JSON review finds all 12 voice/case groups in the four historical scale/mix cases below
+  their sparse stable-pitch target, despite clean delivery. Historical observer and
+  guard differences limit attribution; no retrospective regrade. First isolate
+  meter/tracker/control/native contributions, not another tiny preference/CPU contest.
+- Proposed **Stage A**, now synthetic-execution-approved by the user:
+  synthetic-only meter controls (36 fixtures), matched prescribed/tracked steady
+  captures (72), then eventful delivery (16), with stop points and no tuning loop.
+  No proposed runs have been executed. Full support/catalog coverage and human
+  qualification remain pending. Source-bound vocal repeats and evaluation-host
+  operation require separate approvals; consumed a/c receipts cannot authorize them.
+  Signalsmith is still provisional; Rubber Band's allocation failure is not waived.
+  PR06B go remains pending. No UI, playback, installation or holdout expansion.
+- Tooling repair/review complete: all five initial findings are closed, including
+  legacy proposal relocation and packet-causality follow-ups. **45 studio / 165
+  total Python tests** and full product Debug/Release/ASan/TSan pass at
+  `build/checks/20261024T194129Z-dff8fbbe/environment.json`. Additive retained
+  synthetic revalidation of 48 captures/four guard timelines passes new checks;
+  all 921 original synthetic artifact hashes remain unchanged. Final repair
+  evidence is at `build/studio-review-fixes/20261024T194145Z-23a3bc59/`; engine
+  sources/binaries and private outputs/claims remain untouched. See
+  `docs/evidence/pr-06a/review-fixes-001.md`. No Stage A capture or new engine render.
+- Next exact action: implement/freeze the **already approved synthetic-only Stage A**
+  measurement/fixture protocol and begin meter calibration, within 36 fixtures /
+  at most 88 native captures and its substage stop rules. No repeated approval
+  request for that same scope; new private replay/host work still needs separate
+  authorization. Do not relabel tooling closure as pitch accuracy or product go.
+
+### PR 06B — Studio qualification and architecture go/no-go
+
+Depends on: PR06A's useful pilot/credible technical path, approved versioned studio
+contract and the formal source/reference/listener resources. This retains the
+substance of the former PR06 formal qualification, **after** the small pilot.
+
+**Scope / TODO**
+- [ ] Freeze configurations and the processed-character/listening rubric before
+  formal listening; confirm all required reference, consent and split approvals.
+  Open holdout only under its original explicit authorization/locking rules.
+  The staged native/host feasibility proposal in `docs/STUDIO_VERIFICATION.md` is
+  not that formal approval or a substitute for full-support/human resources.
+- [ ] Render coded listening sets with known synthetic controls, degraded anchors,
+  hidden duplicates and matching targets/gains. Include exposed stems and the
+  complete three-voice sum; align delay only for declared timbre comparisons.
+  The album passage is artistic context, not a perfect transformed reference.
+- [ ] Optionally use already-owned Waves/Melodyne references if appropriate;
+  absence is disclosed and never creates a purchase/trial dependency.
+- [ ] Combine independent processed-character/articulation/stability/usability
+  findings, timestamped defects, objective pitch/formant diagnostics, ≤100 ms
+  processing/PDC, callbacks, reset/repeatability and licensing. Report per-singer,
+  register, ±7/±12 range and worst cases, including expressive challenges.
+  Actual host evidence cannot come from the current dry shell. A pre-go research
+  AU adapter would require its own explicit evaluation-only approval and separate
+  component identity, as proposed in `docs/STUDIO_VERIFICATION.md`; absent that,
+  retain the host gate pending rather than integrating the product before go.
+- [ ] Freeze any remaining bounded tuning/retest allocation before opening holdout;
+  do not reuse the PR06A correction allowance to justify repeated tuning on holdout.
+- [ ] Select a free studio architecture only if **all approved first-milestone gates**
+  pass. Formal accuracy cannot be inferred from informal preference or an oracle
+  bypass. Publish an explicit studio no-go if blockers persist.
+
+**Validation required to merge / product go**
+- [ ] Identity-key separation, levels, alignment, duplicates, listener independence,
+  uncertainty and score aggregation are documented and independently checked.
+- [ ] The complete declared ±12/E2–C6/two-rate/three-voice scope is supported;
+  no failed register, octave shift, case or listener disagreement is hidden.
+- [ ] Independent human references/listening and retained numerical correctness,
+  safety, allocation and reproducibility gates pass under the approved studio
+  contract. Missing observations remain pending, not waived by the pilot.
+- [ ] User approves an explicit **studio-scale go/no-go**. PRs 07–10 remain blocked
+  without this go; a negative engineering report may be preserved without it.
+  This does not qualify live use, MIDI mode or ±24, and authorizes no automatic
+  installation, purchase or public distribution.
+
+**Agent handoff — update before merge**
+- Major decisions: pending — chosen studio configuration or explicit blocker,
+  revised contract identity and user-approved go/no-go.
+- Learnings/evidence: pending — coded scores, defects, objective/host constraints
+  and selection rationale. Distinguish original and studio-only qualification.
+- Reflections/next-agent cautions: artistic preference informs the declared timbre
+  goal but never converts pitch/safety failures or missing evidence into passes.
 
 ### PR 07 — Product processor, minimal controls, automation, and state
 
-Depends on: PR 06 go-decision.
+Depends on: PR06B's explicit studio-scale go-decision, not PR06A preference alone.
 
 **Scope / TODO**
 - [ ] Integrate the selected architecture into the AU shell and shared test target;
   remove evaluation alternatives from normal product linkage, not from evidence.
-- [ ] Add only necessary controls: scale/MIDI mode, key/approved scales, three
-  harmony degree settings for scale mode, voice levels/enables, original level,
-  and the explicit processing configuration only if evidence requires it.
+- [ ] Add only necessary first-milestone controls: key/approved scales, three
+  harmony degree settings, voice levels/enables, original level and explicit studio
+  processing configuration only if evidence requires it. Defer the MIDI-mode user
+  workflow; preserve existing parameter/state IDs and compatibility rather than
+  deleting or reinterpreting them. Do not expose unqualified modes as ready features.
 - [ ] Use clear readable native controls, keyboard access, meaningful labels/units,
   and modest input/pitch status. No preset ecosystem or ornamental feature expansion.
 - [ ] Freeze parameter IDs, ranges, defaults, state schema, and component identity;
   persist musical/voice/processing settings but not transient held MIDI notes.
+  Range/state changes for the studio milestone need explicit migration tests;
+  this planning revision changes no executable range or saved state.
 - [ ] Implement validated state restore, correct host notification and bypass/reset/
   silence behavior, keeping UI/document locks and file work off rendering.
 
@@ -807,8 +1137,8 @@ Depends on: PR 06 go-decision.
   malformed/truncated/out-of-range state is handled safely.
 - [ ] Editor create/destroy, state restore, and automation concurrent with rendering
   pass focused lifetime/concurrency checks; no stuck notes or stale UI overwrite.
-- [ ] UI controls are operable/readable at supported sizes; keyboard focus does
-  not steal intended host MIDI, and no extra product controls were introduced.
+- [ ] UI controls are operable/readable at supported sizes, do not steal host
+  keyboard input, and introduce no extra product controls or unqualified MIDI claims.
 - [ ] Regression audio and approved three-voice behavior remain within frozen limits.
 
 **Agent handoff — update before merge**
@@ -817,17 +1147,25 @@ Depends on: PR 06 go-decision.
 - Reflections/next-agent cautions: once host IDs/state ship, preserve their meaning;
   UI polish must not alter processing or conceal the selected configuration's limits.
 
-### PR 08 — Installed AU/Logic compensation, recall, and offline bounce
+### PR 08 — Recorded-vocal AU/Logic compensation, recall, and bounce
 
 Depends on: PR 07 and user Logic session.
 
 **Scope / TODO**
-- [ ] Add installed-AU integration tests and disposable Logic acceptance projects
-  using recorded audio sidechain and sample-positioned MIDI.
+- [ ] Add installed-AU integration tests and user-coordinated disposable Logic
+  projects using recorded vocals, the explicitly supported source bus and scale
+  automation. Keep the existing track-fed/Low Latency Mode routing limitation
+  visible; dry-shell routing success is not harmony/PDC acceptance.
 - [ ] Verify latency property/notifications, host compensation, bus layouts,
-  sidechain/MIDI sync, bypass, and stopped/configuration changes.
-- [ ] Exercise live keyboard plus recorded MIDI, duplicate/overlapping notes,
-  >3-note allocation, all-notes-off, cycle, seek, stop/resume, and mid-held-note start.
+  source-audio/scale-automation sync, bypass and stopped/configuration changes;
+  retain MIDI delivery/state regressions without claiming MIDI musical qualification.
+- [ ] Exercise cycle, seek, stop/resume, mid-phrase start, scale/key/degree changes,
+  bypass, silence and reset in the recorded-vocal workflow, including re-acquisition
+  without missing the first syllable or leaking a prior phrase.
+- [ ] Preserve existing MIDI-state safety/regression behavior without promoting
+  it as first-milestone product functionality. Live keyboard/recorded-MIDI musical
+  qualification, duplicate notes, >3-note allocation and chase are deferred to the
+  separate MIDI follow-up, not marked passed or silently removed from history.
 - [ ] Document host chase limitations and expected behavior; never promise state
   reconstruction for MIDI events the host does not send.
 - [ ] Compare real-time and offline bounce, start-at-first-syllable, phrase tails,
@@ -837,8 +1175,10 @@ Depends on: PR 07 and user Logic session.
 - [ ] Installed build identity/`auval`/actual Logic route verified; no doubled lead.
 - [ ] Unity-delay compensation reference aligns within the frozen tolerance;
   transformed-audio onset and pitch timing agree with the documented measurement.
-- [ ] Low Latency Mode on/off confirms the intended harmonizer/feed are active;
-  document that Low Latency Mode is inactive during bounce.
+- [ ] Document/test Low Latency Mode on/off and its effect on the supported
+  recorded-vocal route; do not call a bypassed/silent harmonizer a passing render.
+  State any supported-settings restriction explicitly and document that Low
+  Latency Mode is inactive during bounce. No live-monitoring claim is inferred.
 - [ ] Save/close/quit Logic/reopen, duplicate instance, and reopen in a fresh process
   retain settings/routing and deterministic note decisions without stale voices.
 - [ ] Same deterministic configuration real-time/offline bounces meet declared
@@ -851,9 +1191,46 @@ Depends on: PR 07 and user Logic session.
 - Reflections/next-agent cautions: PDC aligns playback, not causal live input;
   neither a saved project file nor a script proves Logic was reopened successfully.
 
-### PR 09 — Actual-hardware monitoring, performance, and final listening
+### PR 09 — Studio session performance and final listening
 
-Depends on: PR 08 and user/singer sessions.
+Depends on: PR08's recorded-vocal host qualification and user/listener sessions.
+
+**First studio milestone — scope / TODO**
+- [ ] Measure optimized Release callbacks for three changing scale-derived voices
+  on the user's representative recorded-vocal Logic session at 44.1/48 kHz and
+  declared supported buffers; test variable/block boundary stress separately.
+- [ ] Retain the callback occupancy/zero-overdue/allocation, finite-output,
+  headroom, reset/repeatability and ≤100 ms accurate-PDC requirements. Offline
+  render speed or acceptable user preference is not callback safety evidence.
+- [ ] Run the existing 30-minute representative Logic soak with playback, transport,
+  scale/voice automation, editor lifecycle and multiple-instance stress; no hidden
+  quality switch, reduced range or fewer voices to fit the workload.
+- [ ] Complete independent final listening under PR06B's approved processed-character
+  rubric, including required expressive/rhythmic c and declared ±12 boundaries.
+  Record articulation, stable intended notes, rhythm/bends, tails and usability,
+  not just resemblance to an album texture. Resources/consent remain prerequisites.
+
+**Validation required for the studio milestone**
+- [ ] All required studio gates, host/PDC/recall/bounce checks and declared
+  representative session performance pass, with raw failures/outliers preserved.
+- [ ] Zero observed dropouts, stuck output, nonfinite samples or session-overload
+  alerts in the declared soak. No native allocation/reset/repeatability waiver.
+- [ ] User accepts the qualified recorded-vocal scale workflow and its exact
+  support/limits; unqualified live/MIDI/±24 features remain explicitly deferred.
+  If blocked, produce a labeled negative studio qualification report, not success.
+
+**Agent handoff — update before merge**
+- Major decisions: pending — studio configuration, tested Mac/buffers/session and
+  final recorded-vocal acceptance. Analog loopback is not inferred from PDC.
+- Learnings/evidence: pending — distributions, soak log, independent judgments and
+  support limitations. A studio milestone is not full original-product completion.
+
+### Deferred live/MIDI follow-up — original PR09 monitoring gates retained
+
+Not a prerequisite for the first studio milestone and **not passed or abandoned**.
+Activate only under a separately approved scope after the studio decision; no
+hardware capture, installation or live research is authorized by this replan.
+The original live-specific obligations remain:
 
 **Scope / TODO**
 - [ ] Use existing interface/cables to measure analog loopback baseline and the
@@ -888,12 +1265,17 @@ Depends on: PR 08 and user/singer sessions.
 
 ### PR 10 — Reproducible local handoff and qualification report
 
-Depends on: successful PR 09 qualification, or explicitly limited no-go documentation.
+Depends on: successful studio PR09 qualification, or explicitly limited no-go
+documentation. Label the outcome **studio-first scale-mode milestone**, not
+completion of the deferred live/MIDI/±24 brief.
 
 **Scope / TODO**
 - [ ] Produce a concise setup/use guide and full evidence index: selected architecture,
   supported ranges/settings, Logic routing, monitoring/compensation, MIDI semantics,
   recall/bounce procedure, known failures, and reproducible commands.
+- [ ] Clearly separate qualified recorded-vocal/scale/±12 behavior from deferred
+  live, MIDI and ±24 behavior. Do not present an available shell parameter, research
+  render or album reference as a supported/qualified product feature.
 - [ ] Provide a local ad-hoc-signed build/install path with ownership checks and
   safe uninstall. Do not add paid signing, notarization, installers, or public release.
 - [ ] Audit zero-spend compliance, dependency notices, source/distribution obligations,
@@ -921,11 +1303,18 @@ Depends on: successful PR 09 qualification, or explicitly limited no-go document
    Logic audio+MIDI route, otherwise stop early.
 2. **Requirements/data gate (PR 02):** freeze acceptance and obtain credible sources/
    listeners. Without them, only synthetic feasibility can be claimed.
-3. **Architecture gate (PRs 03–06):** bounded comparison, one tuning cycle, and
-   independent assessment. No engine purchase.
-4. **Product/host gate (PRs 07–08):** proceed only after architecture go-decision.
-5. **Hardware/acceptance gate (PRs 09–10):** all required manual and measured
-   observations must exist before declaring success.
+3. **Development preference gate (PR06A):** version/approve the studio scope,
+   listening/source protocol and bounded candidate list; prepare a safe small
+   comparison. User preference guides feasibility, not formal acceptance. No
+   holdout, private-preflight bypass or engine purchase.
+4. **Studio architecture gate (PR06B):** formal versioned ±12/scale/studio
+   qualification, independent references/listening and all retained technical
+   gates; explicit user-approved go. The original combined no-go is preserved.
+5. **Product/host gate (PRs 07–08):** proceed only after the studio architecture
+   go, then qualify actual recorded-vocal AU behavior; no automatic installation.
+6. **Studio session/acceptance gate (PRs 09–10):** all required manual/measured
+   studio observations must exist before declaring the limited milestone complete.
+   Live/MIDI/±24 qualification is separate future work, not silently passed.
 
 PRs 03 and 04 can be separate independent work streams after PR 02, but this plan
 does not authorize subagent spawning. No other feature branches are implied.
@@ -934,6 +1323,12 @@ If no no-cost engine meets the approved quality/latency/range simultaneously,
 deliver reproducible failures and options to the user: stop, explicitly revise a
 requirement, or separately scope new research. **Do not reinterpret the zero-spend
 constraint as permission to compromise the fixed brief without approval.**
+
+The 2026-10-24 studio-first decision is such an explicit priority/range/artistic
+revision, not evidence that an engine now passes. The next exact task is PR06A's
+versioned scope/listening-source protocol and small candidate proposal, **not**
+another full matrix, AU integration or re-opening the holdout. A failed studio
+pilot/qualification returns to a user decision rather than an automatic new search.
 
 Cannot conclude yet: real-vocal quality, full-range live feasibility, three-voice
 headroom, actual analog monitoring latency, final Logic recall/bounce reliability,

@@ -1,0 +1,40 @@
+{
+  "schema": "voxide.studio-pilot-scope.v1",
+  "id": "pr06a-studio-001",
+  "status": "proposal_not_product_qualification",
+  "direction": {"approved_by": "user", "date": "2026-10-24", "scope": "Recorded-vocal scale mode first; minimum inclusive +/-12; intentionally processed vocal character"},
+  "historical_baselines": [
+    {"path": "docs/evidence/pr-02/contract.json", "sha256": "4d4edbf5c5061428a25a2fcf3412c519e259cedf3a9b5e0e3042e8321b2d739a"},
+    {"path": "docs/evidence/pr-03/musical-contract.json", "sha256": "2b07e85177a232980534381ea6bda2ad51daea35056e81e42419ea8c894a183f"},
+    {"path": "docs/evidence/pr-05/protocol.json", "sha256": "1088a2dd8862a216d40b3face25c7b7cef1dcb504086f1c72b71e3abcfd05a47"}
+  ],
+  "support": {"input_midi_min": 40, "input_midi_max": 84, "sample_rates": [44100, 48000], "shift_semitones_min": -12, "shift_semitones_max": 12, "harmony_voices": 3, "original_lead": "unchanged except declared gain/alignment", "mode": "scale"},
+  "retained": {
+    "processing_studio_ceiling_ms": 100,
+    "accurate_pdc_required": true,
+    "pitch_tolerance_cents": 25,
+    "stable_accuracy_min": 0.99,
+    "octave_error_fraction_max_exclusive": 0.001,
+    "wrong_note_duration_ms_max": 50,
+    "callback_allocation_calls_max": 0,
+    "callback_occupancy_p999_max_exclusive": 0.5,
+    "overdue_callbacks_max": 0,
+    "nonfinite_samples_max": 0,
+    "lead_null_max_abs": 0.000001,
+    "lead_null_rms": 0.0000001,
+    "native_repeat_max_abs": 0.000001,
+    "native_repeat_rms": 0.0000001,
+    "intentional_bends_and_rhythm": "preserve; do not retune lead or flatten challenge c",
+    "uncertainty": "retain PR03 inactive pitched targets on uncertain/unvoiced source; do not silently hold the last target",
+    "range_policy": "disable a target outside inclusive +/-12; do not clamp into a different intended note"
+  },
+  "deferred_not_passed": ["live processing/monitoring qualification", "MIDI-mode product qualification", "+/-24 coverage", "AU integration until PR06B go"],
+  "pending_protocol_or_evidence": {
+    "processed_character_and_formants": "User preference is developmental. Original formant diagnostics retained; numerical timbre/formant acceptance and revised listening rubric require separate PR06B approval.",
+    "recorded_onset_and_transition": "Record analysis, native, source and delivery clocks. Preserve original response targets diagnostically; no replacement numerical response threshold approved here.",
+    "human_pitch_accuracy": "Pending trustworthy independent references; automatic tracker output is not truth.",
+    "independent_listening": "Pending formal listeners and approved PR06B protocol.",
+    "host_and_performance": "No Logic/PDC/callback acceptance inferred from a file preview. Offline diagnostic allocations do not waive the AU callback gate."
+  },
+  "product_acceptance": "pending; a liked preview cannot make failed or missing gates pass"
+}

@@ -138,3 +138,246 @@
   merge of PR 03. Recognition timing misses and deferred reference/listening/Logic
   gates remain open; this is not architecture or product acceptance. Nothing is
   pushed or installed, and private evaluation data remains excluded from Git.
+
+## Studio-first direction — user clarification, 2026-10-24
+
+This is a **product-priority and artistic-direction decision**, not a new engine
+selection, passing qualification report or authorization to execute audio/host work.
+The implementation checklist remains `docs/PROJECT_PLAN.md`; this entry records
+why that checklist changes rather than creating a competing plan.
+
+### Confirmed in conversation
+
+- **First useful workflow:** processing recorded vocals is a higher priority than
+  harmonies while singing live. Live remains a later goal, not a solved or cancelled
+  requirement. A clearly labeled studio milestone may now be pursued separately
+  from the original combined live/mixing brief.
+- **First musical mode:** scale mode, with user-selected key/scale. MIDI mode is
+  deferred for the first milestone; retain its existing implementation/state and
+  evidence, without promising it is qualified or deleting compatibility.
+- **Minimum shift range:** inclusive **−12 to +12 semitones per harmony**; a smaller
+  supported range is unacceptable. Prior ±24 coverage becomes deferred rather
+  than silently inherited as achieved support. Input E2–C6, 44.1/48 kHz, exactly
+  three available generated voices and an unchanged original lead are retained.
+  For ±12, mathematical output endpoints are approximately 41.2–2093 Hz.
+- **Artistic reference:** Brian Eno, *Another Day on Earth*, “Bottomliners,”
+  approximately **1:30–2:00**. The user primarily values the **processed vocal
+  character**, rather than the particular harmony note choices. The user's
+  association with the DigiTech Vocalist is context, not independently verified
+  gear provenance or an algorithm-recreation requirement. The assistant has not
+  auditioned or analyzed the cited passage; do not invent its voicings/settings.
+- **Timbre goal:** an appealing, intentional electronic harmony texture is welcome;
+  three indistinguishable human backing singers are not the first objective.
+  This does not authorize wrong pitches, flattened intentional bends, damaged
+  articulation, clicks, bursts, unstable output or nonfinite samples. It does not
+  authorize processing/tuning the original lead or adding a masking effects suite.
+- **Next milestone:** a small studio-first listening prototype before further
+  product features or a large new matrix. Compare actual sound and objective
+  diagnostics, not synthetic scores alone. A preferred demonstration is not
+  formal acceptance or an automatic go for AU integration.
+
+### Retained boundaries and unresolved protocol work
+
+- Zero spend, existing pinned engine families, privacy/consent, no automatic key
+  detection, explicit source-time alignment, controlled gain/headroom and honest
+  evidence remain. No new engine, upstream patch, package, purchase or install is
+  authorized by this clarification.
+- Retain the existing **≤100 ms complete studio processing ceiling and accurate
+  PDC** as the planning budget; no greater delay is approved. This is not permission
+  to conceal late/wrong notes or imply an acceptable physical monitoring route.
+  Live processing/monitoring and MIDI response gates are deferred, not passed.
+  Recorded-vocal onset/transition correctness still needs explicit assessment;
+  do not silently replace the original response thresholds with new ones.
+- The original PR02 contract, PR03 musical contract, frozen fixtures, protocols
+  and all PR03–05/architecture results remain immutable historical baselines.
+  Existing tools still grade their original contract. They do **not** implement
+  or certify the revised studio scope merely because this decision is documented.
+- Before a new trial, PR06A must version the studio scope and declare which gates
+  are unchanged, deferred, or pending protocol approval. Pitch/correctness, safety,
+  repeatability, host and callback requirements are not waived. Naturalness and
+  strict formant-preservation scoring must be reviewed explicitly for this artistic
+  target; no new numerical timbre threshold or formant-changing algorithm is
+  approved here, and coloration cannot be used to excuse a defective shift.
+- A **development listening-only** route without completed pitch annotations is a
+  proposed protocol, not an implemented exception to existing private preflight.
+  Approve its source selection, permission/hash binding, safe playback preparation
+  and evidence labels before any private render or playback. Such preferences
+  would not provide F0 truth, independent ratings or holdout acceptance. Formal
+  pitch claims still require trustworthy references; missing references stay pending.
+- Required expressive/rhythmic clip c remains in development assessment once the
+  relevant protocol is approved; do not exclude it, flatten bends, invent annotations
+  or open the holdout for the pilot. All private derivatives remain under ignored
+  `evaluation/`. No commercial reference audio is to be copied into the repository.
+
+### Consequence for sequencing
+
+Keep PRs 00–05 and the bounded architecture investigation as research milestones
+with their negative results intact. Split PR06 into **06A studio timbre/feasibility
+pilot** and **06B versioned studio qualification/architecture decision**. PR07 AU
+integration stays blocked until 06B's explicit user-approved studio go. PR08–10
+then qualify and label the recorded-vocal scale workflow, not the full original
+live/MIDI/±24 product. No engine or treatment has been selected, no prototype has
+been heard, and no new acceptance, implementation or commit is implied by this
+documentation update.
+
+### PR06A preparation — proposed, not yet approved or rendered
+
+On 2026-10-24, prepared versioned `pr06a-studio-001` / `pr06a-listening-001`
+proposals under `docs/evidence/pr-06a/`. Candidate proposal: existing Signalsmith
+2048/512 and Rubber Band R3 short, native consonant handling and unchanged formant
+settings, 100 ms aligned reserve and the approved third/fifth/octave voicing.
+Both have retained 100 ms scale-subset delivery passes **and** quality failures;
+Rubber Band callback allocations/reset issues remain blockers, not exceptions.
+
+Initial source proposal is the existing permitted 12-second development excerpt a
+at native 48 kHz; exact identity/consent/hash and retained evidence are in ignored
+`evaluation/pr-06a/proposal-*/proposal.json`, not public JSON. Key/scale is still
+user-selected/pending. Preparation reads corpus metadata and synthetic reports
+only, not the audio payload or annotation templates. No source identity has been
+verified by decoding, no listening-only exception is approved, and no renderer,
+playback or formal vocal grade is implemented by that proposal. Current formal
+preflight and all historical contracts stay unchanged. See `docs/STUDIO_PILOT.md`.
+
+**Subsequent explicit approval (2026-10-24):** in the interactive trial question,
+the user chose “Approve pilot” and “C major diagnostic.” This authorizes the
+exact excerpt-a/two-candidate/100 ms/three-harmony listening-only comparison,
+including unannotated preference rendering, **after** implementation/safety checks.
+The receipt under ignored `evaluation/pr-06a/proposal-20261024T143509Z-3ba459d6/`
+binds proposal/scope/protocol hashes and the diagnostic key. It is not a claim that
+C major matches the recording. No other source (including c), playback, installation,
+holdout use, formal accuracy or product go is authorized. The proposal JSON remains
+immutable; the separate receipt records approval. Existing formal preflight is unchanged.
+
+**Initial comparison executed after safety checks:** both candidates produced
+previews passing finite/level/null/control/delivery/tail export checks at ignored
+`evaluation/pr-06a/listening-20261024T151731Z-aecf92a7/`. No corrective private
+rerender, automatic playback or other source access occurred. The nine preview
+files are for manual development preference only; no human F0 grade, independent
+listening or actual-excerpt repeatability is claimed. Rubber Band callback
+allocations remain failed, not waived by the file preview. User feedback, c,
+complete range/formal qualification and product go remain pending. Full validation
+and reproduction notes are in `docs/STUDIO_PILOT.md`.
+
+**Initial subjective feedback (2026-10-24):** the user prefers Rubber Band, with
+wording interpreted as a small/non-decisive difference, reports no distracting
+artifacts on this comparison, and says the result sounds really good. The exact
+wording is preserved privately with report/preview bindings; no numeric rating or
+defect timestamps are invented. Both the positive artistic signal and the known
+technical failures stand. Do not spend more effort exaggerating a small sonic
+difference; prioritize engineering suitability before selecting an engine. This
+is not independent qualification, a technical waiver, approval for c/other renders
+or a go for AU integration.
+
+**Bounded engineering follow-up (2026-10-24):** user requested continuation of CPU,
+repeatability and reset assessment. The fixed synthetic comparison at
+`build/studio-engineering/20261024T173710Z-7dee2ad8/report.json` completes 16
+invocations/48 captures/60 exact waveform comparisons. Both pass the observed
+callback-budget and stopped-reconstruction/repeat screens, with no overdue callback.
+Signalsmith 2048/512 has zero callback allocations and lower observed callback cost;
+Rubber Band R3 short allocates in every capture (2,496 calls total). This supports
+**Signalsmith as a provisional engineering front-runner for further tests**, not a
+final engine or PR06B go. Keep Rubber Band as the user's listening preference/reference.
+Passing stopped graph reconstruction does not repair or qualify native `reset()`
+or audio-thread host handoff. No sound tuning, extra private audio access/render,
+clip-c permission, install, playback, upstream patch or commit is inferred. Seek
+explicit clip-c approval before the next listening step. Full methods, caveats,
+qualification paths and per-point CPU results are in `docs/STUDIO_PILOT.md`.
+
+**Clip-c follow-up approval (2026-10-24):** after reviewing the synthetic engineering
+results, the user explicitly said yes to the same two-candidate comparison on
+clip c, diagnostic C major, listening-only without annotations or automatic playback.
+The additive `pr06a-clip-c-001` protocol and a new private approval.v2 receipt bind
+the original settings plus registered development source index 2. Original a
+artifacts/consumed claim and public scope/protocol are immutable; the v1 receipt
+does not acquire permission for c. Formal F0/independent listening and engine go
+remain pending. No additional sources, key detection, DSP/preset change, flattened
+bends, playback, installation, holdout, commit/merge/push or acceptance is implied.
+
+**Clip-c initial execution:** both native runs complete with finite output and
+intact delivery/provenance, but the Rubber Band mix exceeds the conservative 0.5
+preview ceiling. No intended preview reaches digital full scale; this is not a
+confirmed clipping/artifact defect. The package is withheld and the original
+source-specific report, raw outputs and diagnostics stay unchanged under ignored
+`evaluation/pr-06a/listening-20261024T180305Z-d5b0ddb2/`. No output repair, gain change,
+private rerender or automatic playback occurred. A common fixed half-level export
+or partial Signalsmith-only export requires the next explicit user approval;
+formal quality/engine selection is not inferred from this guard outcome.
+
+**Clip-c playback-export amendment (2026-10-24):** the user selected **Half-level
+export (Recommended)**: apply exactly one common 0.5 playback scalar to retained
+dry, both complete mixes and all mix-gain harmony stems. No DSP rerender, limiter,
+per-engine normalization, altered relative mix or changed 0.5 preview ceiling.
+`pr06a-clip-c-half-level-001` and a separate private hash-bound approval authorize
+only an additive retained-output package; the original failed export result,
+raws, consumed render claim and historical protocols remain unchanged. Preserve
+nonfinite/full-scale/delivery/provenance failures; the amendment is not a formal
+quality or engineering waiver. No automatic playback, new sources, commit or go.
+
+**Half-level export completed:** the separate retained-output package at ignored
+`evaluation/pr-06a/playback-half-20261024T183809Z-647c08bb/` contains nine verified
+12.6-second previews at the identical common 0.5 playback scalar. Both candidates
+pass the export guards at this playback level; the original withheld run and all
+243 original artifact hashes are unchanged. Full checks/148 Python tests pass;
+native binaries are unchanged. No DSP rerender, automatic playback or independent
+listening occurred. Next is manual clip-c user feedback, not a new rendering loop
+or product go. Rubber Band callback allocations and all pending formal/host gates
+remain separately failed/pending.
+
+**Clip-c subjective feedback (2026-10-24):** the user tentatively prefers Rubber
+Band again, but explicitly considers the difference minimal and does not care
+which engine is selected from a subjective sound standpoint. The preference is
+non-decisive; do not manufacture a stronger ranking or continue tiny A/B tuning.
+Signalsmith remains the provisional engineering front-runner on lower measured
+callback cost/zero observed callback allocations, with Rubber Band retained as the
+sonic reference. This statement supplies no independent listening, artifact/bend
+rating, pitch truth, final selection or PR06B approval. Exact feedback is bound
+privately to the common-half-level package; all prior evidence stays unchanged.
+Further private renders, DSP tuning, product integration and commits are not
+authorized by this feedback.
+
+**Bounded verification planning (2026-10-24):** the user authorized continuation of
+defining the next checks. `docs/STUDIO_VERIFICATION.md` and
+`pr06a-signalsmith-verification-001` now separate (A) synthetic meter/pitch attribution
+and eventful delivery, (B) newly authorized source-bound vocal repeats, and (C) an
+explicitly approved evaluation-only host route. A is proposed at 36 measurement
+fixtures and at most 88 native captures, with no correction or parameter sweep;
+none of these proposed runs is executed or approved by the planning artifact.
+Retained historical scale/mix pitch misses stay visible despite passing delivery;
+current guard/observer differences prevent simply regrading them as studio passes.
+No new numerical onset/formant thresholds, private exception, consumed-receipt reuse,
+AU install/Logic operation or product integration is authorized. Full-support,
+independent human and host gates remain open; explicit PR06B go is still required.
+
+**Synthetic execution approval and review pause (2026-10-24):** the user approved
+synthetic-only tests, conditional on stopping for review if needed. A fresh
+read-only reviewer in the requested bottom-right Herdr pane then found five
+tooling bugs, all independently reproduced by the main agent with synthetic
+fixtures. `docs/evidence/pr-06a/review-001.md` records receipt replay, proposal
+containment, telemetry completeness, duration and fixed-sum validation findings.
+Stage A stays paused for repairs/regressions and review of the fixes. No fixes,
+new native runs or private payload access occurred. These findings do not prove
+retained-audio corruption or change the provisional engine lead; private replay,
+host operation, product integration and commit/merge/push remain unapproved.
+
+**Tooling repairs accepted (2026-10-24):** on the user's fix request, all five
+review findings were repaired with negative regressions and closed by follow-up
+read-only review, including relocated legacy proposals and forged/backdated output
+packets. Full four-profile product qualification and **165 Python tests** pass;
+45 studio tests now cover the original failures and follow-up edge cases. Additive
+revalidation of retained synthetic artifacts passes the new checks without changing
+old results or waiving Rubber Band allocations. See
+`docs/evidence/pr-06a/review-fixes-001.md`. Engine DSP/parameters/binaries, private
+recordings/outputs/claims and historical contracts remain unchanged. No Stage A
+or new candidate render has executed. Next is the already approved synthetic-only
+Stage A implementation/calibration, not renewed permission for that same scope.
+New private replay, host operation, product go and commit/merge/push remain separate.
+
+**Local research commit/merge authorization (2026-10-24):** after the tooling fixes,
+165 Python/full-product checks and independent review closure, the user explicitly
+requested commit and merge. This authorizes committing the current architecture /
+studio-pilot tooling and locally merging `research-architecture-feasibility` into
+`main`, including its previously branch-only PR05 dependency `dda47a7`. It preserves
+the negative research results and pending studio gates; it is not final engine
+selection, a PR06B product go, AU integration/installation, new private rendering,
+playback or host operation. The existing synthetic-only Stage A approval remains
+separate from the merge. No push or remote publication is authorized.

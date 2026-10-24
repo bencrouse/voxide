@@ -27,6 +27,7 @@ foreach(index RANGE 0 2)
 endforeach()
 set(identity_files InteractionEvaluation/CMakeLists.txt InteractionEvaluation/InteractionProcessor.cpp
     InteractionEvaluation/InteractionProcessor.h InteractionEvaluation/InteractionProbe.cpp InteractionEvaluation/InteractionTests.cpp
+    InteractionEvaluation/EngineeringProbe.cpp InteractionEvaluation/EngineeringProbe.h
     Source/DSP/PitchTracker.cpp Source/DSP/PitchTracker.h Source/DSP/HarmonySelector.cpp Source/DSP/HarmonySelector.h
     EngineEvaluation/EngineAdapter.cpp EngineEvaluation/EngineAdapter.h Source/Tests/AllocationAudit.cpp Source/Tests/AllocationAudit.h
     cmake/engine-dependencies.json)
@@ -46,7 +47,7 @@ target_include_directories(interaction_contract_tests PRIVATE "${root}/Source/Te
 target_link_libraries(interaction_contract_tests PRIVATE interaction_core engine_allocation_audit)
 add_test(NAME interaction_contract COMMAND interaction_contract_tests)
 foreach(engine IN ITEMS signalsmith rubberband)
-    add_executable(voxide_${engine}_interaction InteractionProbe.cpp "${root}/EngineEvaluation/EngineAdapter.cpp")
+    add_executable(voxide_${engine}_interaction InteractionProbe.cpp EngineeringProbe.cpp "${root}/EngineEvaluation/EngineAdapter.cpp")
     target_include_directories(voxide_${engine}_interaction PRIVATE "${root}/Source/Tests")
     target_compile_options(voxide_${engine}_interaction PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_definitions(voxide_${engine}_interaction PRIVATE VOXIDE_ENGINE_${engine}=1

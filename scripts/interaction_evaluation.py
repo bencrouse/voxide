@@ -27,6 +27,7 @@ from evaluation_metrics import percentile, cents, measure_unity_delay
 IDENTITY_FILES = sorted([
     "InteractionEvaluation/CMakeLists.txt", "InteractionEvaluation/InteractionProcessor.cpp", "InteractionEvaluation/InteractionProcessor.h",
     "InteractionEvaluation/InteractionProbe.cpp", "InteractionEvaluation/InteractionTests.cpp", "Source/DSP/PitchTracker.cpp", "Source/DSP/PitchTracker.h",
+    "InteractionEvaluation/EngineeringProbe.cpp", "InteractionEvaluation/EngineeringProbe.h",
     "Source/DSP/HarmonySelector.cpp", "Source/DSP/HarmonySelector.h", "EngineEvaluation/EngineAdapter.cpp", "EngineEvaluation/EngineAdapter.h",
     "Source/Tests/AllocationAudit.cpp", "Source/Tests/AllocationAudit.h", "cmake/engine-dependencies.json"])
 CHANNELS = ("lead-direct", "lead-aligned", "native1", "native2", "native3", "voice1", "voice2", "voice3", "sum-direct", "sum-aligned")

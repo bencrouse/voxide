@@ -43,6 +43,9 @@ struct Settings
     Treatment treatment = Treatment::native;
     Profile profile = Profile::mix;
     HarmonyConfig harmony;
+    // Explicit research controls; defaults retain the historical PR05 ablation.
+    int shiftLimit = 24;
+    bool inactiveUncertain = false;
     bool operator==(const Settings& other) const noexcept;
 };
 // All event times are epoch-local source samples. Oracle frames are available at
@@ -93,7 +96,8 @@ public:
     ~Processor();
     bool configureStopped(Settings);
     bool resetStopped();
-    void start() noexcept;
+    // Finalization is terminal for the native graph; reset/reconfigure before restart.
+    void start();
     void stop();
     Output push(float);
     bool post(const Event&) noexcept;

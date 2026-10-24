@@ -1,0 +1,16 @@
+{
+  "schema": "voxide.architecture-investigation.v1",
+  "baseline_commit": "dda47a7",
+  "scope": "One bounded zero-cost architecture batch; at most one corrective retest, no product integration or new engine families",
+  "unchanged_contract": "docs/evidence/pr-02/contract.json",
+  "measurement": "Independent full-range positive-crossing period/purity screen on analytic sine controls alongside calibrated NACF. Short-response observer validated on known immediate/delayed/wrong-note synthetic controls, completed 20ms dwell and packet availability included. Ambiguous or insufficient-support output stays unresolved, not an engine failure or pass.",
+  "timing": "Compare PR05 half-support+hop hold with one zero-input-hold, source-referenced schedule. Source time = native input begin minus queried control lag. Actual MIDI selector state, setter and observed output clocks separate. No future pitch frames or target events may be used.",
+  "additional_preset": "Signalsmith 256/32 only, user-authorized bounded investigation; no wider sweep",
+  "native": "Seeded identical three-voice calls, Accelerate vs pinned built-in backend; cold/warmed fresh-graph comparison; one Rubber Band short oracle and changing-ratio stack trace at 48kHz. Corrective retest additionally checks same-instance stopped workload priming/reset against eventful fresh output. No upstream patches; nonfinite raw output retained and disqualifying.",
+  "corrective_retest": "One rerun: preserve nonfinite raw samples/counters rather than only fail-fast diagnostics; bound response observations before the next event; add same-instance stopped priming/reset test. No extra preset, acquisition variant or tuning sweep.",
+  "tracking": "Only after oracle timing passes: one causal trailing-history schedule using unchanged tracker support/voicing; skip further tuning if recognition/quality/timing fails. No prediction or retroactive correction.",
+  "screen": "Both rates; representative E2/A3/C6 and inclusive +/-24-semitone extremes plus common-shift changes; focused falsification, not full vocal qualification",
+  "stop": "No broad matrix before valid instruments. No tracker work if oracle timing fails. Persistent native nondeterminism/allocation or quality failure blocks candidate. No survivor means no-go under tested scope, not universal impossibility. Mixing-only does not rescue live brief.",
+  "pending": "Full formant/articulation/vocal, clip c, independent listening, Logic PDC and physical monitoring require a technical survivor and real human/host resources. No private audio access in this batch.",
+  "safety": "No expenditure, installation, package management, AU linkage, device/audio playback/capture, uploads, holdout access, commits, merges or pushes"
+}
