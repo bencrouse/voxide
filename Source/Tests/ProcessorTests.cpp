@@ -8,6 +8,7 @@
 #include <cstring>
 void runTrackingProcessorTests();
 void runStudioUiTests();
+void runStateRecoveryTests();
 
 namespace
 {
@@ -85,6 +86,22 @@ void stateMigration()
     require(after==installed,"Malformed state partially applied");
     constexpr char eval[]="voxide-studio-eval-v1";p.setStateInformation(eval,sizeof(eval));p.getStateInformation(after);
     require(after==installed,"Evaluation state silently reinterpreted");
+    constexpr char v1[]="voxide-shell-v1";
+    auto distinct=[&]
+    {
+        set(p,"sourceBus",1);set(p,"scaleRoot",9);set(p,"scaleSet",1);
+        set(p,"voiceEnabled1",1);set(p,"voiceLevel1",-6);set(p,"originalLevel",-12);
+    };
+    distinct(); // A no-op v1 implementation must not satisfy the defaults check.
+    p.setStateInformation(v1,sizeof(v1));
+    require(same(p.getParameters()[0]->getValue(),0.f),"v1 default routing changed");
+    for (int i=0;i<30;++i)
+    {
+        const float expected=(i==23 || i==25 || i==27)?0.f:p.getParameters()[i]->getDefaultValue();
+        require(same(p.getParameters()[i]->getValue(),expected),"v1 migration changed defaults or enabled harmonies");
+    }
+    distinct();juce::MemoryBlock nondefault;p.getStateInformation(nondefault);
+    p.setStateInformation(v1,sizeof(v1)-1);p.getStateInformation(after);require(after==nondefault,"Truncated v1 state changed settings");
 }
 void layoutContracts()
 {
@@ -211,7 +228,7 @@ int main(int argc,char** argv)
         if (argc==2 && juce::String(argv[1])=="--ui") { runStudioUiTests();return 0; }
         require(argc==1,"Unknown product test mode");
         if (voxide::audit::available) require(voxide::audit::selfTest(),"Allocation detector failed");
-        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();voicesAndFaults();rangeAndFiniteContracts();
+        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();voicesAndFaults();rangeAndFiniteContracts();runStateRecoveryTests();
         require(studioTest::wrongOwner.load()==0 && studioTest::living.load()==0,"Native ownership/lifetime escaped worker");
         std::cout<<"PR07 product contracts passed; no install, private audio, device or Logic\n";return 0;
     }

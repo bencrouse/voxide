@@ -565,3 +565,16 @@ pass. New signed product/source/log artifact:
 corrections are in `docs/evidence/pr-07/implementation-001.md`. No independent PR07
 review or new product Logic operation is claimed. Deferred qualification and
 historical failures remain unchanged; nothing is merged, pushed or installed.
+
+**PR07 review/fix authorization and outcome:** the user requested a separate
+OpenCode review in the bottom-right Herdr pane, then explicitly requested fixes.
+Reviewer `pr07-review` examined `fb233d8..330fe8f` read-only and found three P2
+state/preparation/recovery defects plus test gaps. Original findings and fix
+verification are preserved in `docs/evidence/pr-07/review-001.md` and
+`review-fixes-001.md`. The same reviewer confirmed the production fixes and
+strengthened fixture gaps addressed at source level, without executing tests.
+Parent Debug/Release eight-check and ASan/TSan four-check suites pass, including
+209 Python tests per tooling run. Delivery `build/pr-07-artifacts/ready-20261025-02/`
+is separate from the unchanged original. No host IDs, ranges/defaults, v4 state
+bytes, backend or qualification requirements change. Formal measured qualification
+stays deferred; no merge, push, installation or private replay is authorized.

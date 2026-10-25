@@ -1315,6 +1315,16 @@ checks pass, including 209 Python tests in each tooling run; four focused contra
 each pass under ASan/TSan. Final logs: `build/pr-07-validation/final-003/`.
 Preserved signed product/source/log artifact: `build/pr-07-artifacts/ready-20261025-01/`.
 
+**Independent-review follow-up:** the separate OpenCode reviewer found three P2
+state/recovery defects and test gaps in `330fe8f`; original findings are preserved
+in `docs/evidence/pr-07/review-001.md`. Fixes and stronger regressions are verified
+by the same reviewer at source level; eight Debug/Release checks each, four
+ASan/TSan checks each and 209 Python tests pass. See
+`docs/evidence/pr-07/review-fixes-001.md`; latest logs:
+`build/pr-07-review-fixes/validation-002/`, signed delivery:
+`build/pr-07-artifacts/ready-20261025-02/`. Original artifacts remain unchanged;
+no merge, installation or formal qualification is inferred.
+
 **Agent handoff — update before merge**
 - Major decisions: product identity unchanged, version 0.2.0; first 23 parameters
   preserved, seven hint-3 mixer parameters appended; v4 state and dry-safe migration.

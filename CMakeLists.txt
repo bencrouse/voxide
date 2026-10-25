@@ -86,7 +86,7 @@ add_executable(voxide_dsp_tests Source/Tests/PassThroughTests.cpp Source/Tests/T
 target_link_libraries(voxide_dsp_tests PRIVATE voxide_dsp voxide_allocation_audit)
 add_test(NAME dsp COMMAND voxide_dsp_tests)
 juce_add_console_app(voxide_processor_tests PRODUCT_NAME "voxide_processor_tests")
-target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp Source/Tests/StudioUiTests.cpp)
+target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp Source/Tests/StudioUiTests.cpp Source/Tests/StateRecoveryTests.cpp)
 target_compile_definitions(voxide_processor_tests PRIVATE VOXIDE_TEST_OUTPUT_DIR="${PROJECT_BINARY_DIR}/test-output/diagnostics")
 target_link_libraries(voxide_processor_tests PRIVATE voxide_processor voxide_allocation_audit)
 add_test(NAME processor COMMAND voxide_processor_tests)

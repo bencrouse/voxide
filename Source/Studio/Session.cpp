@@ -153,15 +153,25 @@ struct Session::Graph
 Session::Session(int r,Factory f) : rate(r),factory(f)
 {
     if ((r!=44100 && r!=48000) || !f) throw std::invalid_argument("Unsupported studio session");
-    slots[0]=std::make_unique<Graph>(r,f);active=slots[0].get();
-    slots[1]=std::make_unique<Graph>(r,f);ready.store(slots[1].get(),std::memory_order_release);
+    try
+    {
+        slots[0]=std::make_unique<Graph>(r,f);active=slots[0].get();
+        slots[1]=std::make_unique<Graph>(r,f);ready.store(slots[1].get(),std::memory_order_release);
+        current.status=Status::ready;
+    }
+    catch (...) { buildFailed.store(true,std::memory_order_release);current.status=Status::failed; }
+    // Keep a coordinator even after native/worker setup fails. Only an explicit
+    // recovery request permits another attempt; the callback never constructs it.
     builder=std::thread([this]{buildLoop();});
 }
 Session::~Session() { stop.store(true,std::memory_order_release);if (builder.joinable()) builder.join(); }
 void Session::buildLoop() noexcept
 {
+    unsigned recovered=0;
     while (!stop.load(std::memory_order_acquire))
     {
+        const auto requested=recoveryRequested.load(std::memory_order_acquire);
+        if (requested!=recovered) { recovered=requested;buildFailed.store(false,std::memory_order_release); }
         Graph* old=nullptr;
         while (retired.pop(old)) for (auto& slot:slots) if (slot.get()==old) { slot.reset();break; }
         if (!ready.load(std::memory_order_acquire) && !buildFailed.load(std::memory_order_relaxed))

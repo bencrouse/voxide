@@ -51,6 +51,10 @@ No engine/preset shopping, new dependency, research retry or private render occu
   repeated resets may exhaust the spare and temporarily mute harmonies visibly.
   Host prepare/release/destruction require render stopped/joined. Pinned JUCE's
   wrapper callback lock remains; **whole-AU lock freedom is not qualified**.
+- Explicit recovery retries failed native/worker setup and spare construction on
+  the off-render coordinator. Failed builds do not retry on every callback. If
+  the coordinator/session cannot initialize, the editor disables restart and asks
+  for host re-preparation; it does not advertise an ineffective recovery action.
 - Manual restart/recall and ordinary AU bypass preserve queued original audio.
   Bypass emits unity aligned original. Observed source changes, seek/loop,
   stop/resume, offline transition or explicit non-bypass host reset clear history.
@@ -98,14 +102,19 @@ musical values retain their defined meanings. New 100 ms alignment is declared
 for PDC rather than silently pretending the old zero-latency shell remains.
 Evaluation-AU state is rejected, never silently reinterpreted.
 
-State serialization/recall use a non-render mutex. Recall marks an atomic
-generation odd while applying parameters, even when committed. The renderer
+State serialization/recall and preparation's initial snapshot use a non-render
+mutex. Recall marks an atomic generation odd while quietly applying parameters,
+then publishes even generation **before** notifying listeners. The renderer
 performs one bounded read and keeps its previous complete snapshot if recall
 overlaps; it never locks, spins, or applies a partial transaction. Normal host/UI
 parameter gestures use JUCE attachments and host notifications. Automation is
 callback-granular; sample-accurate sub-block automation is not promised. Recall
 concurrent with automation follows host callback ordering/last-writer behavior;
 it is not an atomic transaction spanning arbitrary independent automation writers.
+Reentrant saves during notifications see the complete published state. Nested
+restores are coalesced last-wins into one deferred recall after the outer listener
+batch. Further requests from that deferred batch's listeners are ignored, bounding
+recursive listener cycles. Both applied states are complete, never interleaved.
 
 ## Native editor and validation
 
@@ -136,7 +145,7 @@ ctest --test-dir build/pr-07-release --output-on-failure
 `make reload-au` now builds/installs **this product AU**, not Studio Eval. It remains
 an explicitly user-invoked install/sign/auval operation, not part of branch work.
 
-## Completed implementation validation
+## Pre-review implementation validation (330fe8f; preserved)
 
 **Implementation complete on its branch, not merged/installed.**
 
@@ -161,6 +170,26 @@ Logs: `build/pr-07-validation/final-003/`.
 Signed component, source snapshot, logs, native UI images and hash manifest:
 `build/pr-07-artifacts/ready-20261025-01/`.
 [Closeout and self-review](evidence/pr-07/implementation-001.md).
+
+The subsequent [independent review](evidence/pr-07/review-001.md) found three P2
+state/recovery defects and two test gaps in that delivery. Original passing tests
+did not establish those missing guarantees. See the separate
+[review-fix record](evidence/pr-07/review-fixes-001.md); original artifact `-01`
+remains unchanged and is not silently promoted as evidence for the fixes.
+
+## Review-fixed validation
+
+The same independent reviewer verified R1/R2/R3 fixed at source level and closed
+the strengthened v1/concurrency/retry-policy test gaps. Detailed scope, bounded
+reentrancy policy and verification history are in the
+[fix record](evidence/pr-07/review-fixes-001.md). The reviewer executed no tests.
+
+Parent execution: **8/8 Debug and Release checks each**, **209 Python tests** per
+tooling run, and **4/4 ASan/TSan focused checks each** pass against the fixes.
+Logs: `build/pr-07-review-fixes/validation-002/`. New preserved signed component,
+source snapshot, logs/images and hashes:
+`build/pr-07-artifacts/ready-20261025-02/`. Original `-01` stays unchanged.
+No additional qualification, installation, Logic operation, merge or push is implied.
 
 ## Boundaries retained
 

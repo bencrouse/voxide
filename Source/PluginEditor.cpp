@@ -71,6 +71,7 @@ public:
         }
         original=std::make_unique<Level>(parameter(p,"originalLevel"),"Original level (dB)","Aligned original only: declared gain, no tuning. -60 dB = silent; host bypass restores unity original.");
         addAndMakeVisible(original.get());restart.setButtonText("Restart harmonies");restart.setTooltip("Recover harmony workers without clearing queued original audio.");
+        restart.setComponentID("restartHarmonies");
         restart.onClick=[this]
         {
             auto& mode=parameter(owner,"harmonyMode");
@@ -114,13 +115,17 @@ private:
             case studio::Status::unsupportedRate:text="Unsupported rate - original only";break;
             case studio::Status::offlineUnsupported:text="Offline unsupported - original only";break;
             case studio::Status::midiUnsupported:text="Legacy MIDI mode - original only";break;
+            case studio::Status::initializationFailed:text="Initialization failed - re-prepare plug-in";break;
         }
         const auto tick=owner.renderTick();
         const bool fresh=tick>0 && juce::Time::highResolutionTicksToSeconds(juce::Time::getHighResolutionTicks()-tick)<.5;
         text+=fresh?" | "+juce::String(snapshot.hz,1)+" Hz | "+juce::String(juce::countNumberOfBits(snapshot.active))+"/3 active":" | no current callback";
         const auto peak=owner.inputPeak();text+="\nInput "+(peak>0?juce::String(juce::Decibels::gainToDecibels(peak),1):juce::String("-inf"))+" dBFS | provide headroom";
         status.setText(text,juce::dontSendNotification);
-        restart.setButtonText(snapshot.status==studio::Status::midiUnsupported?"Use scale harmonies":"Restart harmonies");
+        const bool needsPreparation=snapshot.status==studio::Status::initializationFailed;
+        restart.setEnabled(!needsPreparation);
+        restart.setButtonText(needsPreparation?"Re-prepare required":snapshot.status==studio::Status::midiUnsupported?"Use scale harmonies":"Restart harmonies");
+        restart.setTooltip(needsPreparation?"The recovery coordinator could not initialize. Stop rendering and re-prepare the plug-in in the host.":"Recover harmony workers without clearing queued original audio.");
     }
     Processor& owner;
     juce::Label title,warning,help,status;

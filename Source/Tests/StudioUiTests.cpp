@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "StudioTestSupport.h"
+#include "ProcessorTestAccess.h"
 #include "AllocationAudit.h"
 #include <iostream>
 void runStudioUiTests();
@@ -56,21 +57,40 @@ void runStudioUiTests()
     const auto images=juce::File(VOXIDE_TEST_OUTPUT_DIR).getSiblingFile("ui").getChildFile("capture-"+juce::Uuid().toString());
     require(images.createDirectory().wasOk(),"Cannot create unique UI snapshot directory");
     require(renderWithEditor(false)==renderWithEditor(true),"UI gestures/headless automation/recall changed production audio");
+    {
+        voxide::Processor unavailable(nullptr);unavailable.prepareToPlay(48000,128);
+        std::unique_ptr<juce::AudioProcessorEditor> editor(unavailable.createEditor());
+        const auto* recovery=dynamic_cast<juce::TextButton*>(find(*editor,"restartHarmonies"));
+        require(unavailable.studioStatus().status==voxide::studio::Status::initializationFailed
+            && recovery && !recovery->isEnabled() && recovery->getButtonText()=="Re-prepare required","Unrecoverable initialization offered an ineffective restart");
+    }
     voxide::Processor p(studioTest::factory);p.prepareToPlay(48000,128);
     juce::MemoryBlock initial;p.getStateInformation(initial);
-    std::atomic<bool> stop {false},failed {false};
-    std::atomic<unsigned> callbacks {0};
+    std::atomic<bool> stop {false},failed {false},recovered {false};
+    std::atomic<unsigned> callbacks {0},handoffs {0},settleAfter {std::numeric_limits<unsigned>::max()};
     std::thread render([&]
     {
         studioTest::renderThread=true;
         juce::AudioBuffer<float> audio(2,128);juce::MidiBuffer midi;
+        const void* previous=voxide::ProcessorTestAccess::graph(p);
         while (!stop.load())
         {
-            p.waitIdleForTest();
+            if (!p.waitIdleForTest()) failed.store(true);
             for (int i=0;i<128;++i) audio.setSample(0,i,.02f*std::sin(static_cast<float>(callbacks.load()*128+static_cast<unsigned>(i))*.0288f));
             voxide::audit::begin();p.processBlock(audio,midi);
             if (voxide::audit::end()!=0) failed.store(true);
             for (int i=0;i<128;++i) if (!std::isfinite(audio.getSample(0,i))) failed.store(true);
+            const auto* graph=voxide::ProcessorTestAccess::graph(p);
+            if (graph && previous && graph!=previous) ++handoffs;
+            if (graph) previous=graph;
+            const auto status=p.studioStatus();
+            if (callbacks.load()>=settleAfter.load() && status.status==voxide::studio::Status::ready && status.active==7)
+                for (int i=0;i<128;++i)
+                {
+                    const auto source=callbacks.load()*128+static_cast<unsigned>(i)-4800;
+                    const float dry=.02f*std::sin(static_cast<float>(source)*.0288f);
+                    if (std::abs(audio.getSample(0,i)-dry)>1e-5f) recovered.store(true);
+                }
             ++callbacks;std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
     });
@@ -117,6 +137,10 @@ void runStudioUiTests()
             const auto target=callbacks.load()+3;
             while (callbacks.load()<target) std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
+        settleAfter.store(callbacks.load()+128);
+        const auto limit=std::chrono::steady_clock::now()+std::chrono::seconds(10);
+        while (!recovered.load() && std::chrono::steady_clock::now()<limit) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        require(recovered.load() && handoffs.load()>0,"Concurrency test never recovered audible healthy workers/graph handoffs");
     }
     catch (...) { stop.store(true);render.join();throw; }
     stop.store(true);render.join();

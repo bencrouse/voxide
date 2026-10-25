@@ -5,6 +5,7 @@
 #include "DSP/HarmonySelector.h"
 #include "Studio/Session.h"
 #include <mutex>
+#include <optional>
 
 namespace voxide
 {
@@ -61,10 +62,13 @@ private:
     RenderSettings readSettings() noexcept;
     void resetMusical(const RenderSettings&) noexcept;
     HarmonyConfig musicalConfig() const noexcept;
+    void applyState(const std::array<float,30>&);
     PitchTracker tracker;
     HarmonySelector selector;
     std::atomic<unsigned> stateGeneration { 0 };
     std::recursive_mutex stateMutex; // State serialization only; never render.
+    bool recallingState=false,applyingDeferredState=false;
+    std::optional<std::array<float,30>> deferredState;
     RenderSettings renderedSettings;
     studio::Factory factory;
     std::unique_ptr<studio::Session> session;
@@ -100,5 +104,6 @@ private:
     std::array<juce::AudioParameterBool*,3> voiceEnabled {};
     std::array<juce::AudioParameterFloat*,3> voiceLevels {};
     juce::AudioParameterFloat* originalLevel=nullptr;
+    friend class ProcessorTestAccess;
 };
 }

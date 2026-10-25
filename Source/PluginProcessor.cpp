@@ -64,14 +64,20 @@ void Processor::prepareToPlay(double rate, int)
     const int latency=std::isfinite(rate) && rate>0 && rate<=384000?static_cast<int>(std::floor(rate*.1)):0;
     setLatencySamples(latency);leadDelay.assign(static_cast<std::size_t>(latency),0);leadPosition=0;
     diagnosticRate = rate;
-    renderedSettings=captureSettings();resetMusical(renderedSettings);
+    {
+        // Host preparation is off render. Wait for a complete recall instead of
+        // seeding the render cache/gain ramps with an in-flight transaction.
+        const std::lock_guard lock(stateMutex);
+        renderedSettings=captureSettings();
+    }
+    resetMusical(renderedSettings);
     voiceGains=renderedSettings.voiceGain;originalGain=renderedSettings.originalGain;
     diagnosticFrame=0;++diagnosticEpoch;held.fill(0);heldKnown=true;wasPlaying=false;
     lastHostSampleKnown=false;lastHostFrames=0;lastSource=renderedSettings.source;lastBypassed=false;lastOffline=false;
     renderedReset=resetGeneration.load(std::memory_order_acquire);renderedRestart=restartGeneration.load(std::memory_order_acquire);
     if (!juce::exactlyEqual(rate,44100.) && !juce::exactlyEqual(rate,48000.)) { renderStatus.store(studio::Status::unsupportedRate);return; }
-    try { session=std::make_unique<studio::Session>(static_cast<int>(rate),factory);renderStatus.store(studio::Status::ready); }
-    catch (...) { renderStatus.store(studio::Status::failed); }
+    try { session=std::make_unique<studio::Session>(static_cast<int>(rate),factory);renderStatus.store(session->snapshot().status); }
+    catch (...) { renderStatus.store(studio::Status::initializationFailed); }
 }
 
 void Processor::reset()
@@ -243,7 +249,7 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
         resetMusical(settings);
     }
     if (discontinuity) { std::fill(leadDelay.begin(),leadDelay.end(),0.f);leadPosition=0; }
-    if (session && (discontinuity || hostReset || harmonyRestart)) session->restart();
+    if (session && (discontinuity || hostReset || harmonyRestart)) session->restart(restart!=renderedRestart);
     if (session) session->begin(settings.harmony,settings.variant==0?TrackerVariant::yin:TrackerVariant::multiCandidate,offline,settings.harmony.midiMode);
     renderedReset=reset;renderedRestart=restart;lastOffline=offline;
     if (event.transportKnown != 0) wasPlaying = event.playing != 0;
@@ -409,6 +415,37 @@ void Processor::getStateInformation(juce::MemoryBlock& destination)
     }
 }
 
+void Processor::applyState(const std::array<float,30>& values)
+{
+    // Called under stateMutex, including reentrant host/listener calls. Coalesce
+    // nested requests into one last-wins deferred recall. Notifications from that
+    // deferred recall cannot schedule another, bounding recursive listener cycles.
+    if (recallingState)
+    {
+        if (!applyingDeferredState) deferredState=values;
+        return;
+    }
+    const juce::ScopedValueSetter<bool> recalling(recallingState,true);
+    deferredState.reset();
+    auto publish=[&](const std::array<float,30>& state)
+    {
+        stateGeneration.fetch_add(1,std::memory_order_acq_rel);
+        const auto& parameters=getParameters();
+        for (int i=0;i<parameters.size();++i) parameters[i]->setValue(state[static_cast<std::size_t>(i)]);
+        stateGeneration.fetch_add(1,std::memory_order_release);
+        // Only a complete, even-generation state is observable to synchronous
+        // listeners, including reentrant saves/preparation and render callbacks.
+        for (auto* p:parameters) p->sendValueChangedMessageToListeners(p->getValue());
+    };
+    publish(values);
+    if (deferredState)
+    {
+        const auto pending=*deferredState;deferredState.reset();
+        const juce::ScopedValueSetter<bool> deferred(applyingDeferredState,true);
+        publish(pending);
+    }
+}
+
 void Processor::setStateInformation(const void* data, int size)
 {
     const std::lock_guard lock(stateMutex);
@@ -420,12 +457,6 @@ void Processor::setStateInformation(const void* data, int size)
     const auto& parameters = getParameters();
     const bool v4=size==static_cast<int>(sizeof(current)+30*sizeof(float)) && std::memcmp(data,current,sizeof(current))==0;
     const bool v3=size==static_cast<int>(sizeof(tracking)+23*sizeof(float)) && std::memcmp(data,tracking,sizeof(tracking))==0;
-    auto apply=[&](const std::array<float,30>& values)
-    {
-        stateGeneration.fetch_add(1,std::memory_order_acq_rel);
-        for (int i=0;i<parameters.size();++i) parameters[i]->setValueNotifyingHost(values[static_cast<std::size_t>(i)]);
-        stateGeneration.fetch_add(1,std::memory_order_release);
-    };
     if (v4 || v3)
     {
         std::array<float, 30> values {};
@@ -441,7 +472,7 @@ void Processor::setStateInformation(const void* data, int size)
             if (!std::isfinite(value) || value < 0 || value > 1) return;
             values[index]=value;
         }
-        apply(values);
+        applyState(values);
         return;
     }
     auto restoreLegacy = [&](int source)
@@ -450,7 +481,7 @@ void Processor::setStateInformation(const void* data, int size)
         for (std::size_t i=0;i<values.size();++i) values[i]=parameters[static_cast<int>(i)]->getDefaultValue();
         values[0]=static_cast<float>(source);
         for (std::size_t i=23;i<29;i+=2) values[i]=0;
-        apply(values);
+        applyState(values);
     };
     if (size == static_cast<int>(sizeof(legacy)) && std::memcmp(data, legacy, sizeof(legacy)) == 0)
         restoreLegacy(0);
