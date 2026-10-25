@@ -25,7 +25,13 @@ three harmony voices, minimum ±12 semitones, intentionally processed vocal char
 **Sequencing exception approved 2026-10-25:** implement only PR06B's separate
 evaluation AU on `pr-06b-evaluation-au` from incomplete checkpoint `8f3a982`.
 PR06A's failed/pending gates remain visible; formal qualification, product go and
-PR07 integration remain blocked. See `docs/PR06B_EVALUATION_AU.md`.
+PR07 integration were blocked by that exception alone. See `docs/PR06B_EVALUATION_AU.md`.
+**Subsequent explicit PR07 exception (2026-10-25):** the user reports the manual
+Logic/musical checks work and requests complete PR07 implementation on a branch,
+explicitly deferring formal measured qualification without erasing failures or
+accuracy requirements. Branch `pr-07-product-integration` starts at merged
+evaluation checkpoint `fb233d8`. See `docs/PR07_PRODUCT_INTEGRATION.md` and
+`docs/DECISIONS.md`; no merge/push/installation or private replay is inferred.
 PR06A's approved excerpt-a/C-major listening-only comparison is rendered. The user
 reports good sound, a Rubber Band preference with a seemingly small difference,
 and no distracting artifacts on this example. The earlier bounded engineering comparison
@@ -1260,40 +1266,63 @@ operation is included in closeout.
 - Reflections/next-agent cautions: artistic preference informs the declared timbre
   goal but never converts pitch/safety failures or missing evidence into passes.
 
-### PR 07 — Product processor, minimal controls, automation, and state
+### PR 07 — Product processor, minimal controls, automation, and state (implemented on branch)
 
 Depends on: PR06B's explicit studio-scale go-decision, not PR06A preference alone.
 
+**User-approved sequencing exception:** implement this PR now based on the user's
+manual evaluation-AU acceptance, with formal measured qualification explicitly
+deferred (not passed). This is not an unrestricted qualified-product go. Existing
+accuracy/safety requirements and failed experiments remain unchanged. Contract,
+compatibility and branch evidence: `docs/PR07_PRODUCT_INTEGRATION.md`.
+
 **Scope / TODO**
-- [ ] Integrate the selected architecture into the AU shell and shared test target;
+- [x] Integrate the auditioned worker architecture into the AU shell and shared test target;
   remove evaluation alternatives from normal product linkage, not from evidence.
-- [ ] Add only necessary first-milestone controls: key/approved scales, three
+- [x] Add only necessary first-milestone controls: key/approved scales, three
   harmony degree settings, voice levels/enables, original level and explicit studio
   processing configuration only if evidence requires it. Defer the MIDI-mode user
   workflow; preserve existing parameter/state IDs and compatibility rather than
   deleting or reinterpreting them. Do not expose unqualified modes as ready features.
-- [ ] Use clear readable native controls, keyboard access, meaningful labels/units,
+- [x] Use clear readable native controls, keyboard access, meaningful labels/units,
   and modest input/pitch status. No preset ecosystem or ornamental feature expansion.
-- [ ] Freeze parameter IDs, ranges, defaults, state schema, and component identity;
+- [x] Freeze parameter IDs, ranges, defaults, state schema, and component identity;
   persist musical/voice/processing settings but not transient held MIDI notes.
   Range/state changes for the studio milestone need explicit migration tests;
-  this planning revision changes no executable range or saved state.
-- [ ] Implement validated state restore, correct host notification and bypass/reset/
+  existing ranges remain unchanged; appended mixer parameters/state v4 have explicit
+  dry-safe v1/v2/v3 migration regressions and retain original parameter meanings.
+- [x] Implement validated state restore, correct host notification and bypass/reset/
   silence behavior, keeping UI/document locks and file work off rendering.
 
 **Validation required to merge**
-- [ ] UI and headless/processor renders use the same production DSP and agree.
-- [ ] Parameter automation/readback and save/restore reproduce settings/audio;
+- [x] UI and headless/processor renders use the same production DSP and agree.
+- [x] Parameter automation/readback and save/restore reproduce settings/audio;
   malformed/truncated/out-of-range state is handled safely.
-- [ ] Editor create/destroy, state restore, and automation concurrent with rendering
+- [x] Editor create/destroy, state restore, and automation concurrent with rendering
   pass focused lifetime/concurrency checks; no stuck notes or stale UI overwrite.
-- [ ] UI controls are operable/readable at supported sizes, do not steal host
+- [x] UI controls are operable/readable at supported sizes, do not steal host
   keyboard input, and introduce no extra product controls or unqualified MIDI claims.
-- [ ] Regression audio and approved three-voice behavior remain within frozen limits.
+- [x] Scoped regression streams match the preserved evaluation reference, with
+  independent fake three-voice contributions, +/-12 boundaries and out-of-range
+  muting. Frozen musical limits remain unchanged; this is functional agreement,
+  not a formal accuracy/support pass under the sequencing exception.
+- [ ] Deferred formal measured musical/full-support, challenge-c, native scheduling/
+  stress and host/license qualification. Explicitly outside PR07 implementation
+  completion; original failures remain failed, not waived or regraded.
+
+**Implementation complete on branch; not merged.** Eight Debug and eight Release
+checks pass, including 209 Python tests in each tooling run; four focused contracts
+each pass under ASan/TSan. Final logs: `build/pr-07-validation/final-003/`.
+Preserved signed product/source/log artifact: `build/pr-07-artifacts/ready-20261025-01/`.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — frozen host/state contract and necessary controls.
-- Learnings/evidence: pending — interaction checks, serialization fixtures, caveats.
+- Major decisions: product identity unchanged, version 0.2.0; first 23 parameters
+  preserved, seven hint-3 mixer parameters appended; v4 state and dry-safe migration.
+  Sole native Rubber Band worker path; 100 ms original alignment and per-voice mix;
+  no ready MIDI/offline/live claims. Formal measured qualification explicitly deferred.
+- Learnings/evidence: `docs/PR07_PRODUCT_INTEGRATION.md` and
+  `docs/evidence/pr-07/implementation-001.md`; preserved-reference stream comparison,
+  UI/headless agreement, concurrency/migration and exact uninstalled AU contracts.
 - Reflections/next-agent cautions: once host IDs/state ship, preserve their meaning;
   UI polish must not alter processing or conceal the selected configuration's limits.
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_OSX_ARCHITECTURES arm64 CACHE STRING "Supported architecture")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum macOS")
-project(voxide VERSION 0.1.0 LANGUAGES C CXX)
+project(voxide VERSION 0.2.0 LANGUAGES C CXX)
 
 if(NOT APPLE OR NOT CMAKE_OSX_ARCHITECTURES STREQUAL "arm64"
    OR NOT CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "15.0")
@@ -22,6 +22,7 @@ endif()
 
 include(cmake/JuceDependency.cmake)
 find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
+include(cmake/StudioDependency.cmake)
 execute_process(COMMAND git rev-parse --short=12 HEAD
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" OUTPUT_VARIABLE VOXIDE_REVISION
     OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
@@ -39,13 +40,17 @@ add_library(voxide_dsp STATIC Source/DSP/PassThrough.cpp Source/DSP/PitchTracker
 target_include_directories(voxide_dsp PUBLIC Source/DSP)
 target_compile_options(voxide_dsp PRIVATE -Wall -Wextra -Wpedantic)
 
-add_library(voxide_processor STATIC Source/PluginProcessor.cpp Source/DiagnosticLog.cpp)
+add_library(voxide_studio STATIC Source/Studio/RubberBand.cpp Source/Studio/Worker.cpp Source/Studio/Session.cpp)
+target_include_directories(voxide_studio PUBLIC Source/Studio Source/DSP)
+target_link_libraries(voxide_studio PUBLIC voxide_dsp voxide_rubberband)
+target_compile_options(voxide_studio PRIVATE -Wall -Wextra -Wpedantic)
+add_library(voxide_processor STATIC Source/PluginProcessor.cpp Source/PluginEditor.cpp Source/DiagnosticLog.cpp)
 target_include_directories(voxide_processor PUBLIC Source "${PROJECT_BINARY_DIR}/generated")
 target_compile_definitions(voxide_processor PUBLIC
     JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
     JUCE_USE_FLAC=0 JUCE_USE_OGGVORBIS=0 JUCE_USE_MP3AUDIOFORMAT=0
     JUCE_USE_LAME_AUDIO_FORMAT=0 JUCE_USE_WINDOWS_MEDIA_FORMAT=0)
-target_link_libraries(voxide_processor PUBLIC voxide_dsp juce::juce_audio_utils
+target_link_libraries(voxide_processor PUBLIC voxide_studio juce::juce_audio_utils
     juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
 juce_add_plugin(voxide
@@ -67,6 +72,8 @@ juce_add_plugin(voxide
     COPY_PLUGIN_AFTER_BUILD FALSE)
 target_sources(voxide PRIVATE Source/PluginEntry.cpp)
 target_link_libraries(voxide PRIVATE voxide_processor)
+add_custom_command(TARGET voxide_AU POST_BUILD
+    COMMAND /usr/bin/codesign --force --sign - --timestamp=none "$<TARGET_BUNDLE_DIR:voxide_AU>" VERBATIM)
 
 enable_testing()
 add_library(voxide_allocation_audit SHARED Source/Tests/AllocationAudit.cpp)
@@ -79,10 +86,22 @@ add_executable(voxide_dsp_tests Source/Tests/PassThroughTests.cpp Source/Tests/T
 target_link_libraries(voxide_dsp_tests PRIVATE voxide_dsp voxide_allocation_audit)
 add_test(NAME dsp COMMAND voxide_dsp_tests)
 juce_add_console_app(voxide_processor_tests PRODUCT_NAME "voxide_processor_tests")
-target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp)
+target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp Source/Tests/StudioUiTests.cpp)
 target_compile_definitions(voxide_processor_tests PRIVATE VOXIDE_TEST_OUTPUT_DIR="${PROJECT_BINARY_DIR}/test-output/diagnostics")
 target_link_libraries(voxide_processor_tests PRIVATE voxide_processor voxide_allocation_audit)
 add_test(NAME processor COMMAND voxide_processor_tests)
+add_test(NAME studio_ui COMMAND voxide_processor_tests --ui)
+# Reference code is confined to this regression executable, never AU linkage.
+add_executable(voxide_studio_reference_tests Source/Tests/StudioReferenceTests.cpp
+    EvaluationAU/Session.cpp WorkerEvaluation/WorkerEngine.cpp
+    InteractionEvaluation/InteractionProcessor.cpp EngineEvaluation/EngineAdapter.cpp)
+target_compile_definitions(voxide_studio_reference_tests PRIVATE VOXIDE_WORKER_NO_AUDIT=1)
+target_include_directories(voxide_studio_reference_tests PRIVATE Source EngineEvaluation Source/DSP)
+target_link_libraries(voxide_studio_reference_tests PRIVATE voxide_studio)
+add_test(NAME studio_reference COMMAND voxide_studio_reference_tests)
+if(NOT VOXIDE_SANITIZER)
+    add_test(NAME studio_native_reference COMMAND voxide_studio_reference_tests --native)
+endif()
 add_executable(voxide_au_render_tests Source/Tests/AuRenderTests.cpp)
 target_link_libraries(voxide_au_render_tests PRIVATE "-framework AudioToolbox" "-framework CoreFoundation")
 add_dependencies(voxide_au_render_tests voxide_AU)

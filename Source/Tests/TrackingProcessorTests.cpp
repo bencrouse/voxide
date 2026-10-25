@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "AllocationAudit.h"
+#include "StudioTestSupport.h"
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
@@ -34,10 +35,10 @@ struct Position final : juce::AudioPlayHead
 };
 void stateTests()
 {
-    voxide::Processor p;
-    check(p.getParameters().size() == 23, "v3 state parameter layout changed");
+    voxide::Processor p(studioTest::factory);
+    check(p.getParameters().size() == 30, "v4 state parameter layout changed");
     for (int i = 0; i < p.getParameters().size(); ++i)
-        check(p.getParameters()[i]->getVersionHint() == (i == 0 ? 1 : 2), "AU version hints no longer preserve legacy automation order");
+        check(p.getParameters()[i]->getVersionHint() == (i == 0 ? 1 : i<23?2:3), "AU version hints no longer preserve legacy automation order");
     for (int i = 0; i < p.getParameters().size(); ++i)
         p.getParameters()[i]->setValueNotifyingHost(static_cast<float>(i % 5) / 4);
     juce::MemoryBlock expected, actual;
@@ -57,7 +58,7 @@ void stateTests()
     p.setStateInformation(v2.data(), static_cast<int>(v2.size()));
     check(p.sourceParameter().getIndex() == 1, "Legacy v2 source lost");
     for (int i = 1; i < p.getParameters().size(); ++i)
-        check(std::bit_cast<std::uint32_t>(p.getParameters()[i]->getValue()) == std::bit_cast<std::uint32_t>(p.getParameters()[i]->getDefaultValue()), "Legacy state retained new musical parameters");
+        check(std::bit_cast<std::uint32_t>(p.getParameters()[i]->getValue()) == std::bit_cast<std::uint32_t>((i==23 || i==25 || i==27)?0.f:p.getParameters()[i]->getDefaultValue()), "Legacy state retained new musical parameters or enabled harmonies");
     p.getStateInformation(expected); v2.back() = 2;
     p.setStateInformation(v2.data(), static_cast<int>(v2.size()));
     p.getStateInformation(actual); check(expected == actual, "Invalid legacy source changed state");
@@ -65,7 +66,7 @@ void stateTests()
 struct Result { voxide::PitchFrame frame; std::array<int,3> slots; std::array<voxide::HarmonyTarget,3> targets; };
 Result render(const std::vector<int>& blocks, bool side)
 {
-    voxide::Processor p;
+    voxide::Processor p(studioTest::factory);
     auto layout = p.getBusesLayout(); layout.inputBuses.set(1, juce::AudioChannelSet::mono());
     check(p.setBusesLayout(layout), "Tracking sidechain layout failed");
     set(p, "sourceBus", side ? 1.0f : 0.0f); set(p, "harmonyMode", 1);
@@ -93,7 +94,7 @@ Result render(const std::vector<int>& blocks, bool side)
 }
 void recoveryTests()
 {
-    voxide::Processor p; Position position; p.setPlayHead(&position);
+    voxide::Processor p(studioTest::factory); Position position; p.setPlayHead(&position);
     p.prepareToPlay(48000, 1024); set(p, "harmonyMode", 1);
     juce::AudioBuffer<float> audio(2, 1024); audio.clear(); juce::MidiBuffer midi;
     for (int i = 0; i < 70; ++i) midi.addEvent(juce::MidiMessage::noteOn(1, 60, 0.5f), 0);
@@ -112,7 +113,7 @@ void recoveryTests()
     for (int i = 0; i < 4097; ++i) midi.addEvent(juce::MidiMessage::noteOn(1, 60, 0.5f), 0);
     voxide::audit::begin(); p.processBlock(audio, midi); const auto count = voxide::audit::end();
     check(count == 0 && !p.harmonyState().midiKnown(), "Musical event overflow did not fail closed allocation-free");
-    p.reset(); check(p.harmonyState().midiKnown(), "Reset did not recover unknown MIDI");
+    p.reset();p.processBlock(audio,midi);check(p.harmonyState().midiKnown(), "Reset did not recover unknown MIDI at callback boundary");
     midi.addEvent(juce::MidiMessage::noteOn(1, 60, 0.5f), 0); p.processBlock(audio, midi);
     p.processBlockBypassed(audio, midi);
     check(p.harmonyState().midiSlots()[0] == -1, "Bypass retained held state");
@@ -125,7 +126,7 @@ void recoveryTests()
 }
 void snapshotTests()
 {
-    voxide::Processor p; Position position; p.setPlayHead(&position);
+    voxide::Processor p(studioTest::factory); Position position; p.setPlayHead(&position);
     auto layout = p.getBusesLayout(); layout.inputBuses.set(1, juce::AudioChannelSet::mono());
     check(p.setBusesLayout(layout), "Snapshot test layout failed");
     p.prepareToPlay(48000, 1024);
@@ -165,7 +166,7 @@ void snapshotTests()
 }
 void authoritativeMidiDiagnostics()
 {
-    voxide::Processor p; p.prepareToPlay(48000, 64);
+    voxide::Processor p(studioTest::factory); p.prepareToPlay(48000, 64);
     juce::AudioBuffer<float> audio(2, 64); audio.clear(); juce::MidiBuffer midi;
     midi.addEvent(juce::MidiMessage::noteOn(1, 60, 0.5f), 0);
     midi.addEvent(juce::MidiMessage::noteOn(1, 60, 0.5f), 1);

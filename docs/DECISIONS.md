@@ -535,3 +535,33 @@ are recorded in `docs/evidence/pr-06b/review-fixes-001.md`; a new artifact prese
 the original delivery. Musical/timing failures and formal qualification gates are
 not changed. No merge, push, installation, Logic/device operation or private replay
 is authorized by this request.
+
+## PR07 sequencing approval and manual Logic acceptance (2026-10-25)
+
+The user reports the evaluation AU works in Logic, including the discussed timing,
+loop/seek, recall and musical listening checks, and explicitly asks not to repeat
+those manual checks. These are **user-reported manual acceptance**, not invented
+sample measurements, full-range annotations, stress reports or independent grades.
+Logic version, source, project settings and measured tolerances were not supplied.
+The assistant did not operate Logic, read recordings or perform the audition.
+
+After being asked whether to start PR07 while explicitly deferring formal measured
+qualification and preserving existing failures/accuracy requirements, the user
+answered: **“yes, please implement pr 7 to completion on a branch.”** This is an
+explicit sequencing exception permitting product implementation from `fb233d8` on
+`pr-07-product-integration`, using the already-auditioned Rubber Band worker path.
+It does not declare PR06A/PR06B qualification passed, rehabilitate Signalsmith,
+waive the worker startup miss, select an alternative engine, or authorize private
+reads/renders, installation, Logic/device/playback operation, merge, push or spend.
+Implementation and focused regression evidence are separate from deferred formal
+accuracy, expressive challenge c, native performance, host and licensing gates.
+
+**PR07 implementation outcome:** product processor/native controls/state are complete
+on `pr-07-product-integration`. Product identity and the first 23 parameters remain;
+seven hint-3 mixer parameters and dry-safe v4 migration are frozen. Debug/Release
+eight-check suites (209 Python tests each) and ASan/TSan four-check focused suites
+pass. New signed product/source/log artifact:
+`build/pr-07-artifacts/ready-20261025-01/`; scope, self-review and development
+corrections are in `docs/evidence/pr-07/implementation-001.md`. No independent PR07
+review or new product Logic operation is claimed. Deferred qualification and
+historical failures remain unchanged; nothing is merged, pushed or installed.

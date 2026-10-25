@@ -207,7 +207,9 @@ def check_native(profile, output=None):
                 print(log_path.read_text())
                 raise RuntimeError("Native routing check failed")
         native = json.loads((build / "au-routing-report.json").read_text())
-        if native.get("status") != "pass" or native.get("routing_cases") != 96 or native.get("rendered_blocks") != 384:
+        if (native.get("schema")!="voxide.native-au.v2" or native.get("status")!="pass"
+                or native.get("routing_cases")!=96 or native.get("rendered_blocks",0)<384
+                or native.get("latency_seconds")!=.1 or native.get("continuous_bypass_reference") is not True):
             raise RuntimeError("Native AU report is incomplete")
         component = build / "voxide_artefacts" / profile.capitalize() / "AU/voxide.component"
         info = plistlib.loads((component / "Contents/Info.plist").read_bytes())

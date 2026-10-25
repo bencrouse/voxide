@@ -52,6 +52,22 @@ struct Input
 };
 
 AudioUnitParameterID sourceId(AudioUnit);
+void disableVoices(AudioUnit unit)
+{
+    UInt32 bytes=0;checked(AudioUnitGetPropertyInfo(unit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,0,&bytes,nullptr),"parameter size");
+    std::vector<AudioUnitParameterID> ids(bytes/sizeof(AudioUnitParameterID));
+    checked(AudioUnitGetProperty(unit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,0,ids.data(),&bytes),"parameters");
+    int disabled=0;
+    for (auto id:ids)
+    {
+        AudioUnitParameterInfo info {};bytes=sizeof(info);
+        checked(AudioUnitGetProperty(unit,kAudioUnitProperty_ParameterInfo,kAudioUnitScope_Global,id,&info,&bytes),"parameter info");
+        if (std::string(info.name).find(" enabled")!=std::string::npos)
+        { checked(AudioUnitSetParameter(unit,id,kAudioUnitScope_Global,0,0,0),"disable harmony");++disabled; }
+        if ((info.flags&kAudioUnitParameterFlag_CFNameRelease) && info.cfNameString) CFRelease(info.cfNameString);
+    }
+    require(disabled==3,"Three voice enables missing");
+}
 
 struct Transport
 {
@@ -80,7 +96,7 @@ struct Instance
     ~Instance() { if (unit != nullptr) AudioComponentInstanceDispose(unit); }
 };
 
-void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
+int renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
                 bool bypassed, float sideValue, double rate, UInt32 frames)
 {
     Instance instance(component);
@@ -125,7 +141,10 @@ void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
     const UInt32 bypass = bypassed ? 1u : 0u;
     checked(AudioUnitSetProperty(unit, kAudioUnitProperty_BypassEffect, kAudioUnitScope_Global,
                                  0, &bypass, sizeof(bypass)), "bypass");
-    checked(AudioUnitInitialize(unit), "initialize");
+    disableVoices(unit);checked(AudioUnitInitialize(unit), "initialize");
+    double latencySeconds=0;UInt32 latencyBytes=sizeof(latencySeconds);
+    checked(AudioUnitGetProperty(unit,kAudioUnitProperty_Latency,kAudioUnitScope_Global,0,&latencySeconds,&latencyBytes),"latency");
+    require(std::abs(latencySeconds-.1)<1e-10,"Product AU latency is not 100 ms");
     std::array<float, 137> left {}, right {};
     auto* output = static_cast<AudioBufferList*>(std::calloc(1, sizeof(AudioBufferList) + sizeof(AudioBuffer)));
     require(output != nullptr, "output allocation");
@@ -135,22 +154,33 @@ void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
     AudioTimeStamp timestamp {};
     timestamp.mFlags = kAudioTimeStampSampleTimeValid;
     AudioUnitRenderActionFlags flags = 0;
+    const int latency=static_cast<int>(rate/10),warm=(latency+static_cast<int>(frames)-1)/static_cast<int>(frames),blocks=warm+8;
+    std::uint64_t renderClock=0;
     for (int pass = 0; pass < 4; ++pass)
     {
         // Monotonic render clock, independently stopped/backward/forward project time.
-        timestamp.mSampleTime = pass * frames;
         transport.playing = pass != 1;
-        transport.position = pass == 2 ? 0 : (pass + 1) * frames;
         if (pass == 3) checked(AudioUnitReset(unit, kAudioUnitScope_Global, 0), "reset");
+        for (int block=0;block<blocks;++block)
+        {
+        timestamp.mSampleTime=static_cast<double>(renderClock);
+        transport.position=pass==1?static_cast<double>(frames):static_cast<double>((pass==2?20000:(pass+1)*frames)+block*frames);
+        if (!bypassed && pass==0 && (block==3 || block==6 || block==warm+2 || block==warm+4))
+        {
+            const UInt32 toggle=(block==3 || block==warm+2)?1u:0u;
+            checked(AudioUnitSetProperty(unit,kAudioUnitProperty_BypassEffect,kAudioUnitScope_Global,0,&toggle,sizeof(toggle)),"continuous bypass transition");
+        }
         checked(MusicDeviceMIDIEvent(unit, 0x90, 60, 100, 7), "MIDI note-on");
         checked(MusicDeviceMIDIEvent(unit, 0x80, 60, 0, 23), "MIDI note-off");
         checked(AudioUnitRender(unit, &flags, &timestamp, 0, frames, output), "render");
         const float base = sideSelected ? (sideConnected ? sideValue : 0.0f) : main.value;
         for (UInt32 i = 0; i < frames; ++i)
         {
-            const auto expected = Input::sample(base, static_cast<std::uint64_t>(pass) * frames + i);
+            const auto expected=block*static_cast<int>(frames)+static_cast<int>(i)<latency?0.f:Input::sample(base,renderClock+i-static_cast<unsigned>(latency));
             require(std::abs(left[i] - expected) < 1.0e-7f && std::abs(right[i] - expected) < 1.0e-7f,
                     "AU routing/transport sample mismatch in pass " + std::to_string(pass));
+        }
+        renderClock+=frames;
         }
     }
     std::free(output);
@@ -158,6 +188,7 @@ void renderCase(AudioComponent component, bool sideConnected, bool sideSelected,
     require(main.calls > 0, "Main render callback was not exercised");
     if (sideConnected) require(side.calls > 0, "Sidechain render callback was not exercised");
     checked(AudioUnitUninitialize(unit), "uninitialize");
+    return blocks*4;
 }
 
 AudioUnitParameterID sourceId(AudioUnit unit)
@@ -165,7 +196,7 @@ AudioUnitParameterID sourceId(AudioUnit unit)
     UInt32 size = 0;
     checked(AudioUnitGetPropertyInfo(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
                                      0, &size, nullptr), "parameter list size");
-    require(size == 23 * sizeof(AudioUnitParameterID), "Unexpected tracking parameter count");
+    require(size == 30 * sizeof(AudioUnitParameterID), "Unexpected studio parameter count");
     std::vector<AudioUnitParameterID> ids(size / sizeof(AudioUnitParameterID));
     checked(AudioUnitGetProperty(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
                                  0, ids.data(), &size), "source parameter");
@@ -210,7 +241,7 @@ int main(int argc, char** argv)
             reportPath = argv[3];
             std::ofstream initial(reportPath);
             require(initial.good(), "Cannot initialize AU report");
-            initial << "{\"schema\":\"voxide.native-au.v1\",\"status\":\"running\"}\n";
+            initial << "{\"schema\":\"voxide.native-au.v2\",\"status\":\"running\"}\n";
         }
         const std::string path(argv[1]);
         auto url = CFURLCreateFromFileSystemRepresentation(nullptr,
@@ -233,7 +264,7 @@ int main(int argc, char** argv)
         require(versionValue != nullptr && CFNumberGetValue(versionValue, kCFNumberSInt32Type, &version), "Component version missing");
         auto component = AudioComponentRegister(&description, CFSTR("voxide render test"), version, factory);
         require(component != nullptr, "process-local AU registration");
-        int cases = 0;
+        int cases = 0,renderedBlocks=0;
         for (double rate : { 44100.0, 48000.0 })
             for (UInt32 frames : { 32u, 64u, 137u })
                 for (bool sideConnected : { false, true })
@@ -241,7 +272,7 @@ int main(int argc, char** argv)
                         for (bool bypassed : { false, true })
                             for (float side : { -0.375f, 0.0f })
                             {
-                                renderCase(component, sideConnected, sideSelected, bypassed, side, rate, frames);
+                                renderedBlocks+=renderCase(component, sideConnected, sideSelected, bypassed, side, rate, frames);
                                 ++cases;
                             }
         stateRoundTrip(component);
@@ -249,18 +280,18 @@ int main(int argc, char** argv)
         {
             std::ofstream report(argv[3]);
             require(report.good(), "Cannot open AU report output");
-            report << "{\"schema\":\"voxide.native-au.v1\",\"status\":\"pass\",\"component_version\":" << version
-                   << ",\"routing_cases\":" << cases << ",\"rendered_blocks\":" << cases * 4
-                   << ",\"midi_api_events\":" << cases * 8
+            report << "{\"schema\":\"voxide.native-au.v2\",\"status\":\"pass\",\"component_version\":" << version
+                   << ",\"routing_cases\":" << cases
+                   << ",\"rendered_blocks\":" << renderedBlocks << ",\"midi_api_events\":" << renderedBlocks*2
+                   << ",\"latency_seconds\":0.1,\"continuous_bypass_reference\":true"
                    << ",\"state_round_trip\":true,\"transport_callbacks_observed\":true,"
                    << "\"midi_offset_delivery_observed\":false,"
-                   << "\"scope\":\"Built AU without devices or Logic; MIDI offsets are asserted separately in production processor tests\"}\n";
+                    << "\"scope\":\"Built AU, harmonies disabled, aligned selected original without devices or Logic; MIDI offsets asserted separately in production processor tests\"}\n";
             report.flush();
             require(report.good(), "AU report write failed");
         }
         CFRelease(bundle);
-        std::cout << "Device-free built AU tests passed: " << cases << " routes, " << cases * 4
-                  << " blocks, host transport/reset and fresh-instance state\n";
+        std::cout << "Device-free built AU tests passed: " << cases << " routes, 100 ms aligned lead, bypass continuity, transport/reset and fresh-instance state\n";
         return EXIT_SUCCESS;
     }
     catch (const std::exception& error)
@@ -268,7 +299,7 @@ int main(int argc, char** argv)
         if (!reportPath.empty())
         {
             std::ofstream failed(reportPath);
-            failed << "{\"schema\":\"voxide.native-au.v1\",\"status\":\"fail\"}\n";
+            failed << "{\"schema\":\"voxide.native-au.v2\",\"status\":\"fail\"}\n";
         }
         std::cerr << error.what() << '\n';
         return EXIT_FAILURE;

@@ -5,20 +5,25 @@ three harmony voices. **Current priority: recorded vocals, scale mode, inclusive
 ±12-semitone support and an intentionally processed vocal character.** Live use,
 MIDI-mode qualification and ±24 coverage are deferred, not achieved or cancelled.
 
-**The product AU remains dry pass-through. A separate, uninstalled
-[PR06B evaluation AU](docs/PR06B_EVALUATION_AU.md) now builds with audible harmonies**
-on `pr-06b-evaluation-au`: explicit key/scale, three fixed scale-derived voices,
-unchanged aligned lead and 100 ms declared latency. It is real-time playback only,
-locally ad-hoc signed and unqualified—not product acceptance or a PR07 merge.
-See the linked document for its build path, limitations and focused test results.
+**PR07 product integration** on `pr-07-product-integration` adds the auditioned
+Rubber Band worker path to the original `voxide` AU: native key/scale and three
+degree/octave/level/enable controls, aligned original level and 100 ms latency.
+The user explicitly approved advancing after manual Logic/listening acceptance,
+while **deferring, not passing, formal measured qualification**. Existing failures
+and accuracy requirements stand. Real-time playback only at 44.1/48 kHz; offline
+bounce and MIDI synthesis remain unsupported. See [PR07](docs/PR07_PRODUCT_INTEGRATION.md).
+The separate [evaluation AU](docs/PR06B_EVALUATION_AU.md) and original artifacts
+are retained unchanged. No automatic installation, host operation or playback.
+
+## Historical milestones and retained outcomes
 PR 00 establishes builds and the AU; PR 01 adds routing diagnostics and native
 automated checks, with a separate human-operated Logic checklist. Nothing here
 demonstrates professional vocal quality or acceptable live-monitoring latency.
 
 PR 02 adds offline evaluation fixtures and measurement/corpus tooling. Its original
 ±24-semitone contract/results are preserved as historical baselines; they are not
-silently regraded against the new first-milestone scope. No product pitch shifter
-is integrated or qualified. Human reference/listening approvals remain separate.
+silently regraded against the new first-milestone scope. At that milestone no
+product pitch shifter was integrated. Human reference/listening approvals remain separate.
 
 PR 03 adds two causal YIN variants, 41 built-in 12-TET scale sets plus custom pitch
 classes, all roots, independent degree/octave offsets, and sustained absolute-MIDI
@@ -26,14 +31,14 @@ targets. Tracking response requirements are **not met**; real-vocal accuracy and
 Logic/live monitoring remain unqualified. See [tracking research](docs/TRACKING.md).
 
 PR 04 adds **isolated** Signalsmith/Rubber Band evaluators, oracle-controlled file
-renders and honest quality/timing/allocation comparisons. Neither dependency is
-linked into the AU or Standalone. Candidate failures are retained, not product
+renders and honest quality/timing/allocation comparisons. At that milestone neither
+dependency was linked into the AU or Standalone. Candidate failures are retained, not product
 passes; no engine is selected. See [engine comparison](docs/ENGINE_EVALUATION.md).
 
 PR 05 adds an isolated three-voice interaction processor: oracle/live/scale/MIDI
 ablations, fixed-deadline delivery, direct/aligned lead stems, and a common
-consonant-policy comparison. The product AU remains dry; no engine or treatment
-is selected. See [interaction research](docs/INTERACTION_EVALUATION.md).
+consonant-policy comparison. At that milestone the product AU remained dry; no
+engine or treatment was selected. See [interaction research](docs/INTERACTION_EVALUATION.md).
 
 The subsequent [bounded architecture investigation](docs/ARCHITECTURE_INVESTIGATION.md)
 found a faster schedule but no configuration meeting live timing, quality and
@@ -43,9 +48,10 @@ an engine or erase quality/safety failures.
 
 The artistic reference is Brian Eno's **“Bottomliners,” 1:30–2:00**, primarily its
 processed vocal character, not exact harmony notes or a verified hardware recipe.
-Current phase is **PR06A: a small, safely prepared development listening prototype**,
-followed by **PR06B: formal studio qualification** if warranted. AU integration
-remains blocked until an explicit studio go-decision. The new preview has not
+That direction led to **PR06A: a development listening prototype**, followed by
+**PR06B: formal studio qualification** and its separate evaluation AU. PR07 now has
+the explicit sequencing approval above; formal qualification remains deferred.
+The private preview has not
 been auditioned by the assistant; formal private preflight is unchanged and no
 album audio has been copied here.
 See [the current plan](docs/PROJECT_PLAN.md) and
@@ -85,9 +91,9 @@ withheld result stays unchanged; no formal quality decision is implied. See the
 pilot note for evidence and limitations.
 The [bounded verification](docs/STUDIO_VERIFICATION.md) has now run: meter
 calibration passes 36/36 fixtures, but matched prescribed/tracked output-pitch
-checks fail in 34/72 native cases despite correct controls. **PR06A is blocked;
-formal qualification/product go remain blocked.** The separately approved
-evaluation-AU exception does not waive those gates. A3 is stopped under the approved rule.
+checks fail in 34/72 native cases despite correct controls. **PR06A remains
+incomplete; formal qualification is not passed.** The approved evaluation-AU and
+PR07 sequencing exceptions do not regrade those results. A3 is stopped under the approved rule.
 See [the results](docs/STUDIO_VERIFICATION_RESULTS.md). No private vocal repeats
 or Logic/PDC tests were performed; those remain separately approval-gated.
 All five tooling review findings are now fixed and independently closed, with
@@ -108,7 +114,8 @@ Its normal tests now demonstrate **zero callback allocations, exactly unchanged
 audio and 100 ms software alignment** at both rates/buffers. The overall timing
 screen still fails one first-callback dispatch deadline in a fault test; it is not
 waived. See [the results](docs/evidence/pr-06a/worker-feasibility-001.md). Musical/
-host qualification, PR06A completion and product integration remain gated.
+host qualification and PR06A completion remain open. Product implementation is now
+separately authorized under the explicit PR07 exception above.
 
 ## Local development
 

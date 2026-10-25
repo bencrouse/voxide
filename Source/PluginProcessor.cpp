@@ -1,7 +1,4 @@
 #include "PluginProcessor.h"
-#include "BuildInfo.h"
-#include "DSP/PassThrough.h"
-#include "DiagnosticLog.h"
 #include <bit>
 #include <cmath>
 #include <cstring>
@@ -9,11 +6,20 @@
 
 namespace voxide
 {
-Processor::Processor()
+namespace
+{
+juce::AudioParameterFloatAttributes levelAttributes()
+{
+    return juce::AudioParameterFloatAttributes().withLabel("dB")
+        .withStringFromValueFunction([](float value,int){return value<=-60?juce::String("Off"):juce::String(value,1);})
+        .withValueFromStringFunction([](const juce::String& text){return text.trim().equalsIgnoreCase("Off")?-60.f:text.getFloatValue();});
+}
+}
+Processor::Processor(studio::Factory nativeFactory)
     : AudioProcessor(BusesProperties()
           .withInput("Input", juce::AudioChannelSet::mono(), true)
           .withInput("Vocal sidechain", juce::AudioChannelSet::mono(), false)
-          .withOutput("Output", juce::AudioChannelSet::stereo(), true))
+          .withOutput("Output", juce::AudioChannelSet::stereo(), true)), factory(nativeFactory)
 {
     sourceChoice = new juce::AudioParameterChoice(juce::ParameterID { "sourceBus", 1 },
         "Vocal source", juce::StringArray { "Main input", "Sidechain" }, 0);
@@ -38,27 +44,46 @@ Processor::Processor()
         octaveChoices[i] = new juce::AudioParameterInt(juce::ParameterID { "voiceOctave" + suffix, 2 }, "Voice " + suffix + " octaves", -2, 2, i == 2 ? 1 : 0);
         addParameter(degreeChoices[i]); addParameter(octaveChoices[i]);
     }
+    for (std::size_t i=0;i<3;++i)
+    {
+        const auto suffix=juce::String(static_cast<int>(i+1));
+        voiceEnabled[i]=new juce::AudioParameterBool(juce::ParameterID{"voiceEnabled"+suffix,3},"Voice "+suffix+" enabled",true);
+        voiceLevels[i]=new juce::AudioParameterFloat(juce::ParameterID{"voiceLevel"+suffix,3},"Voice "+suffix+" level",juce::NormalisableRange<float>{-60,0},0,
+            levelAttributes());
+        addParameter(voiceEnabled[i]);addParameter(voiceLevels[i]);
+    }
+    originalLevel=new juce::AudioParameterFloat(juce::ParameterID{"originalLevel",3},"Original level",juce::NormalisableRange<float>{-60,0},0,
+        levelAttributes());
+    addParameter(originalLevel);
 }
+Processor::~Processor() { releaseResources(); }
 
 void Processor::prepareToPlay(double rate, int)
 {
-    setLatencySamples(0);
+    releaseResources();
+    const int latency=std::isfinite(rate) && rate>0 && rate<=384000?static_cast<int>(std::floor(rate*.1)):0;
+    setLatencySamples(latency);leadDelay.assign(static_cast<std::size_t>(latency),0);leadPosition=0;
     diagnosticRate = rate;
-    reset();
+    renderedSettings=captureSettings();resetMusical(renderedSettings);
+    voiceGains=renderedSettings.voiceGain;originalGain=renderedSettings.originalGain;
+    diagnosticFrame=0;++diagnosticEpoch;held.fill(0);heldKnown=true;wasPlaying=false;
+    lastHostSampleKnown=false;lastHostFrames=0;lastSource=renderedSettings.source;lastBypassed=false;lastOffline=false;
+    renderedReset=resetGeneration.load(std::memory_order_acquire);renderedRestart=restartGeneration.load(std::memory_order_acquire);
+    if (!juce::exactlyEqual(rate,44100.) && !juce::exactlyEqual(rate,48000.)) { renderStatus.store(studio::Status::unsupportedRate);return; }
+    try { session=std::make_unique<studio::Session>(static_cast<int>(rate),factory);renderStatus.store(studio::Status::ready); }
+    catch (...) { renderStatus.store(studio::Status::failed); }
 }
 
 void Processor::reset()
 {
-    resetMusical(captureSettings());
-    diagnosticFrame = 0;
-    ++diagnosticEpoch;
-    held.fill(0);
-    heldKnown = true;
-    wasPlaying = false;
-    lastHostSample = -1;
-    lastHostSampleKnown = false;
-    lastHostFrames = 0;
+    resetGeneration.fetch_add(1,std::memory_order_release);
 }
+void Processor::releaseResources()
+{
+    session.reset();renderStatus.store(studio::Status::preparing);studioHz.store(0);studioActive.store(0);meterPeak.store(0);lastRenderTick.store(0);
+}
+studio::Snapshot Processor::studioStatus() const noexcept
+{ return {renderStatus.load(std::memory_order_relaxed),studioHz.load(std::memory_order_relaxed),studioActive.load(std::memory_order_relaxed)}; }
 
 bool Processor::isBusesLayoutSupported(const BusesLayout& layout) const
 {
@@ -81,7 +106,30 @@ Processor::RenderSettings Processor::captureSettings() const noexcept
     // Generation is captured first: if recall overlaps this read, the following
     // callback must observe the later generation and clear transient history again.
     const auto generation = stateGeneration.load(std::memory_order_acquire);
-    return { sourceChoice->getIndex(), trackerChoice->getIndex(), musicalConfig(), generation };
+    RenderSettings settings;settings.source=sourceChoice->getIndex();settings.variant=trackerChoice->getIndex();
+    settings.harmony=musicalConfig();settings.generation=generation;
+    auto gain=[](float db) { return db<=-60?0.f:juce::Decibels::decibelsToGain(db); };
+    for (std::size_t i=0;i<3;++i) settings.voiceGain[i]=voiceEnabled[i]->get()?gain(voiceLevels[i]->get()):0.f;
+    settings.originalGain=gain(originalLevel->get());return settings;
+}
+Processor::RenderSettings Processor::readSettings() noexcept
+{
+    // A recall is a multi-parameter transaction. Never spin, wait, or lock the
+    // renderer: an overlapping transaction leaves the previous snapshot intact.
+    const auto before=stateGeneration.load(std::memory_order_acquire);
+    if (!(before&1u))
+    {
+        for (auto* p:getParameters())
+        {
+            const float value=p->getValue();
+            if (!std::isfinite(value) || value<0 || value>1)
+            { if (session) session->fail();return renderedSettings; }
+        }
+        const auto candidate=captureSettings();
+        const auto after=stateGeneration.load(std::memory_order_acquire);
+        if (before==after) renderedSettings=candidate;
+    }
+    return renderedSettings;
 }
 
 void Processor::resetMusical(const RenderSettings& settings) noexcept
@@ -148,7 +196,7 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
     juce::ScopedNoDenormals noDenormals;
     // AU enables all buses even when disconnected. Never infer connection from
     // enablement or signal level; an explicitly selected silent source stays silent.
-    const auto settings = captureSettings();
+    const auto settings = readSettings();
     const int inputBus = settings.source;
     const auto main = getBusBuffer(buffer, true, 0);
     const auto side = getBusBuffer(buffer, true, 1);
@@ -166,6 +214,10 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
     event.source = static_cast<std::uint8_t>(inputBus);
     event.bypassed = bypassed ? 1 : 0;
     event.midiTruncatedBlocks = truncatedMidiBlocks;
+    const auto reset=resetGeneration.load(std::memory_order_acquire),restart=restartGeneration.load(std::memory_order_acquire);
+    const bool hostReset=reset!=renderedReset;
+    const bool offline=isNonRealtime();
+    bool discontinuity=lastSource!=inputBus || offline!=lastOffline || (hostReset && bypassed==lastBypassed);
     if (auto* playhead = getPlayHead())
         if (const auto position = playhead->getPosition())
         {
@@ -181,13 +233,19 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
     const bool expectedPositionOverflows = lastHostSample > std::numeric_limits<std::int64_t>::max() - lastHostFrames;
     const bool jumpedWhilePlaying = positionKnown && wasPlaying && event.playing != 0
         && (expectedPositionOverflows || event.hostSample != lastHostSample + lastHostFrames);
-    if ((wasPlaying && event.transportKnown != 0 && event.playing == 0)
-        || (positionKnown && event.hostSample < lastHostSample) || jumpedWhilePlaying)
+    if ((lastHostFrames>0 && event.transportKnown!=0 && wasPlaying!=(event.playing!=0))
+        || (positionKnown && event.hostSample < lastHostSample) || jumpedWhilePlaying) discontinuity=true;
+    const bool harmonyRestart=renderedGeneration!=settings.generation || restart!=renderedRestart || lastVariant!=settings.variant;
+    if (discontinuity || hostReset || harmonyRestart)
     {
         held.fill(0);
         heldKnown = true;
         resetMusical(settings);
     }
+    if (discontinuity) { std::fill(leadDelay.begin(),leadDelay.end(),0.f);leadPosition=0; }
+    if (session && (discontinuity || hostReset || harmonyRestart)) session->restart();
+    if (session) session->begin(settings.harmony,settings.variant==0?TrackerVariant::yin:TrackerVariant::multiCandidate,offline,settings.harmony.midiMode);
+    renderedReset=reset;renderedRestart=restart;lastOffline=offline;
     if (event.transportKnown != 0) wasPlaying = event.playing != 0;
     lastHostSample = event.hostSample;
     lastHostSampleKnown = event.hostSampleKnown != 0;
@@ -221,7 +279,34 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
     }
     if (next != end) { selector.panic(); overflow = true; }
     // Selected input is analysed before the aliased output is written.
-    passThrough(samples, output.getWritePointer(0), output.getWritePointer(1), buffer.getNumSamples());
+    const float step=diagnosticRate>0?static_cast<float>(1./(.01*diagnosticRate)):1.f;
+    for (int i=0;i<buffer.getNumSamples();++i)
+    {
+        float sample=samples?samples[i]:0;
+        if (!std::isfinite(sample)) sample=0;
+        float lead=sample;
+        if (!leadDelay.empty()) { lead=leadDelay[leadPosition];leadDelay[leadPosition]=sample;if (++leadPosition==leadDelay.size()) leadPosition=0; }
+        originalGain+=std::clamp(settings.originalGain-originalGain,-step,step);
+        const auto voices=session?session->push(sample):std::array<float,3>{};
+        double wet=0;
+        for (std::size_t v=0;v<3;++v)
+        { voiceGains[v]+=std::clamp(settings.voiceGain[v]-voiceGains[v],-step,step);wet+=static_cast<double>(voices[v])*voiceGains[v]/3.; }
+        float dry=bypassed?lead:lead*originalGain;
+        if (!std::isfinite(dry)) { if (session) session->fail();dry=lead; }
+        const double mixed=bypassed?static_cast<double>(lead):static_cast<double>(dry)+wet;
+        const bool valid=std::isfinite(mixed) && std::abs(mixed)<=std::numeric_limits<float>::max();
+        if (!valid && session) session->fail();
+        const float value=valid?static_cast<float>(mixed):dry;
+        for (int channel=0;channel<output.getNumChannels();++channel) output.setSample(channel,i,value);
+    }
+    if (session)
+    {
+        const auto status=session->snapshot();renderStatus.store(status.status,std::memory_order_relaxed);studioHz.store(status.hz,std::memory_order_relaxed);
+        unsigned active=status.active;
+        for (std::size_t v=0;v<3;++v) if (settings.voiceGain[v]<=0) active&=~(1u<<v);
+        studioActive.store(bypassed?0:active,std::memory_order_relaxed);
+    }
+    meterPeak.store(inputBus==0?mainSummary.peak:sideSummary.peak,std::memory_order_relaxed);
     event.pitchHz = tracker.frame().hz;
     event.pitchConfidence = tracker.frame().confidence;
     event.pitchVoiced = tracker.frame().voiced ? 1 : 0;
@@ -303,154 +388,16 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
     event.midiTruncatedBlocks = truncatedMidiBlocks;
     event.sequence = ++sequence;
     diagnostics.push(event);
+    lastRenderTick.store(static_cast<std::int64_t>(event.tick),std::memory_order_relaxed);
     diagnosticFrame += static_cast<std::uint64_t>(buffer.getNumSamples());
-    // Tracking/target selection only: unchanged lead; no synthesis or MIDI output.
+    // MIDI remains compatibility/diagnostic input, never generated output.
     midi.clear();
 }
 
-namespace
-{
-class ShellEditor final : public juce::AudioProcessorEditor, private juce::Timer
-{
-public:
-    explicit ShellEditor(Processor& owner)
-        : AudioProcessorEditor(owner), ownerProcessor(owner), sourceAttachment(owner.sourceParameter(),
-            [this](float value) { source.setSelectedItemIndex(juce::roundToInt(value), juce::dontSendNotification); }, nullptr)
-    {
-        setWantsKeyboardFocus(false);
-        source.addItemList({ "Main input", "Sidechain" }, 1);
-        source.setTitle("Vocal source");
-        source.setTooltip("Choose the routed bus explicitly. Silent or disconnected sidechain does not fall back to main input.");
-        source.onChange = [this] { sourceAttachment.setValueAsCompleteGesture(static_cast<float>(source.getSelectedItemIndex())); };
-        sourceAttachment.sendInitialUpdate();
-        addAndMakeVisible(source);
-        addAndMakeVisible(startLog);
-        addAndMakeVisible(stopLog);
-        startLog.onClick = [this]
-        {
-            logAfter = static_cast<std::uint64_t>(juce::Time::getHighResolutionTicks());
-            logger.start(juce::File(build::diagnosticDirectory), ownerProcessor.instanceId(), ownerProcessor.diagnosticQueue().dropped());
-            repaint();
-        };
-        stopLog.onClick = [this]
-        {
-            drain(2048);
-            logger.stop(ownerProcessor.diagnosticQueue().dropped());
-            repaint();
-        };
-        startLog.setTitle("Start diagnostic log");
-        stopLog.setTitle("Stop diagnostic log");
-        // Discard stale queued history; no index reset races with the renderer.
-        DiagnosticEvent ignored;
-        for (int i = 0; i < 2048 && ownerProcessor.diagnosticQueue().pop(ignored); ++i) {}
-        parameterEditor = std::make_unique<juce::GenericAudioProcessorEditor>(owner);
-        addAndMakeVisible(*parameterEditor);
-        setSize(1100, 600);
-        startTimerHz(20);
-    }
-
-    ~ShellEditor() override
-    {
-        stopTimer();
-        drain(2048);
-        logger.stop(ownerProcessor.diagnosticQueue().dropped());
-    }
-
-    void resized() override
-    {
-        source.setBounds(140, 96, 260, 28);
-        startLog.setBounds(20, 332, 190, 30);
-        stopLog.setBounds(225, 332, 190, 30);
-        if (parameterEditor) parameterEditor->setBounds(680, 0, 420, getHeight());
-    }
-
-    void paint(juce::Graphics& g) override
-    {
-        g.fillAll(juce::Colours::darkslategrey);
-        g.setColour(juce::Colours::white);
-        g.setFont(20.0f);
-        g.drawText("voxide — causal tracking / targets", 20, 16, 640, 32, juce::Justification::left);
-        g.setFont(14.0f);
-        g.drawText(juce::String(build::version) + " / " + build::diagnosticBuild + " / " + build::revision,
-                   20, 48, 640, 22, juce::Justification::left);
-        g.drawText("Instance " + ownerProcessor.instanceId(), 20, 70, 640, 22, juce::Justification::left);
-        g.drawText("Vocal source", 20, 96, 110, 28, juce::Justification::left);
-        const double age = last.tick == 0 ? -1.0 : juce::Time::highResolutionTicksToSeconds(
-            juce::Time::getHighResolutionTicks() - static_cast<juce::int64>(last.tick));
-        const auto fresh = age >= 0.0 && age < 0.5;
-        g.setColour(fresh ? juce::Colours::lightgreen : juce::Colours::orange);
-        g.drawText(fresh ? "RENDERING — " + juce::String(last.playing != 0 ? "playing" : "stopped/live")
-                         : "STALE / NO CURRENT RENDER CALLBACK", 20, 138, 640, 24, juce::Justification::left);
-        g.setColour(juce::Colours::white);
-        auto db = [](float peak) { return peak > 0.0f ? juce::String(juce::Decibels::gainToDecibels(peak), 1) : juce::String("−inf"); };
-        g.drawText("Main " + db(last.mainPeak) + " dB   Side " + db(last.sidePeak) + " dB   Out "
-            + db(last.leftPeak) + " / " + db(last.rightPeak) + " dB", 20, 168, 640, 22, juce::Justification::left);
-        g.drawText("Epoch " + juce::String(last.epoch) + "  frame " + juce::String(static_cast<juce::int64>(last.frame))
-            + "  host " + juce::String(static_cast<juce::int64>(last.hostSample))
-            + "  block " + juce::String(last.frames), 20, 194, 640, 22, juce::Justification::left);
-        g.drawText("MIDI seen " + juce::String(static_cast<juce::int64>(midiSeen)) + "  last " + lastMidi
-            + "  presses " + (last.musicalMidiKnown != 0 ? juce::String(last.musicalKeyPresses) : juce::String("unknown"))
-            + "  sounding " + juce::String(last.musicalSoundingPitches),
-            20, 220, 640, 22, juce::Justification::left);
-        g.drawText("Dropped records " + juce::String(static_cast<juce::int64>(ownerProcessor.diagnosticQueue().dropped()))
-            + "  MIDI-overflow blocks " + juce::String(static_cast<juce::int64>(last.midiTruncatedBlocks)),
-            20, 246, 640, 22, juce::Justification::left);
-        g.drawText("Dry pass-through only. No harmonies. Logs contain metadata, not PCM.",
-            20, 278, 640, 22, juce::Justification::left);
-        g.drawText(logger.error().isNotEmpty() ? logger.error() : logger.active() ? "Logging metadata" : "Log stopped (also stops when this editor closes)",
-            20, 304, 640, 22, juce::Justification::left);
-        g.setFont(11.0f);
-        g.drawText(logger.path(), 20, 370, 640, 22, juce::Justification::centredLeft, true);
-        g.setFont(14.0f);
-        g.drawText("Pitch " + juce::String(last.pitchHz, 2) + " Hz  confidence " + juce::String(last.pitchConfidence, 3)
-            + (last.pitchVoiced ? "  VOICED" : "  uncertain / unvoiced"), 20, 410, 640, 24, juce::Justification::left);
-        for (int i = 0; i < 3; ++i)
-            g.drawText("Voice " + juce::String(i + 1) + ": " + (last.targetActive[i] ? juce::String(last.targetMidi[i], 2) + " MIDI" : "inactive"),
-                20, 442 + 26 * i, 640, 24, juce::Justification::left);
-        g.drawText("12-TET sets only. Degree steps: 0 = unison, 2 = third. Octaves separate.", 20, 536, 640, 24, juce::Justification::left);
-        g.drawText("Readouts are callback snapshots; no audible harmonies yet.", 20, 562, 640, 24, juce::Justification::left);
-    }
-
-private:
-    void drain(int budget = 512)
-    {
-        DiagnosticEvent event;
-        for (int i = 0; i < budget && ownerProcessor.diagnosticQueue().pop(event); ++i)
-        {
-            if (event.kind == DiagnosticEvent::Kind::audio) last = event;
-            else
-            {
-                ++midiSeen;
-                lastMidi = juce::String::toHexString(event.midi, event.midiSize, 0)
-                    + " @" + juce::String(event.offset);
-            }
-            if (event.tick >= logAfter) logger.append(event);
-        }
-    }
-    void timerCallback() override
-    {
-        drain();
-        startLog.setEnabled(!logger.active());
-        stopLog.setEnabled(logger.active());
-        repaint();
-    }
-    Processor& ownerProcessor;
-    DiagnosticEvent last;
-    std::uint64_t midiSeen = 0, logAfter = 0;
-    juce::String lastMidi = "none";
-    DiagnosticLog logger;
-    juce::ComboBox source;
-    juce::TextButton startLog { "Start diagnostic log" }, stopLog { "Stop diagnostic log" };
-    juce::ParameterAttachment sourceAttachment;
-    std::unique_ptr<juce::GenericAudioProcessorEditor> parameterEditor;
-};
-}
-
-juce::AudioProcessorEditor* Processor::createEditor() { return new ShellEditor(*this); }
-
 void Processor::getStateInformation(juce::MemoryBlock& destination)
 {
-    constexpr char prefix[] = "voxide-tracking-v3";
+    const std::lock_guard lock(stateMutex);
+    constexpr char prefix[] = "voxide-studio-v4";
     const auto& parameters = getParameters();
     destination.setSize(sizeof(prefix) + static_cast<std::size_t>(parameters.size()) * sizeof(float));
     std::memcpy(destination.getData(), prefix, sizeof(prefix));
@@ -464,33 +411,46 @@ void Processor::getStateInformation(juce::MemoryBlock& destination)
 
 void Processor::setStateInformation(const void* data, int size)
 {
+    const std::lock_guard lock(stateMutex);
     if (data == nullptr || size <= 0) return;
     constexpr char legacy[] = "voxide-shell-v1";
     constexpr char prefix[] = "voxide-shell-v2";
-    constexpr char current[] = "voxide-tracking-v3";
+    constexpr char tracking[] = "voxide-tracking-v3";
+    constexpr char current[] = "voxide-studio-v4";
     const auto& parameters = getParameters();
-    if (size == static_cast<int>(sizeof(current) + static_cast<std::size_t>(parameters.size()) * sizeof(float))
-        && std::memcmp(data, current, sizeof(current)) == 0)
+    const bool v4=size==static_cast<int>(sizeof(current)+30*sizeof(float)) && std::memcmp(data,current,sizeof(current))==0;
+    const bool v3=size==static_cast<int>(sizeof(tracking)+23*sizeof(float)) && std::memcmp(data,tracking,sizeof(tracking))==0;
+    auto apply=[&](const std::array<float,30>& values)
     {
-        std::array<float, 23> values {};
+        stateGeneration.fetch_add(1,std::memory_order_acq_rel);
+        for (int i=0;i<parameters.size();++i) parameters[i]->setValueNotifyingHost(values[static_cast<std::size_t>(i)]);
+        stateGeneration.fetch_add(1,std::memory_order_release);
+    };
+    if (v4 || v3)
+    {
+        std::array<float, 30> values {};
         if (parameters.size() != static_cast<int>(values.size())) return;
-        const auto* bytes = static_cast<const unsigned char*>(data) + sizeof(current);
-        for (auto& value : values)
+        for (std::size_t i=0;i<values.size();++i) values[i]=parameters[static_cast<int>(i)]->getDefaultValue();
+        if (v3) for (std::size_t i=23;i<29;i+=2) values[i]=0; // Old sessions were dry-only.
+        const auto* bytes = static_cast<const unsigned char*>(data) + (v4?sizeof(current):sizeof(tracking));
+        for (std::size_t index=0;index<(v4?30u:23u);++index)
         {
             std::uint32_t bits = 0;
             for (unsigned j = 0; j < 4; ++j) bits |= static_cast<std::uint32_t>(*bytes++) << (j * 8);
-            value = std::bit_cast<float>(bits);
+            const auto value = std::bit_cast<float>(bits);
             if (!std::isfinite(value) || value < 0 || value > 1) return;
+            values[index]=value;
         }
-        for (int i = 0; i < parameters.size(); ++i) parameters[i]->setValueNotifyingHost(values[static_cast<std::size_t>(i)]);
-        stateGeneration.fetch_add(1, std::memory_order_release);
+        apply(values);
         return;
     }
     auto restoreLegacy = [&](int source)
     {
-        for (auto* parameter : parameters) parameter->setValueNotifyingHost(parameter->getDefaultValue());
-        sourceChoice->setValueNotifyingHost(static_cast<float>(source));
-        stateGeneration.fetch_add(1, std::memory_order_release);
+        std::array<float,30> values {};
+        for (std::size_t i=0;i<values.size();++i) values[i]=parameters[static_cast<int>(i)]->getDefaultValue();
+        values[0]=static_cast<float>(source);
+        for (std::size_t i=23;i<29;i+=2) values[i]=0;
+        apply(values);
     };
     if (size == static_cast<int>(sizeof(legacy)) && std::memcmp(data, legacy, sizeof(legacy)) == 0)
         restoreLegacy(0);

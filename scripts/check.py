@@ -74,14 +74,14 @@ def main():
                 "-B", str(build_dir),
                 "-DVOXIDE_OFFLINE=" + ("ON" if args.offline else "OFF"),
                 "-DPython3_EXECUTABLE=" + sys.executable])
-            targets = ["--target", "voxide_dsp_tests", "voxide_processor_tests"] if profile in ("asan", "tsan") else []
+            targets = ["--target", "voxide_dsp_tests", "voxide_processor_tests", "voxide_studio_reference_tests"] if profile in ("asan", "tsan") else []
             run(profile + "-build", ["cmake", "--build", str(build_dir), "--parallel", str(args.jobs), *targets])
             env = os.environ.copy()
             if profile == "asan":
                 env["ASAN_OPTIONS"] = "detect_leaks=0:halt_on_error=1"
             if profile == "tsan":
                 env["TSAN_OPTIONS"] = "halt_on_error=1"
-            selection = ["-R", "^(dsp|processor)$"] if profile in ("asan", "tsan") else []
+            selection = ["-R", "^(dsp|processor|studio_ui|studio_reference)$"] if profile in ("asan", "tsan") else []
             run(profile + "-test", ["ctest", "--test-dir", str(build_dir), "--output-on-failure", "--no-tests=error", *selection], env)
             if profile == "release":
                 run("release-tracking-research", [sys.executable, "scripts/tracking_evaluation.py",

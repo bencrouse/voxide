@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "DiagnosticLog.h"
 #include "DiagnosticsTests.h"
+#include "StudioTestSupport.h"
 #include <atomic>
 #include <stdexcept>
 #include <thread>
@@ -74,7 +75,7 @@ void runDiagnosticsTests()
     producer.join();
     check(!failed.load(), "SPSC torn/out-of-order record");
 
-    voxide::Processor processor;
+    voxide::Processor processor(studioTest::factory);
     Position position;
     processor.setPlayHead(&position);
     processor.prepareToPlay(48000, 64);
@@ -91,7 +92,7 @@ void runDiagnosticsTests()
     check(queue.pop(result) && result.offset == 23 && result.heldKeys == 0, "note-off diagnostic");
     check(queue.pop(result) && result.kind == voxide::DiagnosticEvent::Kind::audio, "audio diagnostic missing");
     check(result.hostSample == 128 && result.playing == 1 && result.transportKnown == 1
-          && result.frame == 0 && result.frames == 64 && result.sourceHash == result.leftHash
+          && result.frame == 0 && result.frames == 64 && juce::exactlyEqual(result.leftPeak,0.f) && result.sourceHash != result.leftHash
           && result.leftHash == result.rightHash && result.mainPeak > 0.12f, "audio diagnostic context");
     const auto firstEpoch = result.epoch;
     for (int i = 0; i < 100; ++i) midi.addEvent(juce::MidiMessage::noteOn(1, 60, 0.5f), i % 64);
