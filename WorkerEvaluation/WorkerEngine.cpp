@@ -1,5 +1,7 @@
 #include "WorkerEngine.h"
+#ifndef VOXIDE_WORKER_NO_AUDIT
 #include "../Source/Tests/AllocationAudit.h"
+#endif
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -9,6 +11,18 @@ namespace voxide::worker
 {
 namespace
 {
+#ifdef VOXIDE_WORKER_NO_AUDIT
+// The AU must not load a test malloc interposer into its host process.
+namespace workerAudit
+{
+constexpr bool available=false;
+bool selfTest() { return false; }
+void begin() {}
+std::size_t end() { return 0; }
+}
+#else
+namespace workerAudit=voxide::audit;
+#endif
 using Clock=std::chrono::steady_clock;
 void pause() { std::this_thread::sleep_for(std::chrono::microseconds(50)); }
 }
@@ -44,7 +58,9 @@ void Engine::process(const float* samples,int count)
 }
 int Engine::available() const
 {
-    if (!healthy()) return 0;
+    // Preserve an advertised finite packet if the worker fails between the
+    // consumer's available()/retrieve() calls. Callers still gate audio on
+    // healthy(); changing availability mid-read would throw/allocate in Core.
     if (read==pending.count)
     {
         if (!output.pop(pending)) return 0;
@@ -109,11 +125,11 @@ void Engine::run(engines::Config config,double initialRatio,double initialHz,Fac
 {
     try
     {
-        measurement.auditDetected=!audit::available || audit::selfTest();
-        if (!measurement.auditDetected) throw std::runtime_error("Worker allocation detector failed");
-        audit::begin(); auto native=factory(config,initialRatio,initialHz);
+        measurement.auditDetected=workerAudit::available && workerAudit::selfTest();
+        if (workerAudit::available && !measurement.auditDetected) throw std::runtime_error("Worker allocation detector failed");
+        workerAudit::begin(); auto native=factory(config,initialRatio,initialHz);
         if (!native) throw std::runtime_error("Worker factory returned no engine");
-        description=native->info(); measurement.setupAllocations=audit::end();
+        description=native->info(); measurement.setupAllocations=workerAudit::end();
         if (description.quantum!=128) throw std::runtime_error("Worker quantum must be 128");
         ready.store(true,std::memory_order_release);
         while (!shutdown.load(std::memory_order_acquire) && healthy())
@@ -122,20 +138,20 @@ void Engine::run(engines::Config config,double initialRatio,double initialHz,Fac
             if (!input.pop(command)) { pause(); continue; }
             if (!command.final && options.stallCommand==measurement.commands+1)
                 std::this_thread::sleep_for(std::chrono::milliseconds(options.stallMilliseconds));
-            audit::begin();
+            workerAudit::begin();
             if (command.final) native->finish();
             else { native->control(command.ratio,command.hz); native->process(command.input.data(),command.count); }
             const bool valid=drain(*native);
-            const auto allocations=audit::end();
+            const auto allocations=workerAudit::end();
             if (command.final) measurement.finishAllocations+=allocations;
             else { measurement.bodyAllocations+=allocations; ++measurement.commands; }
             if (!valid) { failed.store(true,std::memory_order_release); break; }
             completed.store(command.serial,std::memory_order_release);
             if (command.final) break;
         }
-        audit::begin(); native.reset(); measurement.destroyAllocations=audit::end();
+        workerAudit::begin(); native.reset(); measurement.destroyAllocations=workerAudit::end();
     }
-    catch (...) { audit::end(); failed.store(true,std::memory_order_release); }
+    catch (...) { workerAudit::end(); failed.store(true,std::memory_order_release); }
     finished.store(true,std::memory_order_release);
     ready.store(true,std::memory_order_release);
 }

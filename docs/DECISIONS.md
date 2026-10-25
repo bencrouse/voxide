@@ -478,3 +478,50 @@ self-review, not independent acceptance. Preserve `pr-06a-completion`; create
 new native matrix, AU installation/Logic operation or automatic qualification/go
 is authorized by this checkpoint operation. Prototype implementation is the next
 task; this commit does not claim the AU exists or that PR06A passed.
+
+**Evaluation-only PR06B approval (2026-10-25):** after asking which PR contains the
+prototype and whether it is preferable to premature PR07 integration, the user
+explicitly requested PR06B on a branch. This authorizes the
+[minimal separate evaluation AU](PR06B_EVALUATION_AU.md) on
+`pr-06b-evaluation-au` from checkpoint `8f3a982`, as a sequencing exception while
+PR06A remains incomplete. Freeze engine research; reuse the existing Rubber Band
+worker direction, key/scale selection, three harmonies and unchanged aligned lead.
+Preserve all qualification gates and original failures. Build and focused
+synthetic/device-free tests are in scope; installation, actual Logic/device
+operation, private-source reads, full formal qualification, PR07 integration,
+commit/merge/push and final engine/distribution approval are not inferred.
+
+**Evaluation-AU implementation result (2026-10-25):** the separate prototype now
+builds, with explicit key/scale, three fixed scale-derived voices, unchanged
+100 ms-aligned lead, global harmony trim/enable, parameter state and visible fault/
+restart status. Pristine spare graphs swap on render boundaries; native work and
+old-graph reclamation stay off callback. An AU-only compile switch disables worker
+test instrumentation without linking its malloc interposer into the host; default
+research instrumentation remains available. Original captured binaries/source/
+reports are preserved, not regraded against this integration change.
+
+All four Release functional tests, ASan/TSan fake-engine processor contracts and
+204 Python tests pass; the exact built AU's impulse delay/property is 100 ms at
+both rates. See `docs/PR06B_EVALUATION_AU.md`. This is real-time-only evaluation:
+offline/unsupported-rate renders are explicitly lead-only, not qualified harmony
+bounces. No installation, Logic/device operation, private replay, commit/merge/
+push, final engine choice or formal PR06B acceptance is claimed. The next practical
+step is a separately coordinated Logic audition, while all outstanding gates stand.
+
+**Prototype delivery hardening (2026-10-25):** the worker proxy now preserves a
+finite packet already advertised when its worker fails between availability and
+retrieval. This avoids a callback exception/allocation race; session health still
+immediately mutes all audible wet output. New processor and audited-worker
+regressions cover it. Five Release checks, both ASan/TSan fake-engine contract
+suites and 204 Python tests pass. The final preserved component and source/test
+manifest are under `build/pr-06b-artifacts/ready-20261025-01/`. Intermediate exports
+and all original PR06A reports remain unchanged. No installation, Logic operation,
+formal qualification/go or automatic commit/merge/push follows from delivery.
+
+**Evaluation-AU implementation closeout authorization (2026-10-25):** the user
+requested closing out this PR after delivery. Review and commit the scoped
+evaluation-AU implementation locally on `pr-06b-evaluation-au`, preserving known
+failures and remaining gates. The [closeout](evidence/pr-06b/closeout-001.md) closes
+the implementation task, not PR06B formal studio qualification or PR07 product go.
+Independent review remains pending before merge/promotion. No main merge, push,
+installation, Logic/device operation, playback or private replay is inferred.

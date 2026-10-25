@@ -5,9 +5,12 @@ three harmony voices. **Current priority: recorded vocals, scale mode, inclusive
 ±12-semitone support and an intentionally processed vocal character.** Live use,
 MIDI-mode qualification and ±24 coverage are deferred, not achieved or cancelled.
 
-**Causal pitch tracking and three-voice target selection are implemented. Product
-AU audio remains dry pass-through; harmonies exist only in isolated research and
-approved local listening files, not the installed plug-in.**
+**The product AU remains dry pass-through. A separate, uninstalled
+[PR06B evaluation AU](docs/PR06B_EVALUATION_AU.md) now builds with audible harmonies**
+on `pr-06b-evaluation-au`: explicit key/scale, three fixed scale-derived voices,
+unchanged aligned lead and 100 ms declared latency. It is real-time playback only,
+locally ad-hoc signed and unqualified—not product acceptance or a PR07 merge.
+See the linked document for its build path, limitations and focused test results.
 PR 00 establishes builds and the AU; PR 01 adds routing diagnostics and native
 automated checks, with a separate human-operated Logic checklist. Nothing here
 demonstrates professional vocal quality or acceptable live-monitoring latency.
@@ -83,7 +86,8 @@ pilot note for evidence and limitations.
 The [bounded verification](docs/STUDIO_VERIFICATION.md) has now run: meter
 calibration passes 36/36 fixtures, but matched prescribed/tracked output-pitch
 checks fail in 34/72 native cases despite correct controls. **PR06A is blocked;
-PR06B/product integration must not start.** A3 is stopped under the approved rule.
+formal qualification/product go remain blocked.** The separately approved
+evaluation-AU exception does not waive those gates. A3 is stopped under the approved rule.
 See [the results](docs/STUDIO_VERIFICATION_RESULTS.md). No private vocal repeats
 or Logic/PDC tests were performed; those remain separately approval-gated.
 All five tooling review findings are now fixed and independently closed, with

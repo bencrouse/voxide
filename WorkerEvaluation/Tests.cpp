@@ -76,7 +76,7 @@ void overflow()
     audit::begin();
     for (int i=0;i<600;++i) engine->process(zero.data(),128);
     require(audit::end()==0,"Queue overflow allocated on callback");
-    require(!engine->healthy() && engine->available()==0,"Queue overflow did not fail closed");
+    require(!engine->healthy(),"Queue overflow did not latch the audio-mute flag");
     engine->finish(); require(engine->metrics().failed,"Queue failure was erased");
 }
 void nonfinite()
@@ -88,6 +88,18 @@ void nonfinite()
     engine->finish(); require(!engine->healthy() && engine->available()==0,"Invalid native output escaped");
     engine.reset(); invalidOutput=false;
 }
+void advertisedPacketFailure()
+{
+    auto engine=std::make_unique<worker::Engine>(engines::Config{48000,1,128},1,220,factory,worker::Engine::Options{});
+    std::array<float,128> input {},output {};input.fill(.01f);
+    engine->process(input.data(),128);require(engine->waitIdle(),"First packet not ready");
+    require(engine->available()==128,"First packet not advertised");
+    invalidOutput=true;engine->process(input.data(),128);
+    require(!engine->waitIdle(),"Native failure not exposed");engine->finish();
+    audit::begin();const int count=engine->available();const int received=engine->retrieve(output.data(),count);
+    require(audit::end()==0 && count==128 && received==128 && !engine->healthy(),"Failure invalidated an advertised packet");
+    engine.reset();invalidOutput=false;
+}
 }
 int main()
 {
@@ -95,7 +107,7 @@ int main()
     {
         owner=std::this_thread::get_id();
         if (audit::available) require(audit::selfTest(),"Allocation controls failed");
-        transfer(); overflow(); nonfinite();
+        transfer(); overflow(); nonfinite(); advertisedPacketFailure();
         require(wrongThread==0 && living==0,"Native ownership/lifetime escaped worker");
         std::cout<<"Worker ownership, SPSC order/splits, callback allocation, worker allocation detection, overflow, nonfinite and stopped lifecycle controls passed\n";
         return 0;

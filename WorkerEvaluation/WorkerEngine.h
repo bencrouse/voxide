@@ -22,6 +22,7 @@ public:
     engines::Info info() const noexcept override { return description; }
     void control(double,double) override;
     void process(const float*,int) override;
+    // Finite queued data remains drainable after failure; gate output on healthy().
     int available() const override;
     int retrieve(float*,int) override;
     void finish() override;

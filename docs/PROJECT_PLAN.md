@@ -22,6 +22,10 @@ interpretations but finds no technical survivor for the tested combined live/mix
 scope. See `docs/ARCHITECTURE_INVESTIGATION.md`; its results remain unchanged.
 **Current direction (user clarification, 2026-10-24): studio-first, scale-first,
 three harmony voices, minimum ±12 semitones, intentionally processed vocal character.**
+**Sequencing exception approved 2026-10-25:** implement only PR06B's separate
+evaluation AU on `pr-06b-evaluation-au` from incomplete checkpoint `8f3a982`.
+PR06A's failed/pending gates remain visible; formal qualification, product go and
+PR07 integration remain blocked. See `docs/PR06B_EVALUATION_AU.md`.
 PR06A's approved excerpt-a/C-major listening-only comparison is rendered. The user
 reports good sound, a Rubber Band preference with a seemingly small difference,
 and no distracting artifacts on this example. The earlier bounded engineering comparison
@@ -45,7 +49,7 @@ checks passed for that tooling milestone. See `docs/evidence/pr-06a/review-fixes
 The merged `534f6e5` was a **partial research/tooling milestone, not PR06A closure**.
 The `pr-06a-completion` checkpoint preserves the approved bounded synthetic work
 and records its negative result. **PR06A is BLOCKED at technical feasibility, not
-accepted/complete; PR06B must not start.** All 72 A2 source/control/safety checks
+accepted/complete; formal PR06B/product go remains blocked.** All 72 A2 source/control/safety checks
 pass, but prescribed and tracked paths fail the same 17 conditions per mode.
 See `docs/STUDIO_VERIFICATION_RESULTS.md`. Driver qualification passes 186 Python
 tests/full product checks; that does not override the failing DSP experiments.
@@ -1166,11 +1170,41 @@ gates passed. The old combined live/mixing no-go remains valid for its scope.
   closure, a production engine selection or a waiver of timing/musical/host gates.
   No AU implementation, installation or Logic operation occurs during checkpointing.
 
-### PR 06B — Studio qualification and architecture go/no-go
+### PR 06B — Studio qualification and architecture go/no-go (evaluation AU implemented; qualification open)
 
 Depends on: PR06A's useful pilot/credible technical path, approved versioned studio
 contract and the formal source/reference/listener resources. This retains the
 substance of the former PR06 formal qualification, **after** the small pilot.
+
+**User-approved sequencing exception (2026-10-25):** build a minimal, separately
+identified evaluation-only AU before closing PR06A, not production integration or
+an assertion that formal qualification passed. Branch `pr-06b-evaluation-au` starts
+at checkpoint `8f3a982`. Scope, build commands, real-time-only limitations and
+remaining gates are in `docs/PR06B_EVALUATION_AU.md`. No installation/Logic/private
+source operation or automatic commit/merge/push is authorized by this exception.
+
+**Evaluation-AU implementation checkpoint (closed locally; qualification open)**
+- [x] Separate local `voxide Studio Eval` component (`aufx / Vx6b / Vxid`), without
+  changing the product component or its parameter/state compatibility.
+- [x] Explicit key/built-in scale, three +2/+4-step/octave voices, unchanged lead
+  at 100 ms alignment, harmony trim/enable, bypass, evaluation state and visible
+  fault/restart controls. Native workers and graph reclamation stay off callback;
+  the AU excludes the research malloc interposer.
+- [x] Release build and five focused functional checks cover processor/worker contracts, native
+  audibility, uninstalled AU impulse/100 ms latency, and signed arm64 bundle/system-
+  dependency validation. ASan/TSan fake-engine contracts and 204 Python tests pass.
+  Final delivery evidence is at `build/pr-06b-artifacts/ready-20261025-01/report.json`;
+  build/use scope is recorded in `docs/PR06B_EVALUATION_AU.md`.
+- [ ] User-coordinated installation/Logic audition; none performed. Fast offline
+  bounce deliberately remains unsupported (explicitly marked delayed-lead-only),
+  not a passing harmony render. Formal musical/support/host/listening gates below
+  are unchanged and open. See `docs/PR06B_EVALUATION_AU.md`.
+
+The prototype implementation task is closed in a local branch commit at the user's
+request, **not completed PR06B qualification or a PR07 go**. All PR06A failures and
+consumed experiments remain unchanged. See `docs/evidence/pr-06b/closeout-001.md`.
+Work remains on `pr-06b-evaluation-au`; no merge, push, installation or Logic
+operation is included in closeout.
 
 **Scope / TODO**
 - [ ] Freeze configurations and the processed-character/listening rubric before
