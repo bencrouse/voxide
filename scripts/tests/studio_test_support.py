@@ -2,9 +2,9 @@
 import csv
 
 
-def synthetic_timeline(rate, total, engine="signalsmith"):
+def synthetic_timeline(rate, total, engine="signalsmith", *, oracle=False):
     # Literal clocks from the pinned adapter/tracker, not calls to studio_clocks.
-    analysis = {44100: 1001, 48000: 1045}[rate]
+    analysis = 0 if oracle else {44100: 1001, 48000: 1045}[rate]
     quantum, lag, offset, finish = (512, 1024, 2048, 1024) if engine == "signalsmith" else (128, 0, 0, 0)
     fields = "kind epoch wall source voice requested available frame_begin frame_end frame_available hz confidence voiced active target_midi requested_shift applied_shift weight first_output count request_kind".split()
     def row(**values):

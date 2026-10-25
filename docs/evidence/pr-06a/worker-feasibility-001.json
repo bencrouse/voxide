@@ -1,0 +1,39 @@
+{
+  "schema": "voxide.worker-feasibility.v1",
+  "id": "pr06a-worker-feasibility-001",
+  "approval": "2026-10-25: user explicitly approved testing background processing to resolve the allocation blocker without changing sound requirements or the 100 ms ceiling",
+  "scope": "Isolated synthetic PR06A architecture feasibility; no AU/product integration, private input, installation, playback, new engine/backend or upstream patch",
+  "engine": "Existing pinned Rubber Band R3 short, original EngineAdapter options and pristine fresh native graphs; no priming/reset workaround",
+  "architecture": "One native owner worker per voice; fixed-capacity SPSC input/control and output queues; callback only posts bounded copied commands and drains available output; no callback locks, waits, native calls, wake syscalls or joins",
+  "rates": [44100, 48000],
+  "callback_frames": [128, 512],
+  "processing_latency_samples": {"44100": 4410, "48000": 4800},
+  "source": "Same documented 5-second synthetic engineering shape: E2/A3/C6 six-harmonic segments, noise/uncertainty, bends and four source-time C-major harmony requests; 600 ms supplied zero tail; three voices and unchanged lead",
+  "captures": {
+    "reference": 4,
+    "paced_worker": 4,
+    "offline_worker": 4,
+    "deliberate_stall_negative": 2,
+    "total_cap": 14,
+    "process_cap": 6,
+    "negative": "128-frame callback at each rate; pause voice-0 worker for 200 ms at process command 64; verify missed delivery is recorded and harmonies latch silent while lead remains unchanged"
+  },
+  "offline": "The offline coordinator may wait for worker completion BETWEEN callback invocations, never inside the audited callback. This is isolated deterministic offline behavior, not host bounce qualification.",
+  "gates": {
+    "callback_allocation_calls_max": 0,
+    "callback_occupancy_p999_max_exclusive": 0.5,
+    "overdue_callbacks_max": 0,
+    "paced_callback_finish": "finish must meet scheduled callback end, including observed start lateness",
+    "output_max_abs_difference": 0.000001,
+    "output_rms_difference": 0.0000001,
+    "all_ten_channels_and_control_input_hashes": "Match synchronous reference at fixed software alignment; no correlation alignment, cropping, gain correction or regrading",
+    "lead_null_max_abs": 0.000001,
+    "lead_null_rms": 0.0000001,
+    "underflows_late_samples_queue_overflow_nonfinite_control_errors": 0,
+    "finish_peak_max": 0.000001,
+    "worker_allocations": "Must be reported separately, including setup/body/finish; never relabeled eliminated. Their stalls remain subject to delivery gates."
+  },
+  "unit_qualification": "Fake-engine queue/ownership/allocation/failure/lifecycle tests in Release, ASan and TSan; these do not execute native engine captures or establish realtime performance",
+  "stop": "Execute the fixed 14 native captures once in serial without builds/profilers/parallel analysis. Preserve incomplete and failed evidence; no tuning/retry, historical claim reuse or automatic full quality matrix.",
+  "remaining": "Even a pass only clears the sampled callback-allocation architecture screen. Rubber Band calibrated pitch/full-support/formant/onset, actual challenge c, independent completion review, Logic/PDC/bounce and explicit PR06B go remain separate gates."
+}

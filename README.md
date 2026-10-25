@@ -76,18 +76,35 @@ at low volume to `00-dry.wav`, `signalsmith-2048-512-mix.wav` and
 `rubberband-r3-short-mix.wav`; report preference and timestamped articulation/bend
 or note defects. Clip-c feedback again slightly favors Rubber Band, but the user
 finds the difference minimal and non-decisive for choosing an engine. Signalsmith
-remains the provisional engineering lead, not a final selection. The original
+was the provisional engineering lead before the subsequent pitch failures below;
+it is not selected. The original
 withheld result stays unchanged; no formal quality decision is implied. See the
 pilot note for evidence and limitations.
-The [bounded verification proposal](docs/STUDIO_VERIFICATION.md) next isolates
-meter/tracker/native pitch errors before eventful-delivery checks. Its synthetic
-matrix is execution-approved but not yet implemented/executed; private vocal
-repeats and Logic/PDC testing remain separately approval-gated. Delivery and a
-favorable listen are not pitch qualification or permission to integrate the product.
+The [bounded verification](docs/STUDIO_VERIFICATION.md) has now run: meter
+calibration passes 36/36 fixtures, but matched prescribed/tracked output-pitch
+checks fail in 34/72 native cases despite correct controls. **PR06A is blocked;
+PR06B/product integration must not start.** A3 is stopped under the approved rule.
+See [the results](docs/STUDIO_VERIFICATION_RESULTS.md). No private vocal repeats
+or Logic/PDC tests were performed; those remain separately approval-gated.
 All five tooling review findings are now fixed and independently closed, with
 165 Python/full-product checks passing. See the
-[repair record](docs/evidence/pr-06a/review-fixes-001.md). Next is the approved
-synthetic-only meter calibration, not another listening comparison.
+[repair record](docs/evidence/pr-06a/review-fixes-001.md). The completion drivers pass
+186 Python/full-product checks; this does not turn failing DSP results into passes.
+No engine choice or additional tuning/retest is inferred from the listening preference.
+The subsequently approved [wrapper audit](docs/evidence/pr-06a/wrapper-audit-001.md)
+found no justified correction. The current configuration is rejected for the
+retained requirements; no speculative rerender was made.
+The separately approved [Rubber Band allocation diagnosis](docs/evidence/pr-06a/rubberband-allocation-diagnosis-001.md)
+also rejects its tested workaround: silent preparation removes allocations but
+changes output timing/waveforms. Both direct-callback configurations remain
+blocked; a worker-owned feasibility prototype needs an explicit architecture decision.
+That isolated prototype was subsequently **approved on 2026-10-25** and is now
+implemented under a [fixed synthetic protocol](docs/evidence/pr-06a/worker-feasibility-001.json).
+Its normal tests now demonstrate **zero callback allocations, exactly unchanged
+audio and 100 ms software alignment** at both rates/buffers. The overall timing
+screen still fails one first-callback dispatch deadline in a fault test; it is not
+waived. See [the results](docs/evidence/pr-06a/worker-feasibility-001.md). Musical/
+host qualification, PR06A completion and product integration remain gated.
 
 ## Local development
 

@@ -1,15 +1,28 @@
 # Signalsmith studio verification — bounded proposal
 
-**Status: planning only, 2026-10-24.** The user authorized defining the next tests,
-not running another private render, installing an AU or operating Logic.
+**Status: PR06A blocked by A2 output-pitch failure, 2026-10-24.** The user requested completion
+of the outstanding PR06A work after the partial research/tooling merge. This does
+not authorize another private render, installing an AU or operating Logic.
 The user subsequently approved **synthetic-only execution**. The
 [independent code review](evidence/pr-06a/review-001.md) found five tooling defects;
 their [repairs, negative regressions and follow-up review](evidence/pr-06a/review-fixes-001.md)
-are now complete. Stage A has not been implemented/executed; its approved bounded
-implementation and meter calibration are next, not another approval request.
+are now complete. A1's synthetic calibration driver and regressions are implemented;
+the bounded [execution contract](evidence/pr-06a/signalsmith-verification-execution.json)
+freezes generator, meter hashes, support/eligibility and stopping rules before
+execution. Calibration runs before any A2/A3 capture; no new approval is needed
+for the already approved synthetic scope. **A1 passed all 36 fixtures** (28 positive,
+eight negative) at `build/studio-verification/20261024T200210Z-edb48fa4/report.json`;
+all positive fixtures have 100% eligible observations within 25 cents. The meter
+and driver/provenance remain bound by hash. A2 executed with independent generated
+targets, input/control hash verification, oracle/tracked timelines and dense output
+measurement. **34/72 cases fail output-pitch gates**: the same 17 conditions per
+mode, despite passing source/control/safety checks. A3 is correctly stopped. See
+[the results and PR stop decision](STUDIO_VERIFICATION_RESULTS.md).
+A failed mandatory gate remains a stop,
+not permission to tune the meter or silently mark PR06A complete.
 [Machine-readable proposal](evidence/pr-06a/signalsmith-verification-proposal.json):
-`pr06a-signalsmith-verification-001`. No new DSP executions or source-audio reads
-were performed for this gap review; retained synthetic JSON and implementation
+`pr06a-signalsmith-verification-001`. No new DSP executions or private source-audio reads
+were performed for the original gap review; retained synthetic JSON and implementation
 contracts were inspected. Historical protocols, results and consumed approvals
 remain unchanged. No engine has received final selection or a studio go.
 
@@ -57,7 +70,7 @@ The report hashes/case IDs are bound in the proposal for later verification.
 
 ## 2. Stage A — synthetic attribution, then eventful delivery
 
-**Execution approved by the user; tooling repairs reviewed/qualified; not executed.**
+**A1 passed; A2 completed with failed output-pitch gates; A3 not executed under the stop rule.**
 One candidate, no DSP tuning, no playback,
 no private sources, no new backend/window/policy or engine sweep. Freeze the driver,
 fixture definitions and measurement protocol before execution. Preserve current
@@ -228,8 +241,11 @@ is needed for a credible studio decision. Resolve this dependency explicitly:
 
 ## 5. Decisions and stopping rules
 
-- **Next checkpoint:** implement/freeze Stage A's fixture/measurement details and
-  start meter calibration within the existing synthetic-only execution approval.
+- **Current checkpoint:** the user approved at most one evidence-backed wrapper/
+  configuration correction and regression, not tracker changes. The subsequent
+  [audit](evidence/pr-06a/wrapper-audit-001.md) found no justified correction. Stop/
+  reject the current configuration; no new native run or allowance was consumed.
+  A3 and PR06B remain blocked. Original consumed stage claims are not reusable.
   The five tooling defects are repaired/regressed and independently closed; see
   the linked repair record. The original proposal
   JSON remains a historical proposal, not a private-source execution receipt.
@@ -237,9 +253,11 @@ is needed for a credible studio decision. Resolve this dependency explicitly:
   a successful A result; no private-audio exception is inherited or broadened.
 - No spend, engine shopping, new backend, package installation, upstream patches,
   uploads, automatic playback, AU/product integration or commit/merge/push.
-- There is **no correction/retest allowance spent or newly granted here**. A
-  diagnosed defect needs a separately bounded decision within the existing PR06A
-  allowance; failed calibration/quality is not an invitation to keep sweeping.
+- The subsequently approved correction/regression allowance is **unspent** because
+  no evidence-backed change was identified. No configuration sweep, speculative
+  rerender or tracker change follows from that approval. Any actual correction
+  still needs its exact diagnosed change and single-use regression protocol frozen
+  before execution; this audit does not create or consume such a claim.
 - Full human references, independent listening, processed-character/formant and
   recorded-onset criteria remain approval/resource gates. Existing formant/response
   diagnostics stay visible; they are not silently replaced by informal preference.

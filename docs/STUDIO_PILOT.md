@@ -550,3 +550,27 @@ unchanged. Final evidence/code snapshots are under
 private payload read, rerender, playback or host operation occurred. The existing
 synthetic-only Stage A approval can now be used for its bounded implementation and
 calibration; no Stage A execution, final engine selection or PR06B go yet.
+
+## Completion attempt: calibrated synthetic stop — 2026-10-24
+
+After partial research/tooling merge `534f6e5`, the user asked to finish the
+outstanding work and reconcile PR status. On `pr-06a-completion`, A1's frozen meter
+passes **36/36** fixtures; A2 executes the full **72** matched prescribed/tracked
+cases with generated input at both rates, three registers, two shapes and three
+voicings. Source/target/control hashes, complete clocks, safety, lead null, sums
+and callback checks pass. **Output pitch fails 34/72 cases**, identically 17
+conditions per mode; only 144/216 voice groups pass the output gates.
+
+The [results](STUDIO_VERIFICATION_RESULTS.md) retain per-register evidence,
+descriptive spectral checks and interpretation limits. These failures persist
+without tracker dependence; successful delivery and favorable listening do not
+waive them. **A3 is not executed** under the stop rule. No new private read/listen,
+engine setting, DSP correction, rerender, host operation or merge occurred.
+
+**Current PR status: PR06A BLOCKED at its technical feasibility/decision gate.**
+The experiment reached a concrete negative stop; PR06A is not accepted/complete
+and PR06B must not begin. Independent review of the new completion code and an
+explicit decision on any bounded correction remain; prior review closure covered
+earlier tooling, not this new code. Driver checks pass 186 Python tests at
+`build/checks/20261024T220420Z-2511d1ba/environment.json`; no threshold, case or
+historical failure was altered to force a pass.

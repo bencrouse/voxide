@@ -1,0 +1,33 @@
+{
+  "schema": "voxide.rubberband-allocation-diagnosis.v1",
+  "id": "pr06a-rubberband-allocation-diagnosis-001",
+  "approval": "User requested continuation of the recommended bounded task: diagnose the existing Rubber Band callback allocations; no product integration or private-source approval inferred",
+  "purpose": "Test one source-backed stopped-preparation hypothesis, not engine selection or pitch qualification",
+  "engine": "Pinned Rubber Band R3 short; unchanged EngineAdapter options, Accelerate FFT and BQResampler",
+  "rates": [44100, 48000],
+  "workloads": ["static", "changing"],
+  "preparations": ["fresh", "silent"],
+  "native_capture_cap": 8,
+  "source": {"midi": 40, "shape": "six-harmonic", "amplitude_per_harmonic": "0.04/h", "primary_seconds": 3, "zero_tail_seconds": 0.6, "voices": 3},
+  "controls": {
+    "static_semitones": [-12, 7, 12],
+    "changing_targets_before_one_second": [-12, 7, 12],
+    "changing_targets_from_one_to_two_seconds": [12, -12, 4],
+    "changing_targets_after_two_seconds": [-7, 12, -12],
+    "changing_bend": "0.35*sin(2*pi*5*source_sample/rate), added only to targets strictly inside endpoints",
+    "slew_semitones_per_second": 2400,
+    "quantum": 128,
+    "initial_semitones": [0, 0, 0]
+  },
+  "silent_preparation": {
+    "ratios_in_order": [0.5, "95999/96000", "95998/95999", 0.5, 2, 1],
+    "zero_samples_per_ratio": "ceil(rate/4/128)*128",
+    "finish_during_preparation": false,
+    "after_preparation": "Call existing wrapper reset(1, sourceHz) once while stopped; then unchanged startup pad/trim and prescribed input/control stream",
+    "rationale": "BQResampler reserves phase tables at 2*sampleRate, less than rational_max=96000 at 44.1 kHz. Two high-numerator ratios exercise both banks; the half-ratio grows retained history buffers. Silence avoids the nonzero history left by rejected exact-audio priming. This is a hypothesis, not a proven neutral reset."
+  },
+  "evidence": ["self-generated input", "complete raw outputs including startup", "per-quantum controls", "stage-separated allocation counts", "diagnostic allocation stacks", "source/build/dependency hashes"],
+  "comparison": {"equal_lengths_required": true, "input_controls_and_metadata_identical_required": true, "max_abs": 0.000001, "rms": 0.0000001, "nonfinite_samples_max": 0, "callback_allocation_calls_max": 0, "finish_allocation_calls_max": 0},
+  "stop": "Execute the fixed eight captures once. If any prepared callback allocates, any output/metadata/duration comparison fails or execution is incomplete, reject this preparation; do not tune or repeat. Preserve partial and failed evidence.",
+  "exclusions": ["private recordings", "automatic playback", "engine/backend changes", "upstream edits", "product-wrapper changes", "timing claims from stack capture", "pitch/formant/host qualification", "reusing A1/A2/A3 claims", "commit/merge/push"]
+}

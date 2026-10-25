@@ -1,0 +1,43 @@
+{
+  "schema": "voxide.studio-verification-execution.v1",
+  "id": "pr06a-signalsmith-stage-a-001",
+  "approval": "User explicitly approved synthetic-only execution, then requested completion of the outstanding PR06A work after local merge; no private or host permission inferred",
+  "proposal_sha256": "871c1f459283a04551c4b7f5e31e3dbfad9a07f5b7aed578d09e35ba86457e04",
+  "scope_sha256": "aa244021646efb53cfe87dc45db4fba602d43d81babf2cec3d4094c4a7b4a7f6",
+  "meter_sources_sha256": {
+    "scripts/engine_metrics.py": "8d3d0af748e062dae9bbf16b80291aebfeaaefb686a2a2fd04d747ca0a4a1e9a",
+    "scripts/evaluation_metrics.py": "d78000b57994e810cad04ca3c6f465afc96e776d75c23a5842a8b5d5e0af0b7a"
+  },
+  "rates": [44100, 48000],
+  "calibration": {
+    "primary_seconds": 3,
+    "zero_tail_seconds": 0.6,
+    "output_midi": [28, 40, 45, 57, 69, 84, 96],
+    "shapes": ["sine", "six-harmonic"],
+    "amplitude": 0.04,
+    "harmonic_amplitude": "0.04/h for h=1..6, only below Nyquist",
+    "phase": "sin(2*pi*h*hz*i/rate), directly from sample index; float32 round-trip before measurement",
+    "source_gain": "min(1, 10^(-24/20)/source_rms); attenuation only, before float32 rounding",
+    "negative_controls": ["one-semitone-wrong-target", "octave-wrong-target", "silence", "seeded-unvoiced-noise"],
+    "negative_tone": "six-harmonic MIDI57, deliberately graded against MIDI58 or MIDI69",
+    "noise_seed": 1448040521,
+    "noise": "standard-library Random(seed).uniform(-0.02,0.02); analytic reference unvoiced",
+    "positive_fixtures": 28,
+    "negative_fixtures": 8,
+    "total_fixtures": 36,
+    "observer_window_samples": 8192,
+    "reference_hop_ms": 10,
+    "stable_boundary_exclusion_ms": 50,
+    "search_hz": [16, 5000],
+    "eligibility": "Reference grid centers must be within stable bounds and their entire centered observer support inside the primary signal; all excluded centers retained with reasons",
+    "missing_estimate": "Wrong on an eligible voiced reference, never silently excluded",
+    "unvoiced_reference": "No pitch-accuracy denominator or correct frames; accepted pitch detections retained as false detections and fail the calibration negative control",
+    "wrong_target_control": "Must fail the ordinary accuracy gate, with at least 99% eligible estimates exposing the deliberately wrong target by more than 25 cents",
+    "wrong_note_duration": "Longest consecutive wrong eligible 10ms grid-cell span; descriptive sampled duration, not sub-grid or onset certification",
+    "gates": {"pitch_tolerance_cents": 25, "stable_accuracy_min": 0.99, "octave_error_fraction_max_exclusive": 0.001, "wrong_note_duration_ms_max": 50},
+    "execution": "One exclusive protocol-keyed A1 claim; no automatic rerun or meter tuning. Standard-library process workers may parallelize offline measurement, not native callback timing."
+  },
+  "stage_caps": {"a1_measurement_fixtures": 36, "a2_native_captures": 72, "a3_native_captures": 16, "total_native_captures": 88},
+  "stop": "Failed calibration stops before any native A2/A3 capture. Preserve the meter, failures, source identities and complete report; do not alter thresholds, hide cases or continue against an uncalibrated observer.",
+  "not_authorized": ["private audio/corpus access", "new listening comparison", "DSP tuning or new engine/backend", "package installation", "AU/Logic/device operation", "playback", "automatic commit/merge/push", "formal qualification or PR06B/product go"]
+}

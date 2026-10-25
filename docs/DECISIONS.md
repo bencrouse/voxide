@@ -381,3 +381,100 @@ the negative research results and pending studio gates; it is not final engine
 selection, a PR06B product go, AU integration/installation, new private rendering,
 playback or host operation. The existing synthetic-only Stage A approval remains
 separate from the merge. No push or remote publication is authorized.
+
+**PR06A completion stop (2026-10-24):** the user requested completion after identifying
+that the prior merge was only a partial milestone. On `pr-06a-completion`, frozen
+A1 calibration passes 36/36 fixtures and A2 executes 72 matched generated-source
+cases. Source/target/control/safety checks pass, but output pitch fails 34/72
+cases: the same 17 conditions in each mode. A3 is not executed; reserved captures
+are not repurposed for tuning. See `docs/STUDIO_VERIFICATION_RESULTS.md` for evidence
+and limits. No tracker-only explanation, musical pass, engine choice or PR06B go
+is inferred. PR06A is explicitly **BLOCKED**, not quietly marked complete to align
+labels. A diagnosed bounded correction/retest requires a new decision; none was
+attempted. Independent completion review remains before merge. No private payload
+read, preview repeat, new engine/backend, threshold relaxation, AU/Logic operation,
+commit/merge/push or historical-result change occurred in this attempt.
+
+**Bounded correction approval and audit outcome (2026-10-24):** the user accepted
+the recommendation to investigate wrapper/configuration, not the tracker, permit
+one evidence-backed correction and regression, preserve requirements and stop if
+failures persist. This approval was granted; it is not still awaiting a decision.
+The subsequent [wrapper audit](evidence/pr-06a/wrapper-audit-001.md) found no
+demonstrated integration defect or justified replacement configuration. API units,
+transpose direction, formant compensation and streaming clocks match the pinned
+implementation. Larger presets violate the complete latency ceiling; a manually
+changed window/hop remains an unproven hypothesis, not a diagnosed correction.
+Stop/reject the current 2048/512 configuration on its existing failed evidence.
+No correction or regression was executed and no allowance/claim was consumed.
+This does not establish impossibility for every configuration or select another
+engine. PR06A remains blocked, A3/PR06B remain stopped, and independent completion
+review remains outstanding. No private/host permission or automatic merge follows.
+
+**Rubber Band allocation diagnosis authorization (2026-10-24):** after asking how
+to resume the plan, the user requested continuation of the recommended next task:
+diagnose the existing Rubber Band callback allocations within PR06A feasibility,
+without changing requirements or advancing integration. Existing stacks already
+identify lazy FFT setup and resampler state creation; repeating that finding alone
+would not be a new fix. A separate synthetic-only diagnostic tests one source-backed
+silence-only stopped-preparation hypothesis, not the previously rejected audio
+priming strategy. The [frozen eight-capture protocol](evidence/pr-06a/rubberband-allocation-diagnosis-001.json)
+compares fresh/prepared graphs at both rates under static/changing controls, counts
+startup/body/tail/finish allocations separately and requires identical input/control/
+metadata plus the retained output-difference limits. There is no product-wrapper
+change, upstream edit, backend change, private read or timing claim from stack
+capture. Failure rejects this preparation without tuning/retry. Any surviving
+diagnostic is not pitch/full-support/host qualification or permission to integrate.
+
+**Rubber Band diagnosis result (2026-10-24):** all eight fixed captures executed
+once. Silent stopped preparation reduces observed callback/finish allocations to
+zero, but all four paired comparisons fail native output lengths and common-body
+waveforms. Reject it without retries or product-wrapper changes. The
+[result/attribution](evidence/pr-06a/rubberband-allocation-diagnosis-001.md) identifies
+FFT initialization, resampler buffer creation and 44.1 kHz phase-table growth.
+One additional fresh-capture allocation came from a probe retrieval warning;
+original counts/logs remain unchanged. That diagnostic bug is repaired with a
+bounded-drain control, not rerun or misrepresented as a product fix. Both current
+direct-callback configurations remain blocked. A worker-owned rendering prototype
+is the next proposed architecture investigation, **not yet approved or executed**;
+the complete 100 ms/PDC, callback safety, musical and source-permission gates stand.
+
+**Worker feasibility authorization (2026-10-25):** after clarification in plain
+language, the user explicitly approved testing background processing and resolving
+the allocation blocker while keeping sound requirements and the 100 ms ceiling.
+Implement an isolated worker-owned Rubber Band prototype, not AU integration.
+The [frozen protocol](evidence/pr-06a/worker-feasibility-001.json) bounds six native
+processes / 14 captures: synchronous references, wall-clock-paced workers and
+coordinated offline workers at both rates/128–512 callbacks, plus two deliberate
+200 ms worker-stall negatives. Native engines remain pristine, with no warmup,
+upstream/backend change or native reset workaround. Fixed SPSC queues carry the
+same source/control stream; callback paths may not wait, lock, allocate, call
+native engines or join threads. Keep all original failures, worker allocations
+and misses visible. This approval is not a private replay, host operation, final
+engine choice, PR06B go or automatic commit/merge/push.
+
+**Worker feasibility result (2026-10-25):** all six fixed native processes / 14
+captures completed once. Every normal rate/buffer point passes: eight worker
+captures have zero callback allocations, no delivery misses and exactly unchanged
+audio/control streams at the original 100 ms software alignment. All 14 waveform/
+partition comparisons are exactly equal. Native allocation is moved to workers,
+not eliminated; all worker counts remain recorded. Both 200 ms stall negatives
+expose missed delivery and fail closed without altering the lead. **The overall
+screen still fails:** the first callback of the 48 kHz negative begins 3.917375 ms
+late and misses its scheduled end by 1.252751 ms, before the injected worker fault.
+Do not waive that observation, shift the epoch retrospectively or rerun `001`.
+See [results and clocks](evidence/pr-06a/worker-feasibility-001.md). This demonstrates
+normal callback isolation and meaningful technical progress, not complete timing,
+pitch/support/host qualification or PR06A/PR06B acceptance. All 199 Python tests
+and Release/ASan/TSan worker contracts pass. No product integration/merge occurred.
+
+**Incomplete checkpoint and prototype-branch authorization (2026-10-25):** the user
+requested faster progress toward a usable evaluation-only AU rather than more
+engine research. They then explicitly authorized the proposed handling of current
+changes: review and commit them as an **incomplete PR06A checkpoint**, preserve
+failures, **do not merge**, and branch evaluation-AU work from that checkpoint.
+The [checkpoint review/handoff](evidence/pr-06a/checkpoint-review-001.md) is a
+self-review, not independent acceptance. Preserve `pr-06a-completion`; create
+`evaluation-au-prototype` from the resulting local commit. No push, private replay,
+new native matrix, AU installation/Logic operation or automatic qualification/go
+is authorized by this checkpoint operation. Prototype implementation is the next
+task; this commit does not claim the AU exists or that PR06A passed.

@@ -11,12 +11,12 @@ and deferred human/host gates still block architecture/product qualification.
 PR 04 is merged locally at `997e884` as a reviewed engineering/research milestone,
 retaining candidate-engine failures. PR 05 interaction engineering implementation
 and automated qualification are complete on `pr-05-three-voice-interaction` at
-`dda47a7` as a negative research milestone, initially committed branch-only. The
-user has now authorized its local merge as a dependency of the architecture/PR06A
-research branch. No engine/architecture is selected; quality/timing and human/host
+`dda47a7` as a negative research milestone, initially committed branch-only. It is
+now merged locally with research/tooling commit `534f6e5`. No engine/architecture
+is selected; quality/timing and human/host
 gates remain open.
 The authorized bounded architecture investigation is complete on
-`research-architecture-feasibility`, now user-authorized for local commit/merge
+`research-architecture-feasibility`, locally merged as `534f6e5`
 with the reviewed PR06A tooling. It corrects overly broad timing
 interpretations but finds no technical survivor for the tested combined live/mixing
 scope. See `docs/ARCHITECTURE_INVESTIGATION.md`; its results remain unchanged.
@@ -24,8 +24,8 @@ scope. See `docs/ARCHITECTURE_INVESTIGATION.md`; its results remain unchanged.
 three harmony voices, minimum ±12 semitones, intentionally processed vocal character.**
 PR06A's approved excerpt-a/C-major listening-only comparison is rendered. The user
 reports good sound, a Rubber Band preference with a seemingly small difference,
-and no distracting artifacts on this example. The bounded engineering comparison
-now favors Signalsmith 2048/512: zero callback allocations and lower callback cost;
+and no distracting artifacts on this example. The earlier bounded engineering comparison
+favored Signalsmith 2048/512: zero callback allocations and lower callback cost;
 both candidates pass stopped-reconstruction/repeat checks in this synthetic set.
 The separately approved clip-c trial ran under unchanged diagnostic C-major
 settings. Signalsmith passes export checks; Rubber Band exceeds the conservative
@@ -34,14 +34,40 @@ approved a separate common 0.5 playback export from retained outputs; its nine
 validated previews have received user feedback: a tentative Rubber Band preference,
 but a minimal, explicitly non-decisive sound difference. Engineering suitability
 therefore remains the practical discriminator. The original withheld run stays
-unchanged; Signalsmith is provisional and any product go remains pending.
-The bounded verification proposal is now drafted in `docs/STUDIO_VERIFICATION.md`:
-meter/pitch attribution before eventful delivery, with separate private-replay and
-evaluation-host approvals. No proposed verification runs have been executed.
+unchanged; that provisional preference is superseded by the subsequent pitch
+failure below. No final engine or product go is selected.
+The bounded verification in `docs/STUDIO_VERIFICATION.md` has reached its required
+stop: **A1 passes 36/36; A2 fails output-pitch gates in 34/72 cases; A3 is not
+executed.** Separate private-replay and host approvals remain untouched.
 The user has approved synthetic-only execution. Five PR06A tooling review defects
 are now repaired, regressed and independently closed; 165 Python/full-product
-checks pass. Stage A implementation/calibration is next; none of its proposed
-captures has executed. See `docs/evidence/pr-06a/review-fixes-001.md`.
+checks passed for that tooling milestone. See `docs/evidence/pr-06a/review-fixes-001.md`.
+The merged `534f6e5` was a **partial research/tooling milestone, not PR06A closure**.
+The `pr-06a-completion` checkpoint preserves the approved bounded synthetic work
+and records its negative result. **PR06A is BLOCKED at technical feasibility, not
+accepted/complete; PR06B must not start.** All 72 A2 source/control/safety checks
+pass, but prescribed and tracked paths fail the same 17 conditions per mode.
+See `docs/STUDIO_VERIFICATION_RESULTS.md`. Driver qualification passes 186 Python
+tests/full product checks; that does not override the failing DSP experiments.
+The subsequently approved bounded wrapper/configuration audit found no justified
+correction; stop/reject the current configuration without speculative retries.
+See `docs/evidence/pr-06a/wrapper-audit-001.md`. No extra merge is authorized.
+The subsequently authorized Rubber Band allocation diagnosis also completed:
+silence-only preparation removes measured callback allocations but changes every
+paired output's native length/waveform, so it is rejected. Both current direct-
+callback configurations remain blocked. See
+`docs/evidence/pr-06a/rubberband-allocation-diagnosis-001.md`. The user subsequently
+approved the isolated worker-owned feasibility prototype on 2026-10-25, not
+further preset tuning or PR06B integration. Its fixed 14-capture protocol is at
+`docs/evidence/pr-06a/worker-feasibility-001.json`; implementation and all 14
+captures are complete. **Normal worker callback isolation passes all four points**:
+zero callback allocations, no delivery misses, exact reference audio/controls and
+unchanged 100 ms software alignment. **The overall screen remains failed** due to
+one first-callback scheduled-finish miss in a deliberate-stall case. No retry or
+waiver occurred. See `docs/evidence/pr-06a/worker-feasibility-001.md`. All 199 Python
+tests and Release/ASan/TSan worker contracts pass; musical/host qualification and
+independent completion review remain pending. This is a working normal-case
+architecture, not permission to close PR06A or start product integration.
 PR06B must still establish a studio go-decision. Live, MIDI-first and
 ±24 coverage are deferred, not qualified. See the decision below and
 `docs/DECISIONS.md` for approval/protocol boundaries.
@@ -910,7 +936,7 @@ below, not an override of these failed results or a studio product go-decision.
   `docs/evidence/architecture/protocol.json`. No new commit/merge/push, AU install,
   Logic/device operation or private-audio access occurred.
 
-### PR 06A — Studio-first timbre and feasibility pilot (next)
+### PR 06A — Studio-first timbre and feasibility pilot (OPEN: worker timing / musical qualification)
 
 Depends on: retained PR03–05/architecture evidence and the 2026-10-24 direction.
 This splits the former PR06; it does not renumber PRs 00–05 or call their failed
@@ -934,10 +960,13 @@ gates passed. The old combined live/mixing no-go remains valid for its scope.
   short pilot passage for the initial comparison, using existing approved scale
   semantics and fixed declared voicings. No new engine/preset/parameter sweep.
   Retain current formant-preservation settings unless a change is separately approved.
-- [ ] Separate oracle/prescribed controls (where trustworthy references exist) from
+- [x] Separate oracle/prescribed controls (where trustworthy references exist) from
   tracked scale-mode output to localize failures. An oracle-only win cannot qualify
   the product. Without trustworthy F0 references, keep numerical vocal accuracy
   pending rather than presenting automatic tracker proposals as truth.
+  A1 calibrated the frozen meter; A2 matched 72 generated-source cases. Both modes
+  fail the same output conditions despite correct source/target controls. This is
+  a negative localization result, not a musical accuracy pass or vocal annotation.
 - [x] After finite/headroom checks, prepare a small local listening set with lead,
   three voice stems and the complete blend, dry comparison, fixed shared gains,
   disclosed delay alignment and exact settings/build/input identities. No per-voice
@@ -947,19 +976,25 @@ gates passed. The old combined live/mixing no-go remains valid for its scope.
   request timestamped defects. User reports good sound, prefers Rubber Band, and
   hears no distracting artifacts; no timestamps or numerical ratings supplied.
   This is development preference, not independent listening/product acceptance.
-- [ ] Before progressing, include the approved expressive/rhythmic c development
+- [x] Before progressing, include the approved expressive/rhythmic c development
   challenge plus low/high register and inclusive ±12 boundary controls. The first
   attractive passage must not stand in for the required support/expressive envelope.
-  The c listening challenge is complete; full musical output/envelope correctness
-  is not. Transport-stub guard checks and bounded engineering samples do not close
-  this criterion. See the proposed staged checks in `docs/STUDIO_VERIFICATION.md`.
-- [ ] Allow one bounded development correction/retest only after diagnosing a
+  The c listen and A2 low/high/±12 samples are executed. This checkbox records
+  inclusion/testing, **not qualification**: E2 output fails, full support remains
+  unqualified, and A3's expressive synthetic stage is stopped by A2. Failed coverage
+  remains a blocker; it is not excluded to improve the result.
+- [x] Enforce one bounded development correction/retest only after diagnosing a
   concrete defect. Preserve the original comparison; stop for a new user decision
   if neither candidate offers a credible studio path. No endless tuning loop.
+  Enforced: zero DSP corrections/retests used; stopped before A3 under the approved
+  protocol. The subsequently approved wrapper audit found no evidence-backed
+  correction; no speculative regression was run or allowance consumed.
 
 **Validation / exit criteria**
 - [ ] Contract/protocol deltas, source permission, safe preparation and evidence
   labels are reviewed; historical contracts/fixtures/results remain immutable.
+  Prior tooling safeguards were independently reviewed. The new completion drivers
+  are self-reviewed/tested; independent completion review remains before merge.
 - [x] Existing engineering checks and any new scope/protocol/privacy regressions
   pass. Wrong notes, lost bends/rhythm, nonfinite output or unsafe levels remain
   defects even if the user likes an electronic texture.
@@ -972,6 +1007,8 @@ gates passed. The old combined live/mixing no-go remains valid for its scope.
 - [ ] User decides whether the pilot merits PR06B. A positive preference result
   authorizes neither AU integration nor a final engine selection; unresolved
   technical blockers require a credible bounded resolution, not a checkbox waiver.
+  **Blocked:** A2's output failures prevent recommending PR06B on current evidence.
+  No automatic go, weaker pitch threshold, excluded register or correction loop.
 
 **Agent handoff — update before merge**
 - Major decisions: studio-first/scale-first/processed-character direction confirmed;
@@ -1051,11 +1088,83 @@ gates passed. The old combined live/mixing no-go remains valid for its scope.
   evidence is at `build/studio-review-fixes/20261024T194145Z-23a3bc59/`; engine
   sources/binaries and private outputs/claims remain untouched. See
   `docs/evidence/pr-06a/review-fixes-001.md`. No Stage A capture or new engine render.
-- Next exact action: implement/freeze the **already approved synthetic-only Stage A**
-  measurement/fixture protocol and begin meter calibration, within 36 fixtures /
-  at most 88 native captures and its substage stop rules. No repeated approval
-  request for that same scope; new private replay/host work still needs separate
-  authorization. Do not relabel tooling closure as pitch accuracy or product go.
+- A1 complete: 36/36 calibration fixtures pass at
+  `build/studio-verification/20261024T200210Z-edb48fa4/report.json`; 28 positives each
+  have 100% eligible observations within 25 cents and all eight negative controls
+  behave as expected. No engine executions in A1; calibration and artifacts are
+  append-only and the meter is unchanged. Driver qualification passes 176 tests at
+  `build/checks/20261024T200029Z-67276484/environment.json`.
+- A2 executed: `build/studio-verification/20261024T220613Z-10d6c48c/report.json`.
+  All 72 captures pass source/target/control, finite/duration/lead-null/sum, delivery
+  and callback checks; zero allocations/overdue callbacks. Each mode passes 19/36
+  cases and fails the same 17. Output pitch passes only 144/216 voice groups.
+  This cannot be attributed to the tracker alone. A3's 16 cases are correctly
+  unexecuted, not reassigned. No DSP correction/retest was applied. Driver checks
+  pass 186 Python/full-product tests at
+  `build/checks/20261024T220420Z-2511d1ba/environment.json`.
+- Historical post-A2 checkpoint: review the negative result and decide whether to authorize a
+  diagnosed bounded correction/retest or stop/reconsider this approach. There is
+  **no next PR advancement** while PR06A's credible-path gate fails. See
+  `docs/STUDIO_VERIFICATION_RESULTS.md`; independent completion-code review also
+  remains before any merge. No further native/private/host run or another partial
+  merge is authorized by the failed experiment. Current completion work is uncommitted.
+- Subsequent decision: the user **approved** one evidence-backed wrapper/
+  configuration correction and regression, not tracker changes. The
+  [audit](evidence/pr-06a/wrapper-audit-001.md) found no demonstrated integration
+  defect or justified replacement. Stop/reject the current 2048/512 configuration
+  rather than run speculative tuning. No DSP correction/native regression or
+  allowance consumption occurred. This supersedes the pending-approval action
+  immediately above, not the original failures or stopped A3/PR06B gates.
+- New authorized feasibility task: diagnose the existing Rubber Band callback
+  allocations. The frozen eight-capture
+  `docs/evidence/pr-06a/rubberband-allocation-diagnosis-001.json` tests exactly one
+  silence-only stopped-preparation hypothesis against fresh graphs; it neither
+  changes the product wrapper nor repeats the rejected exact-audio priming. Keep
+  all original allocation/pitch failures. No engine selection, PR06B go or private/
+  host operation is authorized by this diagnostic.
+- Diagnosis completed: all eight captures retained at
+  `build/rubberband-allocation-diagnosis/20261024T234246Z-23cf5785/report.json`.
+  Prepared callbacks/finish allocate zero in the samples, but 4/4 paired comparisons
+  fail all three output lengths and zero-lag body comparisons. Stop/reject the
+  preparation without retries. Attribution and a disclosed/repaired diagnostic
+  retrieval-warning artifact are recorded in
+  `docs/evidence/pr-06a/rubberband-allocation-diagnosis-001.md`.
+  Proposed next decision: approve or reject an isolated worker-owned rendering
+  feasibility prototype under unchanged ≤100 ms/PDC and callback/musical gates.
+  No new architecture implementation, product integration or final engine choice
+  is authorized by this completed diagnostic.
+- Subsequent worker authorization (2026-10-25): the user approved background
+  processing to resolve the allocation blocker under unchanged requirements.
+  `WorkerEvaluation/` implements fixed SPSC proxies with worker-only native
+  ownership, stopped/joined lifecycle, offline coordination outside callbacks and
+  fail-closed harmonies on missed delivery. The frozen 14-capture protocol compares
+  the unchanged reference with paced/offline workers at both rates/buffers and
+  includes deliberate stall negatives. Native results are pending; no product
+  integration, private replay, engine selection or PR06B go follows automatically.
+- Worker result: `build/worker-feasibility/20261025T140514Z-92f67612/report.json`.
+  All 12 normal captures (references plus paced/offline workers) pass their scoped
+  gates. Eight normal worker captures allocate zero on callbacks; all 14 waveform/
+  partition comparisons are exactly equal. Lead, controls, three voices, duration/
+  tail and fixed 100 ms software alignment are unchanged. Worker allocations remain
+  visible, not waived/eliminated. Both stall negatives detect missed delivery and
+  latch harmonies silent without altering lead; the 48 kHz negative additionally
+  starts its first callback late and misses the frozen scheduled-finish gate.
+  **Overall status stays failed**, not a retroactive pass. The 14-capture claim is
+  consumed; no retry or additional native matrix ran. See
+  `docs/evidence/pr-06a/worker-feasibility-001.md` for precise clocks and next gates.
+  There is now a working normal-case solution to native callback allocations.
+  Resolve the explicit timing/review gate, then musical verification on this exact
+  architecture; do not loop back to rejected warmups or waive the original pitch,
+  challenge-c, support, host or independent-reference requirements. PR06B remains
+  unstarted and no product merge is authorized.
+- User-approved checkpoint/handoff (2026-10-25): self-review and commit current
+  changes as an **incomplete PR06A checkpoint**, without merging or pushing; branch
+  `evaluation-au-prototype` from it. See
+  `docs/evidence/pr-06a/checkpoint-review-001.md`. Freeze further engine research.
+  The next implementation task is the minimal evaluation-only AU: key/scale,
+  three harmonies, unchanged lead and current worker direction. This is not PR06A
+  closure, a production engine selection or a waiver of timing/musical/host gates.
+  No AU implementation, installation or Logic operation occurs during checkpointing.
 
 ### PR 06B — Studio qualification and architecture go/no-go
 
