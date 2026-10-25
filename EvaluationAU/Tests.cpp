@@ -33,20 +33,31 @@ using evaluation::Processor;
 std::thread::id owner;
 std::atomic<int> wrongOwner {0},living {0};
 std::atomic<bool> badOutput {false};
+std::atomic<unsigned> fakeOrdinal {0},silentMask {0};
+std::atomic<bool> markedOutput {false};
+std::atomic<float> largeOutput {0};
+constexpr std::array<float,3> markers {.012f,.024f,.048f};
 void require(bool value,const char* text) { if (!value) throw std::runtime_error(text); }
 bool sameFloat(float a,float b) { return std::bit_cast<std::uint32_t>(a)==std::bit_cast<std::uint32_t>(b); }
 void nativeOwner() { if (std::this_thread::get_id()==owner) ++wrongOwner; }
 class Fake final : public engines::Engine
 {
 public:
-    Fake() { nativeOwner(); ++living; }
+    Fake() : voice(fakeOrdinal.fetch_add(1)%3) { nativeOwner(); ++living; }
     ~Fake() override { nativeOwner(); --living; }
     engines::Info info() const noexcept override { nativeOwner(); return {0,0,0,0,128,0,3}; }
     void control(double r,double) override { nativeOwner(); ratio=r; }
     void process(const float* source,int count) override
     {
         nativeOwner(); require(pending==0,"Fake input not drained");
-        for (int i=0;i<count;++i) audio[static_cast<std::size_t>(i)]=badOutput.load()?std::numeric_limits<float>::quiet_NaN():static_cast<float>(source[i]*ratio);
+        for (int i=0;i<count;++i)
+        {
+            float value=static_cast<float>(source[i]*ratio);
+            if (markedOutput.load()) value=(silentMask.load()&(1u<<voice))?0.f:markers[voice];
+            const float large=largeOutput.load();
+            if (large>0) value=large;
+            audio[static_cast<std::size_t>(i)]=badOutput.load()?std::numeric_limits<float>::quiet_NaN():value;
+        }
         read=0; pending=count;
     }
     int available() const override { nativeOwner(); return pending; }
@@ -58,6 +69,7 @@ private:
     std::array<float,128> audio {};
     int pending=0,read=0;
     double ratio=1;
+    unsigned voice;
 };
 std::unique_ptr<engines::Engine> fake(engines::Config,double,double) { return std::make_unique<Fake>(); }
 void parameter(Processor& p,int index,float normalized) { p.getParameters()[index]->setValueNotifyingHost(normalized); }
@@ -85,6 +97,10 @@ void leadAndState()
             for (int pass=0;pass<12;++pass)
             {
                 require(evaluation::ProcessorTestAccess::idle(p),"Fake coordinator failed");
+                if (pass==4) p.requestRestart();
+                if (pass==6) { juce::MemoryBlock recall;p.getStateInformation(recall);p.setStateInformation(recall.getData(),static_cast<int>(recall.getSize())); }
+                // Reproduce the pinned AU wrapper's reset on entering bypass.
+                if (pass%2==0) p.reset();
                 for (int i=0;i<partition;++i) { buffer.setSample(0,i,source[static_cast<std::size_t>(position+i)%source.size()]); buffer.setSample(1,i,.7f); }
                 callback(p,buffer,pass%2==0);
                 for (int i=0;i<partition;++i)
@@ -100,7 +116,10 @@ void leadAndState()
         juce::MemoryBlock state,after; p.getStateInformation(state);
         Processor restored(fake); restored.setStateInformation(state.getData(),static_cast<int>(state.getSize())); restored.getStateInformation(after);
         require(state==after,"Evaluation state roundtrip failed");
-        auto broken=state; static_cast<unsigned char*>(broken.getData())[broken.getSize()-1]=0xff;
+        parameter(p,0,1);parameter(p,1,0);parameter(p,2,1);
+        juce::MemoryBlock broken;p.getStateInformation(broken);
+        require(broken!=state,"Malformed fixture must change earlier valid parameters");
+        static_cast<unsigned char*>(broken.getData())[broken.getSize()-1]=0xff;
         restored.setStateInformation(broken.getData(),static_cast<int>(broken.getSize())); restored.getStateInformation(after);
         require(state==after,"Malformed state partially applied");
         restored.setStateInformation(state.getData(),static_cast<int>(state.getSize())-1); restored.getStateInformation(after);
@@ -131,16 +150,30 @@ void modesAndReset()
     require(p.status().status==evaluation::Session::Status::unsupportedRate && p.getLatencySamples()==9600,"Unsupported rate not explicit");
     p.releaseResources();
 }
+void hostResetClearsSource()
+{
+    Processor p(fake);parameter(p,2,0);p.prepareToPlay(48000,128);
+    juce::AudioBuffer<float> buffer(2,128);
+    for (int block=0;block<50;++block)
+    {
+        require(evaluation::ProcessorTestAccess::idle(p),"Reset fixture worker not idle");
+        for (int i=0;i<128;++i) buffer.setSample(0,i,.02f);
+        callback(p,buffer);
+    }
+    p.reset();buffer.clear();callback(p,buffer);
+    for (int i=0;i<128;++i) require(sameFloat(buffer.getSample(0,i),0.f),"Explicit host reset retained old source history");
+    p.releaseResources();
+}
 void transportContinuity()
 {
     struct Head final : juce::AudioPlayHead
     {
-        bool known=true;
+        bool known=true,playing=true;
         std::int64_t frame=0;
         juce::Optional<PositionInfo> getPosition() const override
         {
             if (!known) return {};
-            PositionInfo info;info.setTimeInSamples(frame);info.setIsPlaying(true);return info;
+            PositionInfo info;info.setTimeInSamples(frame);info.setIsPlaying(playing);return info;
         }
     } head;
     Processor p(fake);p.prepareToPlay(48000,128);p.setPlayHead(&head);
@@ -152,6 +185,91 @@ void transportContinuity()
     head.frame=0;callback(p,buffer);
     require(evaluation::ProcessorTestAccess::active(p)!=initial,"Actual seek did not swap to a pristine graph");
     p.releaseResources();
+    for (bool forward:{false,true})
+    {
+        Processor resumed(fake);resumed.prepareToPlay(48000,128);resumed.setPlayHead(&head);
+        head.known=true;head.playing=false;head.frame=1000;
+        for (int block=0;block<45;++block)
+        {
+            require(evaluation::ProcessorTestAccess::idle(resumed),"Stopped worker not idle");
+            for (int i=0;i<128;++i) buffer.setSample(0,i,static_cast<float>(.031*std::sin(6.283185307179586*220*(block*128+i)/48000)));
+            callback(resumed,buffer);
+        }
+        const auto* stopped=evaluation::ProcessorTestAccess::active(resumed);
+        head.playing=true;if (forward) head.frame=20000;
+        buffer.clear();callback(resumed,buffer);
+        const auto* fresh=evaluation::ProcessorTestAccess::active(resumed);
+        require(fresh && fresh!=stopped,"Resume retained stopped harmony history");
+        for (int block=0;block<40;++block)
+        {
+            for (int i=0;i<128;++i) require(sameFloat(buffer.getSample(0,i),0.f) && sameFloat(buffer.getSample(1,i),0.f),"Stopped lead/wet leaked into resumed playback");
+            head.frame+=128;buffer.clear();require(evaluation::ProcessorTestAccess::idle(resumed),"Resumed worker not idle");callback(resumed,buffer);
+        }
+        resumed.releaseResources();
+    }
+}
+float markedVoices(unsigned silence)
+{
+    fakeOrdinal.store(0);silentMask.store(silence);markedOutput.store(true);
+    Processor p(fake);p.prepareToPlay(48000,128);
+    juce::AudioBuffer<float> buffer(2,128);float wet=0;
+    for (int begin=0;begin<48000;begin+=128)
+    {
+        require(evaluation::ProcessorTestAccess::idle(p),"Marked workers not idle");
+        for (int i=0;i<128;++i) buffer.setSample(0,i,static_cast<float>(.02*std::sin(6.283185307179586*220*(begin+i)/48000)));
+        callback(p,buffer);
+        if (begin>=40000) for (int i=0;i<128;++i)
+        {
+            const float dry=static_cast<float>(.02*std::sin(6.283185307179586*220*(begin+i-4800)/48000));
+            wet=buffer.getSample(0,i)-dry;
+            double expected=0;for (unsigned voice=0;voice<3;++voice) if (!(silence&(1u<<voice))) expected+=markers[voice]/3.0;
+            require(std::abs(wet-expected)<1e-7,"Identifiable voice contribution missing or misrouted");
+        }
+    }
+    require(p.status().status==evaluation::Session::Status::ready && p.status().active==7,"Marked voices not control-active");
+    p.releaseResources();markedOutput.store(false);silentMask.store(0);return wet;
+}
+void threeVoiceContributions()
+{
+    const float all=markedVoices(0);
+    for (unsigned voice=0;voice<3;++voice)
+    {
+        const float missing=markedVoices(1u<<voice);
+        require(std::abs(all-missing-markers[voice]/3.f)<1e-7,"Silenced-voice negative control failed");
+        require(std::abs(missing-all)>1e-4f,"Aggregate audibility incorrectly accepted a missing voice");
+    }
+}
+void finiteMixing()
+{
+    for (int mode=0;mode<3;++mode)
+    {
+        Processor p(fake);if (mode==1) parameter(p,2,0);p.prepareToPlay(48000,128);
+        largeOutput.store(std::numeric_limits<float>::max()*.9f);
+        juce::AudioBuffer<float> buffer(2,128);bool fault=false;
+        const double amplitude=mode==2?static_cast<double>(std::numeric_limits<float>::max())*.75:.02;
+        for (int begin=0;begin<48000;begin+=128)
+        {
+            if (!fault) require(evaluation::ProcessorTestAccess::idle(p),"Large finite workers not idle");
+            for (int i=0;i<128;++i) buffer.setSample(0,i,static_cast<float>(amplitude*std::sin(6.283185307179586*220*(begin+i)/48000)));
+            callback(p,buffer);
+            const bool failed=p.status().status==evaluation::Session::Status::failed;
+            require(!fault || failed,"Overflow fault did not latch");
+            for (int i=0;i<128;++i)
+            {
+                const float out=buffer.getSample(0,i);
+                require(std::isfinite(out) && sameFloat(out,buffer.getSample(1,i)),"Nonfinite mixed output escaped");
+                if (fault || mode==1)
+                {
+                    const int at=begin+i-4800;
+                    const float dry=at<0?0.f:static_cast<float>(amplitude*std::sin(6.283185307179586*220*at/48000));
+                    require(sameFloat(out,dry),"Finite-lead fallback changed the lead");
+                }
+            }
+            fault=failed;
+        }
+        require(mode==2?fault:!fault,"Large finite mix status incorrect");
+        p.releaseResources();largeOutput.store(0);
+    }
 }
 void nativeSmoke()
 {
@@ -174,7 +292,7 @@ void nativeSmoke()
                 if (at>rate/2 && std::abs(buffer.getSample(0,i)-dry)>1e-4f) heard=true;
             }
         }
-        require(heard && p.status().status==evaluation::Session::Status::ready && p.status().active==7,"Native prototype did not produce all three harmonies");
+        require(heard && p.status().status==evaluation::Session::Status::ready && p.status().active==7,"Native aggregate audibility/control activation failed (not per-voice proof)");
         p.releaseResources();
     }
 }
@@ -213,7 +331,7 @@ int main(int argc,char** argv)
         owner=std::this_thread::get_id();
         if (audit::available) require(audit::selfTest(),"Allocation detector unavailable");
         if (argc==2 && std::string(argv[1])=="--native") nativeSmoke();
-        else { require(argc==1,"Unknown test mode"); leadAndState(); modesAndReset(); transportContinuity(); faultCloses(); advertisedPacketSurvivesWorkerFailure(); require(wrongOwner==0 && living==0,"Native ownership escaped worker"); }
+        else { require(argc==1,"Unknown test mode"); leadAndState(); modesAndReset(); hostResetClearsSource(); transportContinuity(); threeVoiceContributions(); finiteMixing(); faultCloses(); advertisedPacketSurvivesWorkerFailure(); require(wrongOwner==0 && living==0,"Native ownership escaped worker"); }
         std::cout<<"Evaluation processor checks passed; no device, playback, installation or Logic operation\n";
         return 0;
     }

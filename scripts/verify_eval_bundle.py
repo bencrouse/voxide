@@ -24,6 +24,9 @@ def verify(component):
             "AU contains a non-system/test dynamic dependency")
     require(not any("allocation" in path.lower() or "trace" in path.lower() for path in libraries),
             "Test allocator interposer must never be loaded into Logic")
+    sections=subprocess.check_output(["otool","-l",str(binary)],text=True)
+    require(not any(line.split()==["sectname","__interpose"] for line in sections.splitlines()),
+            "AU contains a static Mach-O interpose section")
     subprocess.run(["codesign","--verify","--strict",str(component)],check=True,capture_output=True)
     return {"bundle_id":info["CFBundleIdentifier"],"type":entry["type"],"subtype":entry["subtype"],"libraries":libraries}
 

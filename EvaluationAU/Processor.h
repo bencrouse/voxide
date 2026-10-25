@@ -13,7 +13,7 @@ public:
     const juce::String getName() const override { return "voxide Studio Eval"; }
     void prepareToPlay(double,int) override;
     void releaseResources() override;
-    void reset() override { requestRestart(); }
+    void reset() override { resetGeneration.fetch_add(1,std::memory_order_release); }
     void requestRestart() noexcept { restartGeneration.fetch_add(1,std::memory_order_release); }
     bool isBusesLayoutSupported(const BusesLayout&) const override;
     void processBlock(juce::AudioBuffer<float>&,juce::MidiBuffer&) override;
@@ -44,8 +44,9 @@ private:
     float wetGain=1;
     double rate=0;
     std::atomic<unsigned> restartGeneration {0};
-    unsigned renderedGeneration=0;
-    bool lastOffline=false,lastPlaying=false,lastPositionKnown=false;
+    std::atomic<unsigned> resetGeneration {0};
+    unsigned renderedGeneration=0,renderedReset=0;
+    bool lastOffline=false,lastPlaying=false,lastPositionKnown=false,lastBypassed=false;
     std::int64_t lastPosition=0;
     int lastFrames=0;
     std::atomic<Session::Status> renderStatus {Session::Status::preparing};

@@ -1195,6 +1195,13 @@ source operation or automatic commit/merge/push is authorized by this exception.
   dependency validation. ASan/TSan fake-engine contracts and 204 Python tests pass.
   Final delivery evidence is at `build/pr-06b-artifacts/ready-20261025-01/report.json`;
   build/use scope is recorded in `docs/PR06B_EVALUATION_AU.md`.
+- [x] User-requested independent OpenCode review in Herdr bottom-right pane found
+  five issues in `358b0fb`; original findings are preserved in
+  `docs/evidence/pr-06b/review-001.md`. Fixes cover restart/bypass lead continuity,
+  finite mixing/fault fallback, resume history, per-voice and malformed-state
+  regressions. Five Release checks, ASan/TSan contracts and 205 Python tests pass.
+  Review-fixed delivery: `build/pr-06b-artifacts/ready-20261025-02/report.json`;
+  original `ready-20261025-01` is retained unchanged.
 - [ ] User-coordinated installation/Logic audition; none performed. Fast offline
   bounce deliberately remains unsupported (explicitly marked delayed-lead-only),
   not a passing harmony render. Formal musical/support/host/listening gates below

@@ -15,13 +15,15 @@ void require(bool value,const char* text) { if (!value) throw std::runtime_error
 void checked(OSStatus value,const char* text) { require(value==noErr,text); }
 struct Input
 {
+    static float signal(int frame)
+    { return (frame==0?.04f:0.f)+static_cast<float>(.01*std::sin(frame*.017)); }
     static OSStatus render(void*,AudioUnitRenderActionFlags*,const AudioTimeStamp* time,UInt32,UInt32 frames,AudioBufferList* buffers)
     {
         for (UInt32 c=0;c<buffers->mNumberBuffers;++c)
         {
             if (!buffers->mBuffers[c].mData) return kAudio_ParamError;
             auto* out=static_cast<float*>(buffers->mBuffers[c].mData);
-            for (UInt32 i=0;i<frames;++i) out[i]=(time->mSampleTime==0 && i==0)?.04f:0.f;
+            for (UInt32 i=0;i<frames;++i) out[i]=signal(static_cast<int>(time->mSampleTime)+static_cast<int>(i));
             buffers->mBuffers[c].mDataByteSize=frames*sizeof(float);
         }
         return noErr;
@@ -74,13 +76,20 @@ void test(AudioComponent component,int rate)
     for (int begin=0;begin<rate/4;begin+=128)
     {
         std::this_thread::sleep_until(epoch+std::chrono::nanoseconds(static_cast<std::uint64_t>(begin)*1000000000ull/static_cast<unsigned>(rate)));
+        const int block=begin/128;
+        if (block==12 || block==24 || block==48 || block==60)
+        {
+            UInt32 bypass=(block==12 || block==48)?1:0;
+            checked(AudioUnitSetProperty(unit,kAudioUnitProperty_BypassEffect,kAudioUnitScope_Global,0,&bypass,sizeof(bypass)),"Toggle actual AU bypass");
+        }
         AudioTimeStamp time {};time.mFlags=kAudioTimeStampSampleTimeValid;time.mSampleTime=begin;
         AudioUnitRenderActionFlags flags=0;
         checked(AudioUnitRender(unit,&flags,&time,0,128,reinterpret_cast<AudioBufferList*>(&output)),"Render built AU");
         for (int i=0;i<128;++i)
         {
-            const float expected=begin+i==rate/10?.04f:0.f;
-            require(std::abs(left[i]-expected)<1e-7f && std::abs(right[i]-expected)<1e-7f,"Built AU impulse/lead alignment mismatch");
+            const int at=begin+i-rate/10;
+            const float expected=at<0?0.f:Input::signal(at);
+            require(left[i]==expected && right[i]==expected,"Built AU impulse/continuous lead/bypass alignment mismatch");
         }
     }
     checked(AudioUnitUninitialize(unit),"Uninitialize built AU");
@@ -107,7 +116,7 @@ int main(int argc,char** argv)
         auto component=AudioComponentRegister(&description,CFSTR("voxide Studio Eval smoke"),0x000100,factory);
         require(component!=nullptr,"Register built component in this process");
         test(component,44100);test(component,48000);CFRelease(bundle);
-        std::cout<<"Built AU: both rates, four parameters, latency property and exact delayed impulse passed; no installation/device/Logic\n";
+        std::cout<<"Built AU: both rates, four parameters, latency property, exact delayed impulse/continuous lead across bypass passed; no installation/device/Logic\n";
         return 0;
     }
     catch (const std::exception& e) { std::cerr<<e.what()<<'\n';return 1; }

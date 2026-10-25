@@ -1,6 +1,8 @@
 #include "Session.h"
 #include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <limits>
 #include <stdexcept>
 
 namespace voxide::evaluation
@@ -74,6 +76,7 @@ void Session::buildLoop() noexcept
     }
 }
 void Session::restart() noexcept { needsRestart=true; }
+void Session::fail() noexcept { failedClosed=true; current.status=Status::failed; current.active=0; }
 bool Session::waitIdleForTest() const
 {
     if (!active) return true;
@@ -128,8 +131,16 @@ float Session::push(float input,bool bypassed,float wet) noexcept
             || std::any_of(stats.underflows.begin(),stats.underflows.end(),[](auto n) { return n!=0; })
             || std::any_of(stats.lateSamples.begin(),stats.lateSamples.end(),[](auto n) { return n!=0; }))
         { failedClosed=true; current.status=Status::failed; current.active=0; return 0; }
+        double sum=0;
+        for (float voice:output.voices)
+        {
+            if (!std::isfinite(voice)) { fail(); return 0; }
+            sum+=static_cast<double>(voice);
+        }
+        const double mixed=static_cast<double>(wet)*(sum/3.0);
+        if (!std::isfinite(mixed) || std::abs(mixed)>std::numeric_limits<float>::max()) { fail(); return 0; }
         if (bypassed) return 0;
-        return wet*(output.voices[0]+output.voices[1]+output.voices[2])/3.f;
+        return static_cast<float>(mixed);
     }
     catch (...) { failedClosed=true; current.status=Status::failed; current.active=0; return 0; }
 }

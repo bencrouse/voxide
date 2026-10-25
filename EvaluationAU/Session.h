@@ -18,6 +18,7 @@ public:
     Session(const Session&)=delete;
     Session& operator=(const Session&)=delete;
     void restart() noexcept;
+    void fail() noexcept;
     void begin(int key,int scale,bool offline) noexcept;
     float push(float input,bool bypassed,float wet) noexcept;
     Snapshot snapshot() const noexcept { return current; } // Render owner only.

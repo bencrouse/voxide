@@ -35,7 +35,8 @@ void Processor::prepareToPlay(double sampleRate,int)
     setLatencySamples(latency);
     wetGain=enabled->get()?juce::Decibels::decibelsToGain(level->get()):0.f;
     renderedGeneration=restartGeneration.load(std::memory_order_acquire);
-    lastOffline=false; lastPlaying=false; lastPositionKnown=false; lastFrames=0;
+    renderedReset=resetGeneration.load(std::memory_order_acquire);
+    lastOffline=false; lastPlaying=false; lastPositionKnown=false; lastBypassed=false; lastFrames=0;
     if (rate!=44100. && rate!=48000.) { renderStatus.store(Session::Status::unsupportedRate); return; }
     try { session=std::make_unique<Session>(static_cast<int>(rate),factory); renderStatus.store(Session::Status::ready); }
     catch (...) { session.reset(); renderStatus.store(Session::Status::failed); }
@@ -59,7 +60,12 @@ void Processor::render(juce::AudioBuffer<float>& buffer,juce::MidiBuffer& midi,b
     juce::ScopedNoDenormals noDenormals;
     const bool offline=isNonRealtime();
     const unsigned generation=restartGeneration.load(std::memory_order_acquire);
-    bool restart=generation!=renderedGeneration || offline!=lastOffline;
+    const bool harmonyRestart=generation!=renderedGeneration;
+    const unsigned reset=resetGeneration.load(std::memory_order_acquire);
+    const bool hostReset=reset!=renderedReset;
+    // Pinned JUCE calls reset() when entering AU bypass. That transition must
+    // preserve the dry delay; ordinary host resets still discard source history.
+    bool discontinuity=offline!=lastOffline || (hostReset && bypassed==lastBypassed);
     bool receivedPosition=false;
     if (auto* head=getPlayHead()) if (const auto position=head->getPosition())
     {
@@ -69,19 +75,22 @@ void Processor::render(juce::AudioBuffer<float>& buffer,juce::MidiBuffer& midi,b
         if (sample && lastPositionKnown)
         {
             const bool overflow=lastPosition>std::numeric_limits<std::int64_t>::max()-lastFrames;
-            if (*sample<lastPosition || (playing && lastPlaying && (overflow || *sample!=lastPosition+lastFrames))) restart=true;
+            if (*sample<lastPosition || (playing && lastPlaying && (overflow || *sample!=lastPosition+lastFrames))) discontinuity=true;
         }
-        if (lastPlaying && !playing) restart=true;
+        // Stopped callbacks are a separate stream, even at a fixed position.
+        // Neither stop nor resume may replay that stream into playback.
+        if (lastFrames>0 && lastPlaying!=playing) discontinuity=true;
         lastPlaying=playing; lastPositionKnown=sample.hasValue();
         if (sample) lastPosition=*sample;
     }
     if (!receivedPosition) lastPositionKnown=false;
     lastFrames=buffer.getNumSamples(); lastOffline=offline; renderedGeneration=generation;
-    if (restart)
+    renderedReset=reset; lastBypassed=bypassed;
+    if (discontinuity)
     {
         std::fill(leadDelay.begin(),leadDelay.end(),0.f); leadPosition=0;
-        if (session) session->restart();
     }
+    if (session && (discontinuity || harmonyRestart || hostReset)) session->restart();
     if (session) session->begin(key->getIndex(),scale->getIndex(),offline);
     const auto input=getBusBuffer(buffer,true,0);
     auto output=getBusBuffer(buffer,false,0);
@@ -95,7 +104,10 @@ void Processor::render(juce::AudioBuffer<float>& buffer,juce::MidiBuffer& midi,b
         wetGain+=std::clamp(target-wetGain,-step,step);
         const float lead=delayed(sample);
         const float wet=session?session->push(sample,bypassed,wetGain):0.f;
-        const float value=lead+wet;
+        const double mixed=static_cast<double>(lead)+wet;
+        const bool valid=std::isfinite(mixed) && std::abs(mixed)<=std::numeric_limits<float>::max();
+        if (!valid && session) session->fail();
+        const float value=valid?static_cast<float>(mixed):lead;
         for (int channel=0;channel<output.getNumChannels();++channel) output.setSample(channel,i,value);
     }
     if (session)

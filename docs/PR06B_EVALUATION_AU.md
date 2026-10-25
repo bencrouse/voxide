@@ -28,6 +28,12 @@ gates below; no merge, push or installation is implied.
   retains its one-third relative mix gain, with one global harmony trim (−60 to
   0 dB) and enable. Defaults match the prior mix. No normalization/limiter/masking
   effects; provide headroom before the insert to avoid sums above full scale.
+- Enable/trim are **output-time mixer controls**, with the existing 10 ms wet-gain
+  ramp. Key/scale are **source-time** controls and reach audible output ~100 ms
+  later. Simultaneous automation is not promised to affect the same source passage.
+- Voice averaging and lead/wet mixing use double intermediates and finite/float-range
+  checks. Unrepresentable output latches an explicit harmony fault and falls back
+  to finite aligned lead, not clipping, normalization or acceptance of invalid wet.
 - Visible ready/preparing/fault/offline/unsupported-rate status, active voice count
   and a manual **Restart harmonies** action. Delivery faults latch harmonies off;
   the aligned lead continues, and the failure is visible rather than accepted.
@@ -38,6 +44,14 @@ gates below; no merge, push or installation is implied.
   boundaries. Old graphs and worker joins are reclaimed off render. Rapid repeated
   resets can temporarily exhaust the spare and mute harmonies while it is rebuilt;
   loop/first-syllable/reacquisition qualification remains pending.
+- Manual harmony restart and parameter-state recall preserve queued lead. Ordinary
+  AU bypass transitions (including pinned JUCE's reset callback) preserve it too.
+  An explicit host reset without a bypass transition, observed seek/loop, offline
+  mode change, stop or resume discards source/worker history. Resume always starts
+  a fresh stream, even at the same stopped position; stopped callbacks cannot bleed
+  into playback. Without host position/transport information, unreported source
+  changes cannot be inferred. A reset coinciding with a bypass change is treated
+  as bypass unless an observed transport/source discontinuity overrides it.
 - Host prepare/release/destruction must occur with rendering stopped/joined.
   Host/UI reset requests are atomic; only the render owner swaps graphs. Readouts
   are snapshots, not proof that Logic is currently delivering callbacks.
@@ -98,12 +112,16 @@ license constraints; no distribution/commercial-license claim is made.
   supported rates. They establish nonzero harmony processing, not pitch accuracy,
   host performance, a new feasibility matrix or permission to replay private audio.
 - Exact built, **uninstalled** AU loaded in a device-free, process-local harness:
-  component identity/parameters, 100 ms AU latency property and delayed dry impulse.
+  component identity/parameters, 100 ms AU latency property and exact delayed dry
+  impulse/continuous lead across actual AU bypass-property transitions.
   This is not a Logic/PDC/bounce test or public component registration.
 - Bundle metadata/arm64/signature verification and a dependency check rejecting
-  non-system/test allocator libraries in the actual AU.
+  non-system/test allocator libraries and static Mach-O interpose sections in the AU.
 
-## Validation result
+The pinned JUCE AU wrapper takes `getCallbackLock()` around processing. Direct
+processor tests do **not** qualify whole-AU lock freedom or lifecycle contention.
+
+## Initial validation result (358b0fb; preserved)
 
 **Implementation/build complete; focused tests pass.** All five Release checks cover
 headless processor and audited worker contracts, native functional audibility at both rates,
@@ -112,11 +130,12 @@ ASan and TSan pass the fake-engine processor contracts, including rapid resets,
 worker ownership/reclamation, native-fault muting, and unknown-position/seek
 handling, including failure between packet advertisement and retrieval. The Python suite passes **204 tests**. No malloc interposer or other
 build-local dynamic library is linked into the actual AU.
-The implementation is self-reviewed; independent review remains outstanding
-before any merge or promotion as qualified product code.
+An [independent review](evidence/pr-06b/review-001.md) found five actionable
+runtime/test issues in `358b0fb`. That original outcome is preserved; subsequent
+fix verification does not establish formal musical/Logic qualification.
 
 Build/test logs: `build/pr-06b-validation/delivery-20261025T161139Z/report.json`.
-Use the final preserved component, not earlier intermediate exports:
+Original preserved component (superseded by the review-fixed artifact below):
 
 `build/pr-06b-artifacts/ready-20261025-01/voxide Studio Eval.component`
 
@@ -127,6 +146,20 @@ These are functional checks, not a replacement for the failed PR06A screen or
 full native performance/pitch qualification. Initial AU-smoke factory lookup and
 test-runner wiring errors were fixed; they were implementation regressions, not
 retries of a consumed research/quality experiment.
+
+## Review-fixed validation
+
+The [five independent findings](evidence/pr-06b/review-001.md) are addressed in
+[the fix record](evidence/pr-06b/review-fixes-001.md). Five Release checks and both
+fake-engine contracts under ASan/TSan pass; **205 Python tests pass**. This includes
+actual AU bypass transitions, overflow/dry-fallback checks, stopped-stream resume,
+identifiable fake voices/negative controls and malformed-state atomicity.
+Logs: `build/pr-06b-review-fixes/20261025-01/`.
+
+Review-fixed delivery (separate from the unchanged original):
+`build/pr-06b-artifacts/ready-20261025-02/voxide Studio Eval.component`.
+Artifact/source hashes and copied validation logs:
+`build/pr-06b-artifacts/ready-20261025-02/report.json`.
 
 **Next user-facing step:** coordinate installation of this separate component and
 a disposable recorded-vocal Logic audition. Neither has happened automatically.

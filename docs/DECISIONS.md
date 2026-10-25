@@ -525,3 +525,13 @@ failures and remaining gates. The [closeout](evidence/pr-06b/closeout-001.md) cl
 the implementation task, not PR06B formal studio qualification or PR07 product go.
 Independent review remains pending before merge/promotion. No main merge, push,
 installation, Logic/device operation, playback or private replay is inferred.
+
+**Independent prototype review/fix authorization (2026-10-25):** the user requested
+an OpenCode reviewer in the bottom-right Herdr pane, followed by implementation of
+fixes/improvements. Reviewer `pr06b-review` examined `8f3a982..358b0fb` read-only and
+returned five actionable runtime/test findings, preserved in
+`docs/evidence/pr-06b/review-001.md`. The scoped fixes and subsequent verification
+are recorded in `docs/evidence/pr-06b/review-fixes-001.md`; a new artifact preserves
+the original delivery. Musical/timing failures and formal qualification gates are
+not changed. No merge, push, installation, Logic/device operation or private replay
+is authorized by this request.

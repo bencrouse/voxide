@@ -18,8 +18,9 @@ class EvalBundleTests(unittest.TestCase):
         (contents/"Info.plist").write_bytes(plistlib.dumps(info))
         return component
 
-    def verify(self,path,arch="arm64",library="/usr/lib/libc++.1.dylib",sign_error=False):
+    def verify(self,path,arch="arm64",library="/usr/lib/libc++.1.dylib",sign_error=False,sections="sectname __text\n"):
         def output(command,**kwargs):
+            if command[:2]==["otool","-l"]:return sections
             return arch if command[0]=="lipo" else "Eval:\n\t"+library+" (compatibility version 1.0.0)\n"
         with patch.object(bundle.subprocess,"check_output",side_effect=output), \
              patch.object(bundle.subprocess,"run",side_effect=subprocess.CalledProcessError(1,"codesign") if sign_error else None):
@@ -45,6 +46,12 @@ class EvalBundleTests(unittest.TestCase):
     def test_wrong_architecture_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaisesRegex(ValueError,"architecture"):self.verify(self.fixture(Path(temp)),arch="x86_64")
+
+    def test_static_interposer_is_rejected_even_with_system_only_dependencies(self):
+        for segment in ("__DATA","__DATA_CONST"):
+            with tempfile.TemporaryDirectory() as temp:
+                with self.assertRaisesRegex(ValueError,"interpose"):
+                    self.verify(self.fixture(Path(temp)),sections=f"Section\n  sectname __interpose\n  segname {segment}\n")
 
     def test_unsigned_bundle_is_not_reported_valid(self):
         with tempfile.TemporaryDirectory() as temp:
