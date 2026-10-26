@@ -640,3 +640,25 @@ failed screen, missing actual Logic/whole-host evidence, independent listening/
 rubric, formal full-support/challenge-c/licensing gates remain open. Prior artifact
 reports are historical and are not rewritten or regraded. This authorizes no push,
 additional installation/host/device/playback operation or private-source access.
+
+## PR10 local handoff authorization (2026-10-26)
+
+After local PR09 merge `ef80f07`, the user requested implementing PR10 to completion.
+Branch `pr-10-local-handoff` delivers setup/use/evidence instructions, reversible
+owned-product uninstall, cache-only clean-local-clone checks, and an explicit
+negative qualification report. Product stays 0.4.0; musical DSP, 30 host parameters,
+v4 state, pinned dependencies, 100 ms alignment and all frozen gates are unchanged.
+
+Uninstall requires explicit execution/approval and retains the component and exact
+ownership receipt outside AU discovery. No recursive deletion, broad cache reset,
+automatic old-version restoration or unrelated plug-in modification is allowed.
+Clean reproduction uses local committed Git objects and existing verified archives;
+no downloads, purchases, package installs, engine search or upstream patching.
+
+Implementation completion is not final user acceptance, independent review, merge
+or push authorization. Real installed-AU/auval/Logic/device/playback operations and
+private recording access remain separately coordinated. PR08's reported pass is
+accepted without another worksheet; PR09's failure is not rerun or regraded.
+The outcome is a **studio-first scale-mode engineering handoff, NOT qualified**;
+full-support/challenge-c, independent listening/rubric, actual Logic/whole-host/soak,
+final studio acceptance and distribution/license clearance remain open.

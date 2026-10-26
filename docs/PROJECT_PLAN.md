@@ -1542,13 +1542,13 @@ documentation. Label the outcome **studio-first scale-mode milestone**, not
 completion of the deferred live/MIDI/±24 brief.
 
 **Scope / TODO**
-- [ ] Produce a concise setup/use guide and full evidence index: selected architecture,
+- [x] Produce a concise setup/use guide and full evidence index: selected architecture,
   supported ranges/settings, Logic routing, monitoring/compensation, MIDI semantics,
   recall/bounce procedure, known failures, and reproducible commands.
-- [ ] Clearly separate qualified recorded-vocal/scale/±12 behavior from deferred
+- [x] Clearly separate qualified recorded-vocal/scale/±12 behavior from deferred
   live, MIDI and ±24 behavior. Do not present an available shell parameter, research
   render or album reference as a supported/qualified product feature.
-- [ ] Provide a local ad-hoc-signed build/install path with ownership checks and
+- [x] Provide a local ad-hoc-signed build/install path with ownership checks and
   safe uninstall. Do not add paid signing, notarization, installers, or public release.
 - [ ] Audit zero-spend compliance, dependency notices, source/distribution obligations,
   and private-recording separation. Do not publish/upload without user direction.
@@ -1564,8 +1564,14 @@ completion of the deferred live/MIDI/±24 brief.
 - [ ] No pending required gate is called passed; user accepts the final outcome.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — final status and permitted sharing/use boundary.
-- Learnings/evidence: pending — exact reproducible candidate and evidence index.
+- Major decisions: PR10 authorized on `pr-10-local-handoff` from `ef80f07`; retain
+  product 0.4.0, existing DSP/pins/contracts and explicit **NOT qualified** outcome.
+  Local-only, zero-spend use; no public/proprietary distribution clearance.
+- Learnings/evidence: [handoff guide](PR10_LOCAL_HANDOFF.md),
+  [index](evidence/pr-10/handoff-index.json) and
+  [execution/no-go report](evidence/pr-10/implementation-001.md).
+  Reversible quarantine, not deletion; clean local Git/cache-only reproduction.
+  Installed-AU and actual user workflow remain separately coordinated, not waived.
 - Reflections/next-agent cautions: preserve known limits and negative results; a
   local qualified AU is not a notarized/public release or a commercial license grant.
 

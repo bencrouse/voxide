@@ -1,0 +1,26 @@
+{
+  "schema": "voxide.pr10-evidence-index.v1",
+  "qualification": "not_qualified",
+  "milestone": "studio-first scale-mode engineering / negative-qualification handoff",
+  "private_evidence_policy": "Unavailable without separate source-bound consent; never opened or packaged by this index",
+  "entries": [
+    {"id":"pr00-foundation","status":"historical_functional_checks","document":"docs/VALIDATION.md","scope":"Build, shell and bundle foundation; no vocal-quality proof"},
+    {"id":"pr01-routing","status":"historical_functional_checks","document":"docs/ROUTING_VALIDATION.md","scope":"Shell routing/MIDI diagnostics, not current harmony/Logic qualification"},
+    {"id":"pr02-contract","status":"frozen_requirements","document":"docs/EVALUATION.md","scope":"Calibrated meters/frozen acceptance; no candidate pass inferred"},
+    {"id":"pr02-validation","status":"historical_calibration","document":"docs/EVALUATION_VALIDATION.md","scope":"Independent instrument calibration/regressions"},
+    {"id":"pr03-tracking","status":"historical_failures_retained","document":"docs/TRACKING.md","scope":"Causal recognition/accuracy misses and missing human truth retained"},
+    {"id":"pr04-engines","status":"historical_failures_retained","document":"docs/ENGINE_EVALUATION.md","scope":"No candidate passes all original numerical/reset/repeat gates"},
+    {"id":"pr05-interactions","status":"historical_failures_retained","document":"docs/INTERACTION_EVALUATION.md","scope":"Three-voice interaction research, not product qualification"},
+    {"id":"architecture","status":"combined_scope_no_go","document":"docs/ARCHITECTURE_INVESTIGATION.md","scope":"Original combined live/quality/range no-go is not regraded"},
+    {"id":"pr06a-pilot","status":"developmental_user_preference","document":"docs/STUDIO_PILOT.md","scope":"Processed-character preference, not independent formal grading"},
+    {"id":"pr06a-verification","status":"historical_failures_retained","document":"docs/STUDIO_VERIFICATION_RESULTS.md","scope":"Signalsmith 34/72 pitch failures and rejected experiments preserved"},
+    {"id":"pr06b-evaluation-au","status":"historical_implementation_formal_gates_open","document":"docs/PR06B_EVALUATION_AU.md","artifact_manifest":"build/pr-06b-artifacts/ready-20261025-02/artifacts.json","scope":"Separate evaluation component; formal quality/support/listening remain open"},
+    {"id":"pr07-product","status":"functional_implementation_formal_gates_open","document":"docs/PR07_PRODUCT_INTEGRATION.md","artifact_manifest":"build/pr-07-artifacts/ready-20261025-02/artifacts.json","scope":"Selected R3-short product path under explicit qualification deferral"},
+    {"id":"pr08-user-acceptance","status":"user_reported_acceptance","document":"docs/evidence/pr-08/user-acceptance-001.md","scope":"User says full checklist passed, declines worksheet; no raw measurements invented"},
+    {"id":"pr08-reviewed-engineering","status":"reviewed_functional_implementation","document":"docs/evidence/pr-08/review-fixes-001.md","artifact_manifest":"build/pr-08-artifacts/ready-20261026-02/artifacts.json","scope":"Native bounce/recall/reference tests, not new PR09 soak/performance proof"},
+    {"id":"pr09-negative-screen","status":"not_qualified","document":"docs/evidence/pr-09/implementation-001.md","artifact_manifest":"build/pr-09-artifacts/ready-20261026-01/artifacts.json","scope":"Both 44.1 kHz variable-block v1 screen repeats miss wet output; failures/outliers retained"},
+    {"id":"pr09-reviewed-observations","status":"reviewed_fixes_still_not_qualified","document":"docs/evidence/pr-09/review-fixes-001.md","artifact_manifest":"build/pr-09-artifacts/ready-20261026-02/artifacts.json","scope":"R1/R2/R3/P3 source-verified fixes; 245 Python tests; v2 timing not rerun/regraded"},
+    {"id":"pr10-local-handoff","status":"negative_qualification_handoff","document":"docs/evidence/pr-10/implementation-001.md","artifact_manifest":"build/pr-10-artifacts/ready-20261026-01/artifacts.json","scope":"Local reproducibility, reversible uninstall and no-go; not a public or qualified release"},
+    {"id":"licensing-privacy-and-cost","status":"local_only_distribution_clearance_open","document":"docs/PR10_LOCAL_HANDOFF.md","scope":"Zero new expenditure; JUCE AGPLv3/Rubber Band GPL source obligations and private recording separation"}
+  ]
+}

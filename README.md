@@ -5,15 +5,24 @@ three harmony voices. **Current priority: recorded vocals, scale mode, inclusive
 ±12-semitone support and an intentionally processed vocal character.** Live use,
 MIDI-mode qualification and ±24 coverage are deferred, not achieved or cancelled.
 
-**PR08 host/bounce implementation** on `pr-08-host-bounce-integration` extends the
-locally merged PR07 product. Version **0.3.0** adds same-engine offline harmony
+**PR10 local handoff:** product remains **0.4.0**, **not qualified for studio use
+or public release**. PR09's original 44.1 kHz variable-block wet-output failure
+remains unresolved; corrected observation logic has not been timed again. See the
+[setup/use/uninstall guide](docs/PR10_LOCAL_HANDOFF.md),
+[evidence index](docs/evidence/pr-10/handoff-index.json) and
+[negative-qualification report](docs/evidence/pr-10/implementation-001.md).
+Local engineering completion does not close the missing Logic soak, whole-host,
+independent listening/rubric, full-support/challenge-c or licensing gates.
+
+**PR08 host/bounce implementation**, now merged locally, extends the
+PR07 product. Version **0.3.0** added same-engine offline harmony
 bounce, exact-built-AU tests and fresh-process recall. The user reports completing
 the product Logic checklist, declares PR08 a pass and authorizes local merge;
 [acceptance is user-reported](docs/evidence/pr-08/user-acceptance-001.md), not
 independently measured or inferred from native tests. No worksheet was supplied.
 See [PR08](docs/PR08_HOST_INTEGRATION.md) and its [Logic checklist](docs/PR08_LOGIC_CHECKLIST.md).
 
-**PR09 implementation** on `pr-09-studio-session-qualification` adds opt-in local
+**PR09 implementation**, now merged locally as a negative qualification, adds opt-in local
 session metadata logging and controlled full-AU timing/allocation screens in
 product **0.4.0**, without changing musical DSP/state. Actual 30-minute Logic soak,
 independent listening/rubric and final studio qualification are not claimed from
@@ -134,7 +143,9 @@ separately authorized under the explicit PR07 exception above.
 ## Local development
 
 Requires Apple Silicon, macOS 15+, a macOS SDK/Clang (Command Line Tools), CMake
-3.24+, Git, and Python 3.9+. The initial download is checksum-pinned JUCE 8.0.15.
+3.24+, Git, and Python 3.9+. Use the existing checksum-pinned JUCE 8.0.15 and
+Rubber Band archive cache; default product commands are now offline and fail if it
+is absent. PR10 does not authorize downloads, package installs or new dependencies.
 No paid SDK, signing membership, Python package, or Nitride checkout is required.
 
 ```sh
@@ -150,17 +161,17 @@ Checks do not install plug-ins, launch Logic, access the microphone, or change
 audio devices. `make build PROFILE=release` builds the AU and development-only
 Standalone app without opening either. See [Contributing](CONTRIBUTING.md).
 
-After the first dependency download, use the verified local cache offline:
+Use the verified local cache offline:
 
 ```sh
 python3 scripts/check.py --full --offline
 ```
 
-To include PR 04 in the same full source-snapshot check, add `--engines`. On first
-use only, explicitly acquire the three free pinned evaluator-source archives:
-`python3 scripts/engine_dependencies.py --destination build/engine-release/_deps`.
-No pip/Homebrew package, paid license, AU installation or audio-device access is
-needed. Subsequent `make engine-check` runs offline from that verified cache.
+To include historical PR04 synthetic checks in the same full source-snapshot
+check, add `--engines` only with the existing cached evaluator archives. For the
+current product's clean committed local-clone four-profile reproduction instead:
+`python3 scripts/local_handoff.py reproduce --cache "$PWD/.cache/dependencies"`.
+Neither path authorizes private research or changes a historical qualification.
 
 ## Explicit local AU install
 
@@ -182,17 +193,22 @@ slot. User testing supports direct physical-input monitoring and project recall;
 the track-fed route goes silent with Low Latency Mode. See the recorded limitations
 in [routing validation](docs/ROUTING_VALIDATION.md), not a blanket compatibility claim.
 
-Choose **Vocal source: Main input** (default) or **Sidechain** explicitly. The shell
+Choose **Vocal source: Main input** (default) or **Sidechain** explicitly. The product
 sends channel 1 of that bus to both outputs, including in bypass. A stereo source's
 second channel is deliberately ignored. A selected silent/disconnected sidechain
 produces silence, not automatic fallback: JUCE's AU wrapper enables both buses, so
 enablement cannot identify a connection. The user's Logic captures deliver audio
 on Main while Side remains silent, despite selecting a source in Logic's Side Chain menu.
 All musical/source parameters are saved in plug-in state; legacy shell states load
-with musical defaults. MIDI controls target decisions but generates no sound or
-MIDI output. The editor's optional local metadata log
-contains bounded audio/MIDI summaries, not PCM; logging stops when the editor closes.
-The editor exposes target controls and callback snapshots, not audible harmonies.
+with musical defaults. Current scale mode generates three worker-owned harmonies;
+MIDI synthesis/live monitoring remain deferred. The historical routing diagnostic
+log stops when the editor closes. PR09's separate opt-in **session metadata log**
+continues with the editor closed and must be stopped explicitly; neither logs PCM.
+
+For reversible removal, quit Logic yourself and explicitly run
+`python3 scripts/au.py uninstall --allow-uninstall`. Only the exact owned component
+and ledger move outside AU discovery; all bytes/backups and unrelated plug-ins
+remain. Unknown/edited installs are refused. See the handoff guide for recovery.
 
 ## Routing development loop
 
@@ -207,7 +223,8 @@ does not claim Logic monitoring, Low Latency Mode, or project recall acceptance.
 ## License and project boundaries
 
 The user chose **local-only use for now**, using JUCE's AGPLv3 option with no
-commercial license. This is not a public distribution setup. Before sharing any
+commercial license. Current product also links pinned Rubber Band under
+GPL-2.0-or-later. This is not a public distribution setup. Before sharing any
 source/binary, review the applicable license and corresponding-source/notice
 obligations; no proprietary distribution entitlement is implied.
 
