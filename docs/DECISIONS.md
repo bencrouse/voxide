@@ -578,3 +578,35 @@ Parent Debug/Release eight-check and ASan/TSan four-check suites pass, including
 is separate from the unchanged original. No host IDs, ranges/defaults, v4 state
 bytes, backend or qualification requirements change. Formal measured qualification
 stays deferred; no merge, push, installation or private replay is authorized.
+
+## PR08 implementation authorization (2026-10-26)
+
+After merging PR07 locally, the user requested completing PR08 implementation on
+a branch. Branch `pr-08-host-bounce-integration` starts at `f36e5d8`. Implement the
+offline bounce path, synthetic exact-AU/recall tests, opt-in installed checks and a
+concrete user-session handoff. This is not authority to install, invoke installed
+`auval`, operate Logic/devices, play audio or read private recordings automatically.
+Existing manual evaluation-AU acceptance remains accepted without demanding the
+same audition again; it is not transferred as measured evidence for product 0.3.0.
+
+Offline coordination uses the same native engine/command/source clock, allowing
+bounded waits only when the host explicitly marks non-realtime. No backend,
+quality mode, musical/accuracy gate or persisted parameter/state meaning changes.
+Actual installed/Logic/recorded-vocal acceptance stays pending until coordinated;
+native checks cannot close those gates. Prior failures and consumed claims remain
+unchanged. Scope and handoff: `docs/PR08_HOST_INTEGRATION.md`.
+
+## PR08 user acceptance and merge authorization (2026-10-26)
+
+After the reviewed fixes and host-checklist handoff, the user reported testing
+"all of it," declined to fill `worksheet.json`, declared a pass and explicitly
+requested commit and merge. Accept this user-reported product-host acceptance
+without requiring the worksheet or repeating the tests. Commit the acceptance
+record and merge PR08 locally; no push or further host/private operations.
+
+No raw numerical results, exports, setup details or project/binary hashes were
+supplied, so none are fabricated or claimed independently verified. The prior
+artifacts and generated worksheet retain their historical pending records; the
+new user decision supersedes them for PR08 acceptance and merge, not formal
+measured accuracy/full-support, challenge c, performance/soak or licensing gates.
+Record: `docs/evidence/pr-08/user-acceptance-001.md`.

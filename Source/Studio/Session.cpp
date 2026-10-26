@@ -53,7 +53,7 @@ struct Session::Graph
     TrackerVariant variant=TrackerVariant::multiCandidate;
     std::uint64_t wall=0;
     unsigned activeMask=0;
-    bool configured=false,healthy=true;
+    bool configured=false,healthy=true,offline=false;
     explicit Graph(int r,Factory factory) : rate(r),latency(r/10)
     {
         tracker.prepare(rate);analysis=tracker.supportSamples()/2+tracker.hopSamples();
@@ -68,8 +68,9 @@ struct Session::Graph
     }
     bool allHealthy() const noexcept
     { return healthy && std::all_of(workers.begin(),workers.end(),[](const auto& w){return w && w->healthy();}); }
-    void configure(HarmonyConfig config,TrackerVariant selected) noexcept
+    void configure(HarmonyConfig config,TrackerVariant selected,bool nonRealtime) noexcept
     {
+        offline=nonRealtime;
         config.midiMode=false;
         if (!configured) { variant=selected;tracker.prepare(rate,variant); }
         if (!configured || config!=lastConfig)
@@ -112,7 +113,11 @@ struct Session::Graph
             enabled[v]=voiced && target.active && delta>=-12.000001 && delta<=12.000001;
             const double desired=enabled[v]?std::clamp(delta,-12.0,12.0):shifts[v];
             shifts[v]=approach(shifts[v],desired,2400.0*128/rate);
-            workers[v]->process(block.data(),128,std::exp2(shifts[v]/12),voiced?pitch.hz:0);drain(v);
+            workers[v]->process(block.data(),128,std::exp2(shifts[v]/12),voiced?pitch.hz:0);
+            // Identical commands/engine/clock in both modes. Only the explicitly
+            // offline coordinator waits, before consuming the same tagged data.
+            if (offline && !workers[v]->waitIdle()) healthy=false;
+            drain(v);
             if (enabled[v]) activeMask|=1u<<v;
         }
         for (int i=0;i<128;++i)
@@ -184,20 +189,35 @@ void Session::buildLoop() noexcept
 }
 void Session::begin(const HarmonyConfig& config,TrackerVariant variant,bool offline,bool midiMode) noexcept
 {
-    const bool suppressed=offline || midiMode;
-    if (suppressed!=wasSuppressed || (active && active->configured && active->variant!=variant)) needsRestart=true;
-    wasSuppressed=suppressed;
+    // A missing-spare timeout invalidates this epoch. Ordinary callbacks, recall
+    // and transport/mode changes must neither wait again nor adopt a late graph.
+    if (offlineWaitFailed) { fail();return; }
+    const bool suppressed=midiMode;
+    if (suppressed!=wasSuppressed || offline!=wasOffline || (active && active->configured && active->variant!=variant)) needsRestart=true;
+    wasSuppressed=suppressed;wasOffline=offline;
     if (needsRestart || !active)
     {
         auto* next=ready.exchange(nullptr,std::memory_order_acq_rel);auto* old=active;active=next;
         if (old && !retired.push(old)) { fail();return; }
         needsRestart=false;failed=false;current={};
     }
-    if (offline) { current.status=Status::offlineUnsupported;current.active=0;return; }
     if (midiMode) { current.status=Status::midiUnsupported;current.active=0;return; }
+    if (offline && !active && !buildFailed.load(std::memory_order_acquire))
+    {
+        // Fast bounce can request another epoch before the spare is replenished.
+        // Retirement is already published; construction and joins stay on builder.
+        ++spareWaitCalls;
+        const auto limit=std::chrono::steady_clock::now()+std::chrono::seconds(5);
+        while (!active && !buildFailed.load(std::memory_order_acquire) && std::chrono::steady_clock::now()<limit)
+        {
+            active=ready.exchange(nullptr,std::memory_order_acq_rel);
+            if (!active) std::this_thread::sleep_for(std::chrono::microseconds(50));
+        }
+        if (!active) { offlineWaitFailed=true;fail();return; }
+    }
     if (!active) { current.status=buildFailed.load(std::memory_order_acquire)?Status::failed:Status::preparing;return; }
     if (failed || !active->allHealthy()) { fail();return; }
-    active->configure(config,variant);
+    active->configure(config,variant,offline);
     if (!active->allHealthy()) { fail();return; }
     current.status=Status::ready;
 }

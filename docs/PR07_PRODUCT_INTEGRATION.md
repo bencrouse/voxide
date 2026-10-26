@@ -2,6 +2,10 @@
 
 Branch: `pr-07-product-integration`, based on `fb233d8`.
 
+This records the **0.2.0 PR07 contract**. Product 0.3.0 adds same-engine offline
+bounce and host integration work in [PR08](PR08_HOST_INTEGRATION.md); the historical
+offline restriction and artifacts below are not retroactively regraded.
+
 ## Authority and scope
 
 The user reports the evaluation AU's manual Logic/listening checks work, including

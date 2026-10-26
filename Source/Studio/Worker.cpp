@@ -6,7 +6,11 @@
 
 namespace voxide::studio
 {
-namespace { void pause() { std::this_thread::sleep_for(std::chrono::microseconds(50)); } }
+namespace
+{
+thread_local std::uint64_t waitCalls=0;
+void pause() { std::this_thread::sleep_for(std::chrono::microseconds(50)); }
+}
 Worker::Worker(int rate,Factory factory) : thread([this,rate,factory]{run(rate,factory);})
 {
     while (!ready.load(std::memory_order_acquire)) pause();
@@ -42,8 +46,10 @@ int Worker::retrieve(float* destination,int maximum) noexcept
     const int n=std::min(available(),maximum);
     std::copy_n(pending.audio.data()+read,n,destination);read+=n;return n;
 }
-bool Worker::waitIdleForTest() const
+std::uint64_t Worker::waitCallsOnThreadForTest() noexcept { return waitCalls; }
+bool Worker::waitIdle() const
 {
+    ++waitCalls;
     const auto limit=std::chrono::steady_clock::now()+std::chrono::seconds(5);
     while (completed.load(std::memory_order_acquire)<submitted)
     { if (!healthy() || std::chrono::steady_clock::now()>limit) return false;pause(); }

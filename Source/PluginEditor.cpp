@@ -50,7 +50,7 @@ public:
     {
         setWantsKeyboardFocus(false);
         title.setText("voxide / studio",juce::dontSendNotification);title.setFont(juce::FontOptions(24.f));
-        warning.setText("100 ms alignment | 44.1 / 48 kHz | real-time only\nFormal measured qualification deferred. Offline bounce and MIDI synthesis unavailable.",juce::dontSendNotification);
+        warning.setText("100 ms alignment | 44.1 / 48 kHz | playback + offline bounce\nFormal measured qualification deferred. MIDI synthesis unavailable.",juce::dontSendNotification);
         warning.setColour(juce::Label::textColourId,juce::Colours::orange);
         help.setText("Degree steps: 0 = unison; +2 = third in seven-note scales. Shifts beyond +/-12 semitones mute.",juce::dontSendNotification);
         for (auto* label:{&title,&warning,&help,&status}) addAndMakeVisible(label);

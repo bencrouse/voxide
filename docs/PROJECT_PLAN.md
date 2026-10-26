@@ -1340,7 +1340,33 @@ no merge, installation or formal qualification is inferred.
 
 Depends on: PR 07 and user Logic session.
 
-**Scope / TODO**
+**Implementation authorization (2026-10-26):** the user requested complete PR08
+implementation on `pr-08-host-bounce-integration` from merged `f36e5d8`. Code,
+synthetic tests and user-session handoff are authorized; installation, installed
+`auval`, Logic/device/playback operations and private-source reads require separate
+coordination. Actual host acceptance below is not silently deferred or passed by
+implementation. See `docs/PR08_HOST_INTEGRATION.md` and `docs/PR08_LOGIC_CHECKLIST.md`.
+
+**User acceptance / local merge approval (2026-10-26):** the user reports testing
+all of the checklist, declares a pass, declines `worksheet.json`, and explicitly
+requests commit and merge. Accept that report without requiring the worksheet or
+repeat testing. This is user-reported acceptance, not independently supplied raw
+measurements. The original checklists below retain their pre-session evidence
+state; missing raw records no longer block this explicitly authorized local merge.
+See `docs/evidence/pr-08/user-acceptance-001.md`. Numerical requirements and the
+separate formal accuracy, challenge c, performance/soak and licensing gates remain.
+
+**Engineering implementation**
+- [x] Same-engine offline harmony rendering, bounded worker/spare coordination only
+  in explicit non-realtime mode, unchanged 100 ms alignment and realtime no-wait path.
+- [x] Exact-built-AU latency/notification, source/automation/bypass, unity/harmony
+  and tail comparisons; fresh native-process ClassInfo/audio recall checks.
+- [x] Opt-in owned-installed-file/`auval` integration command, never automatically
+  run by branch work or default checks; unchanged installer ownership safeguards.
+- [x] Synthetic first-sample/pre-roll kit and all-pending user worksheet, with
+  recorded-source, route/LLM, PDC, recall/bounce and chase limits explicit.
+
+**Original scope checklist — pre-acceptance evidence record**
 - [ ] Add installed-AU integration tests and user-coordinated disposable Logic
   projects using recorded vocals, the explicitly supported source bus and scale
   automation. Keep the existing track-fed/Low Latency Mode routing limitation
@@ -1360,7 +1386,7 @@ Depends on: PR 07 and user Logic session.
 - [ ] Compare real-time and offline bounce, start-at-first-syllable, phrase tails,
   and differing host render-block sizes. Physical live input must be recorded first.
 
-**Validation required to merge**
+**Original merge-validation checklist — raw records not supplied**
 - [ ] Installed build identity/`auval`/actual Logic route verified; no doubled lead.
 - [ ] Unity-delay compensation reference aligns within the frozen tolerance;
   transformed-audio onset and pitch timing agree with the documented measurement.
@@ -1375,8 +1401,23 @@ Depends on: PR 07 and user Logic session.
   differences are explained, measured, and independently auditioned before acceptance.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — compensation strategy and supported host workflows.
-- Learnings/evidence: pending — project hashes, bounce comparisons, manual observations.
+- Major decisions: product 0.3.0 preserves the 100 ms PDC/source-clock contract and
+  pinned R3 short engine in playback and bounce; only explicit offline processing
+  may wait for workers/spares. Start the user session with recorded input, PDC All,
+  Low Latency Mode Off, 128-frame I/O and Small process buffer. No automatic host
+  operation or transfer of prior evaluation-AU acceptance to the new binary.
+- Engineering evidence and self-review: `docs/evidence/pr-08/implementation-001.md`.
+  The independent review of `6d751fa` identified three P2 timeout/installed-identity/
+  recall-test issues, now fixed and independently source-verified. All four profile
+  suites pass again (223 Python tests per normal tooling run). Fixes/regressions:
+  `docs/evidence/pr-08/review-fixes-001.md`; new artifact `ready-20261026-02`.
+  Original artifact `ready-20261026-01`
+  remains unchanged and does not prove the missing guarantees.
+  New synthetic kit: `evaluation/pr-08/logic-kit-20261026T134318Z-ded21219/`;
+  the worksheet retains its pre-session pending state by the user's choice.
+  User-reported host acceptance and local merge authorization are recorded in
+  `docs/evidence/pr-08/user-acceptance-001.md`; no raw measurements or project/
+  installed-binary hashes were supplied or inferred from native functional tests.
 - Reflections/next-agent cautions: PDC aligns playback, not causal live input;
   neither a saved project file nor a script proves Logic was reopened successfully.
 

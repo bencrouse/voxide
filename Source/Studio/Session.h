@@ -16,7 +16,7 @@ public:
     void restart(bool recover=false) noexcept
     {
         needsRestart=true;
-        if (recover) recoveryRequested.fetch_add(1,std::memory_order_release);
+        if (recover) { offlineWaitFailed=false;recoveryRequested.fetch_add(1,std::memory_order_release); }
     }
     void fail() noexcept { failed=true;current.status=Status::failed;current.active=0; }
     void begin(const HarmonyConfig&,TrackerVariant,bool offline,bool midiMode) noexcept;
@@ -25,6 +25,8 @@ public:
     bool waitIdleForTest() const;
     const void* graphForTest() const noexcept { return active; }
     bool rebuildFailedForTest() const noexcept { return buildFailed.load(std::memory_order_acquire); }
+    bool spareReadyForTest() const noexcept { return ready.load(std::memory_order_acquire)!=nullptr; }
+    std::uint64_t spareWaitCallsForTest() const noexcept { return spareWaitCalls; }
 private:
     struct Graph;
     int rate;
@@ -36,7 +38,8 @@ private:
     std::atomic<bool> stop {false},buildFailed {false};
     std::atomic<unsigned> recoveryRequested {0};
     std::thread builder;
-    bool needsRestart=false,failed=false,wasSuppressed=false;
+    bool needsRestart=false,failed=false,wasSuppressed=false,wasOffline=false,offlineWaitFailed=false;
+    std::uint64_t spareWaitCalls=0;
     Snapshot current;
     void buildLoop() noexcept;
 };
