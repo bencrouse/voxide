@@ -1433,6 +1433,12 @@ and a concrete user handoff. No automatic host/device/private-source operation.
 See `docs/PR09_STUDIO_SESSION.md`. Actual soak, independent listening and formal
 qualification below cannot be checked off by native tests or metadata alone.
 
+**Local merge authorization (2026-10-26):** after reviewed fixes `45a34ab`, the user
+explicitly requested commit/merge. Merge the engineering implementation and labeled
+negative qualification result locally. No additional host/soak/listening results or
+requirement changes were reported; the failed variable-output gate and studio
+qualification checklists below remain open. See `docs/DECISIONS.md`.
+
 **Engineering implementation**
 - [x] Opt-in bounded metadata-only processor capture, off-render persistent writer,
   explicit stop/in-flight handshake, dropped/aborted capture rejection, editor-close

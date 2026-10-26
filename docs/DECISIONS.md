@@ -627,3 +627,16 @@ from it. The purported approved PR06B revised listening rubric remains pending i
 the underlying protocol records. Missing resources/observations require an explicit
 incomplete/negative qualification result, not a success claim or lowered gates.
 Scope and operator steps: `docs/PR09_STUDIO_SESSION.md`.
+
+## PR09 local merge authorization (2026-10-26)
+
+After implementation `4de958d`, reviewed fixes `45a34ab` and explicit notice that
+the original variable-block audio failure remains unresolved, the user requested
+"ok please commit and merge". Record the approval and merge PR09 locally as an
+**engineering / negative-qualification milestone**, not a qualified studio pass.
+
+No new host/soak/listening results or requirement revisions were supplied. The
+failed screen, missing actual Logic/whole-host evidence, independent listening/
+rubric, formal full-support/challenge-c/licensing gates remain open. Prior artifact
+reports are historical and are not rewritten or regraded. This authorizes no push,
+additional installation/host/device/playback operation or private-source access.
