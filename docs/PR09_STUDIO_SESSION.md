@@ -48,6 +48,14 @@ finite output and peak **<1**. At least some aggregate wet output must appear in
 every voiced body second; this is not each voice's pitch proof. A variable/small-
 block failure is retained separately from passing larger-buffer points.
 
+After independent review, the **v2 screen observations** require above-threshold
+nonzero output in both channels as well as deviation from the lead; silence/lost
+channels cannot pass as wet. Each callback retains sample-count buckets for every
+absolute output second it overlaps. Boundary-crossing samples cannot cover an
+earlier dry second. The analyzer rejects impossible bucket counts and old v1
+aggregate-only CSV rather than inventing sample positions. Native negative controls
+exercise the actual counter before screening; they are not timed rendering.
+
 Do not run the timing screen alongside another build/profiler/sanitizer. The
 report records starting load/platform but cannot independently guarantee all other
 machine activity is idle. No selective reruns, trimming or best-run promotion.
@@ -110,8 +118,11 @@ python3 scripts/studio_session.py analyse \
 
 The parser refuses outside/symlink paths, PCM/unknown fields, Debug captures,
 changed candidate identity, missing/aborted footers, sequence gaps, dropped records,
-nonfinite metadata and changed-rate timelines. It retains failed reports under
-ignored `evaluation/pr-09/`. Timing percentiles include every callback, not only
+nonfinite metadata and changed-rate timelines. Header values must match the
+producer's bounded scalar string/integer/boolean types; nested payloads and exponent
+overflow are rejected. Module-path string validation does not access the module
+file. Failed reports stay under ignored `evaluation/pr-09/`.
+Timing percentiles include every callback, not only
 voiced/steady windows. Wall time, monotonic span and host-reported playing exposure
 are separate; wall time alone cannot claim a soak. Host transport reporting is
 not independently observed playback or dropout detection.
@@ -151,3 +162,10 @@ PR09 cannot declare a qualified studio go until required technical observations,
 actual soak and independent final listening exist. Licensing and outstanding
 formal/full-support accuracy remain open under the existing deferral; nothing in
 this instrumentation weakens those requirements. PR10 remains a separate handoff.
+
+## Independent code review follow-up
+
+The fresh [PR09 review](evidence/pr-09/review-001.md) found three P2 observation/
+schema defects in `4de958d`. [Fixes and regression evidence](evidence/pr-09/review-fixes-001.md)
+are recorded separately. The original artifact, passing functional tests and failed
+screen stay preserved; no old v1 observation is promoted into a corrected-v2 pass.

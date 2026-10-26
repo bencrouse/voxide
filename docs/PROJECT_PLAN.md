@@ -1479,6 +1479,12 @@ qualification below cannot be checked off by native tests or metadata alone.
   **both 44.1 kHz variable-block cases fail wet-output coverage**. This is a negative
   qualification result, not a passed performance/three-voice gate. Full raw evidence
   and outliers remain under `build/pr-09-validation/final-001/`.
+- Independent review subsequently found three P2 counter/boundary/header defects
+  and a follow-up P3 peak-consistency gap. All are fixed and independently closed
+  at source level; final Release/Debug 11/11 each (245 Python tests each) and focused
+  ASan/TSan 4/4 each pass. See `docs/evidence/pr-09/review-fixes-001.md` and separate
+  artifact `ready-20261026-02`. Corrected v2 observations are not a timing rerun or
+  regrading of old v1 data; the original variable-output failure remains unresolved.
 - Actual Logic soak/workload/whole-host measurements, independently approved final
   listening/rubric and final acceptance remain open; PR08 acceptance is not repeated
   or transferred into them. No worksheet is required from the user. See

@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "AllocationAudit.h"
 #include "BuildInfo.h"
+#include "ScreenObservations.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <filesystem>
@@ -291,9 +292,10 @@ void performanceScreen(AudioComponent component,const std::string& path)
 {
     require(std::string(voxide::build::profile)=="Release" && voxide::audit::available,"Performance screen requires ordinary Release");
     require(voxide::audit::selfTest(),"Performance allocation detector failed");
+    voxide::screen::observationGuards();
     // Metadata retained for every callback, including startup and outliers. This
     // is controlled synthetic full-AudioUnitRender timing, not a Logic session.
-    const std::string columns="case,rate,begin,frames,ns,allocations,api_error,nonfinite,peak,wet_samples,scheduler_lag_ns,requested_root,requested_scale,degree1,degree2,degree3\n";
+    const std::string columns="case,rate,begin,frames,ns,allocations,api_error,nonfinite,peak,wet0,wet1,wet2,wet3,wet4,audible0,audible1,audible2,audible3,audible4,scheduler_lag_ns,requested_root,requested_scale,degree1,degree2,degree3\n";
     std::string csv=columns;
     for (int rate:{44100,48000}) for (int mode=0;mode<3;++mode)
     {
@@ -304,7 +306,7 @@ void performanceScreen(AudioComponent component,const std::string& path)
         std::array<float,1024> left {},right {};
         struct Buffers { UInt32 count=2;AudioBuffer data[2]; } buffers;
         buffers.data[0]={1,1024*sizeof(float),left.data()};buffers.data[1]={1,1024*sizeof(float),right.data()};
-        struct Record { int begin,frames;std::int64_t ns,lag;std::size_t allocations;OSStatus error;unsigned nonfinite=0,wet=0;float peak=0; };
+        struct Record { int begin,frames;std::int64_t ns,lag;std::size_t allocations;OSStatus error;voxide::screen::Observations output {}; };
         std::vector<Record> records;records.reserve(static_cast<std::size_t>(rate*5/32+1));
         const auto epoch=std::chrono::steady_clock::now();std::size_t partition=0;int changed=0;
         for (int at=0;at<rate*5;)
@@ -327,8 +329,7 @@ void performanceScreen(AudioComponent component,const std::string& path)
             for (int i=0;i<n;++i)
             {
                 const auto index=static_cast<std::size_t>(i);const float lead=Input::tone(at+i-rate/10,rate);
-                if (!std::isfinite(left[index]) || !std::isfinite(right[index])) ++row.nonfinite;
-                else { row.peak=std::max({row.peak,std::abs(left[index]),std::abs(right[index])});if (std::abs(left[index]-lead)>1e-4f) ++row.wet; }
+                row.output.observe(at+i,rate,left[index],right[index],lead);
             }
             records.push_back(row);at+=n;
         }
@@ -337,7 +338,10 @@ void performanceScreen(AudioComponent component,const std::string& path)
         for (const auto& r:records)
         {
             const auto change=r.begin/rate;
-            const auto line=std::to_string(rate)+"-"+std::to_string(mode)+","+std::to_string(rate)+","+std::to_string(r.begin)+","+std::to_string(r.frames)+","+std::to_string(r.ns)+","+std::to_string(r.allocations)+","+std::to_string(r.error)+","+std::to_string(r.nonfinite)+","+std::to_string(r.peak)+","+std::to_string(r.wet)+","+std::to_string(r.lag)
+            auto line=std::to_string(rate)+"-"+std::to_string(mode)+","+std::to_string(rate)+","+std::to_string(r.begin)+","+std::to_string(r.frames)+","+std::to_string(r.ns)+","+std::to_string(r.allocations)+","+std::to_string(r.error)+","+std::to_string(r.output.nonfinite)+","+std::to_string(r.output.peak);
+            for (const auto count:r.output.wet) line+=","+std::to_string(count);
+            for (const auto count:r.output.audible) line+=","+std::to_string(count);
+            line+=","+std::to_string(r.lag)
                 +","+std::to_string((5+change)%12)+","+std::to_string(change?change%3:1)+","+std::to_string(change && change%2==0?-2:2)
                 +","+std::to_string(change && change%2==0?3:4)+","+std::to_string(change && change%2==0?5:6)+"\n";
             csv+=line;completed+=line;
@@ -353,7 +357,7 @@ int main(int argc,char** argv)
     std::string report;
     try
     {
-        juce::ScopedJuceInitialiser_GUI gui;require(argc>=3 && std::string(argv[1])=="--component","Pass --component exact.component");
+        juce::ScopedJuceInitialiser_GUI gui;voxide::screen::observationGuards();require(argc>=3 && std::string(argv[1])=="--component","Pass --component exact.component");
         std::string save,restore,audio,screen;
         for (int i=3;i<argc;i+=2)
         {
@@ -364,7 +368,7 @@ int main(int argc,char** argv)
         if (!screen.empty())
         {
             require(save.empty() && restore.empty() && audio.empty(),"Screen is synthetic only");Bundle bundle(argv[2]);performanceScreen(bundle.component,screen);
-            const auto json=std::string("{\"schema\":\"voxide.pr09-screen.v1\",\"status\":\"captured_not_qualified\",\"pid\":")+std::to_string(getpid())+",\"profile\":\"Release\",\"cases\":6,\"voices\":3,\"seconds_per_case\":5,\"full_AudioUnitRender_timing\":true,\"allocation_audit\":true,\"Logic_operated\":false}\n";
+            const auto json=std::string("{\"schema\":\"voxide.pr09-screen.v2\",\"status\":\"captured_not_qualified\",\"pid\":")+std::to_string(getpid())+",\"profile\":\"Release\",\"cases\":6,\"voices\":3,\"seconds_per_case\":5,\"full_AudioUnitRender_timing\":true,\"allocation_audit\":true,\"sample_observation_guards\":true,\"Logic_operated\":false}\n";
             if (!report.empty()) writeBytes(report,json.data(),json.size());std::cout<<json;return 0;
         }
         require(save.empty() || restore.empty(),"Choose save or restore");Bundle bundle(argv[2]);recallParameterGuards(bundle.component);int cases=0;

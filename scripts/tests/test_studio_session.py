@@ -78,6 +78,36 @@ class StudioSessionTests(unittest.TestCase):
             if change=="scope":rows[0]["allocation_audit_available"]=True
             with self.subTest(change=change),self.assertRaises(ValueError):self.parse(rows)
 
+    def test_all_header_text_fields_reject_nonproducer_values(self):
+        for key in session.HEADER_TEXT_LIMITS:
+            for value in ({"pcm":[.1,.2]},["fixture"],True,42,None):
+                rows=self.metadata();rows[0][key]=value
+                with self.subTest(key=key,value=value),self.assertRaises(ValueError):self.parse(rows)
+        for key,value in (("revision",""),("instance",""),("module_path","relative/voxide"),("cpu","a"*1025),("os","bad\0text")):
+            rows=self.metadata();rows[0][key]=value
+            with self.subTest(key=key),self.assertRaises(ValueError):self.parse(rows)
+        rows=self.metadata();rows[0].update(cpu="",os="")
+        self.assertEqual(self.parse(rows)["callbacks"],6) # Native system descriptions may be unavailable.
+
+    def test_numeric_overflow_in_header_is_rejected_before_schema_acceptance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/"fixture.jsonl";text="".join(json.dumps(r)+"\n" for r in self.metadata())
+            for key in ("cpu","revision","module_path","tick_hz"):
+                rows=self.metadata();rows[0][key]="overflow-marker"
+                malformed="".join(json.dumps(r)+"\n" for r in rows).replace('"overflow-marker"','1e999')
+                path.write_text(malformed)
+                with self.subTest(key=key),self.assertRaisesRegex(ValueError,"Nonfinite JSON number"):
+                    session.parse_log(path,"a"*64)
+
+    def test_malformed_header_retains_failed_analysis_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();directory=root/"evaluation/pr-09";directory.mkdir(parents=True)
+            path=directory/"malformed.jsonl";rows=self.metadata();rows[0]["module_path"]={"pcm":[.1,.2]}
+            path.write_text("".join(json.dumps(r)+"\n" for r in rows));output=directory/"report"
+            with patch.object(session,"ROOT",root),self.assertRaisesRegex(ValueError,"header text"):
+                session.analyse(path,"a"*64,allow_session_log=True,output=output)
+            self.assertEqual(session.load_json(output/"report.json")["status"],"fail")
+
     def test_health_peak_overdue_and_offline_fail_without_dropping_observations(self):
         rows=self.metadata();rows[1].update(status=2,peak=1.1,offline=True,nonfinite=1,elapsed_ticks=3000000)
         rows[2]["tick"]+=1000000
@@ -115,15 +145,20 @@ class StudioSessionTests(unittest.TestCase):
                 while at<rate*5:
                     n=min(partitions[i%len(partitions)],rate*5-at)
                     change=at//rate;even=change>0 and change%2==0
-                    rows.append({"case":f"{rate}-{mode}","rate":rate,"begin":at,"frames":n,"ns":1000,"allocations":0,
-                        "api_error":0,"nonfinite":0,"peak":.1,"wet_samples":n,"scheduler_lag_ns":1000,
-                        "requested_root":(5+change)%12,"requested_scale":change%3 if change else 1,"degree1":-2 if even else 2,"degree2":3 if even else 4,"degree3":5 if even else 6});at+=n;i+=1
+                    row={"case":f"{rate}-{mode}","rate":rate,"begin":at,"frames":n,"ns":1000,"allocations":0,
+                        "api_error":0,"nonfinite":0,"peak":.1,"scheduler_lag_ns":1000,
+                        "requested_root":(5+change)%12,"requested_scale":change%3 if change else 1,"degree1":-2 if even else 2,"degree2":3 if even else 4,"degree3":5 if even else 6}
+                    for second in range(5):
+                        overlap=max(0,min(at+n,(second+1)*rate)-max(at,second*rate))
+                        row[f"wet{second}"]=row[f"audible{second}"]=overlap
+                    rows.append(row);at+=n;i+=1
         return rows
 
     def test_screen_matrix_and_raw_failure_accounting(self):
         rows=self.screen_rows();report=session.analyse_screen(rows)
         self.assertEqual(len(report),6);self.assertTrue(all(c["status"]=="pass_this_screen_only" for c in report))
         rows[0].update(allocations=1,ns=10000000,peak=1.1,api_error=-1,nonfinite=1)
+        rows[0]["audible0"]-=1;rows[0]["wet0"]-=1
         failed=next(c for c in session.analyse_screen(rows) if c["case"]=="44100-0")
         self.assertEqual(failed["status"],"failed_screen");self.assertEqual(failed["timing"]["allocation_calls"],1)
         self.assertEqual(failed["timing"]["overdue_callbacks"],1)
@@ -133,8 +168,46 @@ class StudioSessionTests(unittest.TestCase):
         with self.assertRaises(ValueError):session.analyse_screen(rows[:-1])
         bad=copy.deepcopy(rows);bad[0]["frames"]=64
         with self.assertRaises(ValueError):session.analyse_screen(bad)
-        for row in rows:row["wet_samples"]=0
+        for row in rows:
+            for second in range(5):row[f"wet{second}"]=0
         self.assertTrue(all(c["status"]=="failed_screen" for c in session.analyse_screen(rows)))
+
+    def test_silent_screen_cannot_pass_activity_gates(self):
+        rows=self.screen_rows()
+        for row in rows:
+            row["peak"]=0
+            for second in range(5):row[f"wet{second}"]=row[f"audible{second}"]=0
+        for case in session.analyse_screen(rows):
+            self.assertEqual(case["status"],"failed_screen")
+            self.assertFalse(case["gates"]["audible_each_body_second"])
+            self.assertFalse(case["gates"]["aggregate_wet_each_body_second"])
+
+    def test_activity_peak_respects_native_threshold_and_serialization_rounding(self):
+        rows=self.screen_rows()
+        for row in rows:row["peak"]=.000001
+        with self.assertRaisesRegex(ValueError,"peak threshold"):session.analyse_screen(rows)
+        # Native output just above 1e-4 can serialize as exactly 0.000100.
+        for row in rows:row["peak"]=.0001
+        self.assertTrue(all(c["status"]=="pass_this_screen_only" for c in session.analyse_screen(rows)))
+
+    def test_boundary_resumption_does_not_cover_previous_dry_second(self):
+        rows=self.screen_rows()
+        for row in rows:
+            if row["case"]=="44100-2":row["wet1"]=0
+        crossing=next(r for r in rows if r["case"]=="44100-2" and r["begin"]==88045)
+        self.assertEqual((crossing["frames"],crossing["wet1"],crossing["wet2"]),(257,0,102))
+        case=next(c for c in session.analyse_screen(rows) if c["case"]=="44100-2")
+        self.assertEqual(case["wet_samples_by_second"][1],0)
+        self.assertGreater(case["wet_samples_by_second"][2],0)
+        self.assertFalse(case["gates"]["aggregate_wet_each_body_second"])
+
+    def test_out_of_bucket_counts_and_old_aggregate_format_are_rejected(self):
+        rows=self.screen_rows();rows[0]["wet4"]=1
+        with self.assertRaisesRegex(ValueError,"per-second"):session.analyse_screen(rows)
+        rows=self.screen_rows();rows[0]["wet_samples"]=rows[0]["frames"]
+        for key in list(rows[0]):
+            if key.startswith("wet") and key!="wet_samples" or key.startswith("audible"):rows[0].pop(key)
+        with self.assertRaisesRegex(ValueError,"v2 required"):session.analyse_screen(rows)
 
     def test_screen_debug_refused_before_any_native_execution(self):
         with patch.object(session.au,"no_symlinks",side_effect=lambda p:p),patch.object(session,"native_binary",return_value=(Path("fixture"),"Debug")), \

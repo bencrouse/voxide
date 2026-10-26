@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "StudioTestSupport.h"
 #include "AllocationAudit.h"
+#include "ScreenObservations.h"
 #include <filesystem>
 #include <iostream>
 void runSessionTelemetryTests();
@@ -120,5 +121,5 @@ void outputOnlyMetadata()
 }
 void runSessionTelemetryTests()
 {
-    queueContracts();queueConcurrency();logContracts();outputOnlyMetadata();std::cout<<"Session metadata opt-in, stop handshake, overflow, editor lifetime and render auditing pass; synthetic only\n";
+    voxide::screen::observationGuards();queueContracts();queueConcurrency();logContracts();outputOnlyMetadata();std::cout<<"Session metadata opt-in, stop handshake, overflow, editor lifetime, screen observation guards and render auditing pass; synthetic only\n";
 }

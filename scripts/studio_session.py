@@ -22,6 +22,8 @@ SCOPE="Processor-body metadata is not full AU-wrapper timing, allocation proof, 
 CALLBACK_KEYS={"kind","sequence","tick","elapsed_ticks","frames","rate","status","active","enabled","root","scale","epoch","offline","bypassed","transport_known","playing","peak","nonfinite"}
 HEADER_KEYS={"kind","schema","version","revision","profile","instance","module_path","module_file_sha256","os","cpu","unix_ms","tick_hz","scope","pcm_recorded","allocation_audit_available"}
 END_KEYS={"kind","callbacks","last_sequence","dropped","unix_ms"}
+HEADER_TEXT_LIMITS={"kind":64,"schema":128,"version":64,"revision":256,"profile":64,"instance":256,"module_path":4096,"module_file_sha256":64,"os":1024,"cpu":1024,"scope":512}
+SCREEN_KEYS={"case","rate","begin","frames","ns","allocations","api_error","nonfinite","peak","scheduler_lag_ns","requested_root","requested_scale","degree1","degree2","degree3"}|{f"{kind}{second}" for kind in ("wet","audible") for second in range(5)}
 
 
 def integer(value,minimum=0):
@@ -44,22 +46,48 @@ def unique_pairs(pairs):
     return result
 
 
+def json_float(text):
+    value=float(text);require(math.isfinite(value),"Nonfinite JSON number");return value
+
+
+def validate_header(row,expected_binary_sha256):
+    require(set(row)==HEADER_KEYS,"Wrong session metadata header fields")
+    for key,limit in HEADER_TEXT_LIMITS.items():
+        value=row[key]
+        require(type(value) is str and len(value)<=limit and "\0" not in value and (value or key in ("os","cpu")),"Invalid header text: "+key)
+    require(row["kind"]=="header" and row["schema"]=="voxide.pr09-session.v1","Wrong session metadata header")
+    require(row["version"]=="0.4.0" and row["profile"]=="Release" and row["pcm_recorded"] is False
+        and row["allocation_audit_available"] is False and row["scope"]=="processor render body only; excludes AU wrapper, telemetry collection and file IO","Wrong/unqualified capture scope")
+    require(Path(row["module_path"]).is_absolute(),"Module path must be absolute metadata, not an accessed file")
+    require(row["module_file_sha256"]==expected_binary_sha256,"Module file differs from requested candidate")
+    integer(row["tick_hz"],1);integer(row["unix_ms"],1)
+
+
 def analyse_screen(rows):
     quality=load_json(CONTRACT)["quality"];cases=[]
+    require(all(set(row)==SCREEN_KEYS for row in rows),"Screen CSV lacks exact per-second sample evidence (v2 required)")
     names={f"{rate}-{mode}" for rate in (44100,48000) for mode in range(3)}
     require({r["case"] for r in rows}==names,"Incomplete screen matrix")
     for name in sorted(names):
         rate,mode=map(int,name.split("-"));selected=[r for r in rows if r["case"]==name]
-        partitions=([128],[512],[32,128,257,512,1024])[mode];at=0;wet=[0]*5
+        partitions=([128],[512],[32,128,257,512,1024])[mode];at=0;wet=[0]*5;audible=[0]*5
         for i,row in enumerate(selected):
             require(int(row["rate"])==rate and int(row["begin"])==at and int(row["frames"])==min(partitions[i%len(partitions)],rate*5-at),"Screen timeline/block sequence changed")
             change=at//rate;even=change>0 and change%2==0
             require(tuple(int(row[k]) for k in ("requested_root","requested_scale","degree1","degree2","degree3"))
                 ==((5+change)%12,change%3 if change else 1,-2 if even else 2,3 if even else 4,5 if even else 6),"Screen musical workload changed")
-            for key in ("ns","allocations","nonfinite","wet_samples"):require(int(row[key])>=0,"Negative screen observation")
-            require(int(row["wet_samples"])<=int(row["frames"]),"Invalid wet observation")
-            finite(float(row["peak"]));at+=int(row["frames"])
-            wet[min(4,int(row["begin"])//rate)]+=int(row["wet_samples"])
+            for key in ("ns","allocations","nonfinite"):require(int(row[key])>=0,"Negative screen observation")
+            n=int(row["frames"]);audible_count=0
+            for second in range(5):
+                w,a=(int(row[f"{kind}{second}"]) for kind in ("wet","audible"))
+                overlap=max(0,min(at+n,(second+1)*rate)-max(at,second*rate))
+                require(0<=w<=a<=overlap,"Invalid per-second screen observation")
+                wet[second]+=w;audible[second]+=a;audible_count+=a
+            require(int(row["nonfinite"])+audible_count<=n,"Nonfinite/audible sample counts exceed callback")
+            # Native peak is serialized to six decimals: a genuine >1e-4
+            # observation may round to exactly 1e-4, but never below it.
+            peak=finite(float(row["peak"]));require(not audible_count or peak>=1e-4,"Audible counts contradict output peak threshold")
+            at+=n
         require(at==rate*5,"Truncated screen")
         timing=callback_metrics(selected,rate,True,quality,rate*5)
         timing["scope"]="Full exact-built AudioUnitRender invocation including input callbacks; synthetic paced Release host, not Logic"
@@ -67,9 +95,9 @@ def analyse_screen(rows):
         peak=max(float(r["peak"]) for r in selected)
         gates={"occupancy":timing["occupancy_target_met_on_this_run_only"],"zero_overdue":timing["overdue_callbacks"]==0,
             "zero_allocations":timing["allocation_calls"]==0,"finite":all(int(r["nonfinite"])==0 for r in selected),
-            "headroom":peak<1,"api":all(int(r["api_error"])==0 for r in selected),"aggregate_wet_each_body_second":all(wet[1:])}
+            "headroom":peak<1,"api":all(int(r["api_error"])==0 for r in selected),"audible_each_body_second":all(audible[1:]),"aggregate_wet_each_body_second":all(wet[1:])}
         cases.append({"case":name,"rate":rate,"block":"variable" if mode==2 else partitions[0],"timing":timing,"occupancy":stats(occupancy),
-            "peak":peak,"wet_samples_by_second":wet,"scheduler_lag_ns":stats([int(r["scheduler_lag_ns"]) for r in selected]),
+            "peak":peak,"wet_samples_by_second":wet,"audible_samples_by_second":audible,"scheduler_lag_ns":stats([int(r["scheduler_lag_ns"]) for r in selected]),
             "gates":gates,"status":"pass_this_screen_only" if all(gates.values()) else "failed_screen"})
     return cases
 
@@ -81,7 +109,7 @@ def screen(build,output=None):
     require(au.check_identity(component)=="0.4.0","Build the PR09 instrumented product first");verify_linkage(component)
     expected=au.fingerprint(component);helper_hash=sha256(binary);contract_hash=sha256(CONTRACT)
     directory=au.no_symlinks(Path(output).absolute() if output else ROOT/"build/pr-09-screens"/stamp());directory.mkdir(parents=True,exist_ok=False)
-    report={"schema":"voxide.pr09-screen-report.v1","status":"running","cases":[],"component":str(component),"component_files":expected,
+    report={"schema":"voxide.pr09-screen-report.v2","status":"running","cases":[],"component":str(component),"component_files":expected,
         "native_binary_sha256":helper_hash,"contract_sha256":contract_hash,"environment":{"platform":platform.platform(),"load_start":os.getloadavg()},
         "Logic_operated":False,"private_recording_read":False,"qualification":"incomplete_studio_qualification","scope":"Controlled synthetic screen only; all failures/outliers retained"}
     write_json(directory/"started.json",report)
@@ -93,9 +121,10 @@ def screen(build,output=None):
             command=[str(binary),"--component",str(component),"--screen",str(raw),"--report",str(result)]
             with (directory/f"process-{repeat}.log").open("x") as log:subprocess.run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=180)
             native=load_json(result)
-            require(native.get("schema")=="voxide.pr09-screen.v1" and native.get("status")=="captured_not_qualified"
+            require(native.get("schema")=="voxide.pr09-screen.v2" and native.get("status")=="captured_not_qualified"
                 and native.get("profile")=="Release" and native.get("cases")==6 and native.get("voices")==3 and native.get("seconds_per_case")==5
-                and native.get("full_AudioUnitRender_timing") is True and native.get("allocation_audit") is True and native.get("Logic_operated") is False,"Wrong/incomplete screen report")
+                and native.get("full_AudioUnitRender_timing") is True and native.get("allocation_audit") is True
+                and native.get("sample_observation_guards") is True and native.get("Logic_operated") is False,"Wrong/incomplete screen report")
             require(all(type(native[k]) is int for k in ("cases","voices","seconds_per_case")),"Invalid screen counters")
             pids.append(integer(native.get("pid"),1))
             with raw.open() as stream:cases=analyse_screen(list(csv.DictReader(stream)))
@@ -110,20 +139,16 @@ def screen(build,output=None):
 
 def parse_log(path,expected_binary_sha256):
     """Strict metadata-only parser; caller must establish access consent first."""
-    require(re.fullmatch(r"[0-9a-f]{64}",expected_binary_sha256) is not None,"Expected exact module-file SHA-256")
+    require(type(expected_binary_sha256) is str and re.fullmatch(r"[0-9a-f]{64}",expected_binary_sha256) is not None,"Expected exact module-file SHA-256")
     occupancy=[];costs=[];rates=set();roots=set();scales=set();epochs=set();frames=0;count=0;previous_end=None;first=None;last=None
     bad_status=offline=bypassed=nonfinite=overdue=active3=enabled3=playing_frames=zero_frames=0;peak=0;header=end=None
     with path.open() as stream:
         for line in iter(lambda:stream.readline(16385),""):
             require(len(line)<=16384 and line.endswith("\n"),"Oversized/truncated/non-metadata log line")
-            row=json.loads(line,object_pairs_hook=unique_pairs,parse_constant=lambda _:(_ for _ in ()).throw(ValueError("Nonfinite JSON")))
+            row=json.loads(line,object_pairs_hook=unique_pairs,parse_float=json_float,parse_constant=lambda _:(_ for _ in ()).throw(ValueError("Nonfinite JSON")))
             require(type(row) is dict and end is None,"Unexpected data after footer")
             if header is None:
-                require(set(row)==HEADER_KEYS and row.get("kind")=="header" and row.get("schema")=="voxide.pr09-session.v1","Wrong session metadata header")
-                require(row.get("version")=="0.4.0" and row.get("profile")=="Release" and row.get("pcm_recorded") is False
-                    and row.get("allocation_audit_available") is False and row.get("scope")=="processor render body only; excludes AU wrapper, telemetry collection and file IO","Wrong/unqualified capture scope")
-                require(row.get("module_file_sha256")==expected_binary_sha256,"Module file differs from requested candidate")
-                integer(row["tick_hz"],1);integer(row["unix_ms"],1);header=row;continue
+                validate_header(row,expected_binary_sha256);header=row;continue
             if row.get("kind")=="end":
                 require(set(row)==END_KEYS,"Wrong footer fields");end=row;continue
             require(set(row)==CALLBACK_KEYS and row.get("kind")=="callback","Unknown, aborted or non-metadata record")
