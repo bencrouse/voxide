@@ -9,6 +9,7 @@
 void runTrackingProcessorTests();
 void runStudioUiTests();
 void runStateRecoveryTests();
+void runBounceTests(bool);
 
 namespace
 {
@@ -59,7 +60,7 @@ void dryRouting()
             }
         }
         p.setNonRealtime(true);juce::AudioBuffer<float> b(2,128);b.clear();callback(p,b);
-        require(p.studioStatus().status==voxide::studio::Status::offlineUnsupported,"Offline falsely supported");
+        require(p.studioStatus().status==voxide::studio::Status::ready,"Offline coordinator failed");
         p.setNonRealtime(false);set(p,"harmonyMode",1);callback(p,b);
         require(p.studioStatus().status==voxide::studio::Status::midiUnsupported,"Legacy MIDI mode falsely supported");
     }
@@ -226,9 +227,10 @@ int main(int argc,char** argv)
     {
         studioTest::renderThread=true;
         if (argc==2 && juce::String(argv[1])=="--ui") { runStudioUiTests();return 0; }
+        if (argc==2 && juce::String(argv[1])=="--bounce-native") { runBounceTests(true);return 0; }
         require(argc==1,"Unknown product test mode");
         if (voxide::audit::available) require(voxide::audit::selfTest(),"Allocation detector failed");
-        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();voicesAndFaults();rangeAndFiniteContracts();runStateRecoveryTests();
+        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();voicesAndFaults();rangeAndFiniteContracts();runStateRecoveryTests();runBounceTests(false);
         require(studioTest::wrongOwner.load()==0 && studioTest::living.load()==0,"Native ownership/lifetime escaped worker");
         std::cout<<"PR07 product contracts passed; no install, private audio, device or Logic\n";return 0;
     }

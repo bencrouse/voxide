@@ -16,7 +16,10 @@ public:
     int available() noexcept;
     int retrieve(float*,int) noexcept;
     bool healthy() const noexcept { return !failed.load(std::memory_order_acquire); }
-    bool waitIdleForTest() const;
+    // Offline coordinator only. Never call from real-time processing.
+    bool waitIdle() const;
+    bool waitIdleForTest() const { return waitIdle(); }
+    static std::uint64_t waitCallsOnThreadForTest() noexcept;
 private:
     struct Command { std::uint64_t serial=0;double ratio=1,hz=0;int count=0;std::array<float,128> audio {}; };
     struct Packet { std::uint64_t first=0;int count=0;std::array<float,1024> audio {}; };

@@ -1340,6 +1340,23 @@ no merge, installation or formal qualification is inferred.
 
 Depends on: PR 07 and user Logic session.
 
+**Implementation authorization (2026-10-26):** the user requested complete PR08
+implementation on `pr-08-host-bounce-integration` from merged `f36e5d8`. Code,
+synthetic tests and user-session handoff are authorized; installation, installed
+`auval`, Logic/device/playback operations and private-source reads require separate
+coordination. Actual host acceptance below is not silently deferred or passed by
+implementation. See `docs/PR08_HOST_INTEGRATION.md` and `docs/PR08_LOGIC_CHECKLIST.md`.
+
+**Engineering implementation**
+- [x] Same-engine offline harmony rendering, bounded worker/spare coordination only
+  in explicit non-realtime mode, unchanged 100 ms alignment and realtime no-wait path.
+- [x] Exact-built-AU latency/notification, source/automation/bypass, unity/harmony
+  and tail comparisons; fresh native-process ClassInfo/audio recall checks.
+- [x] Opt-in owned-installed-file/`auval` integration command, never automatically
+  run by branch work or default checks; unchanged installer ownership safeguards.
+- [x] Synthetic first-sample/pre-roll kit and all-pending user worksheet, with
+  recorded-source, route/LLM, PDC, recall/bounce and chase limits explicit.
+
 **Scope / TODO**
 - [ ] Add installed-AU integration tests and user-coordinated disposable Logic
   projects using recorded vocals, the explicitly supported source bus and scale
@@ -1375,8 +1392,16 @@ Depends on: PR 07 and user Logic session.
   differences are explained, measured, and independently auditioned before acceptance.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — compensation strategy and supported host workflows.
-- Learnings/evidence: pending — project hashes, bounce comparisons, manual observations.
+- Major decisions: product 0.3.0 preserves the 100 ms PDC/source-clock contract and
+  pinned R3 short engine in playback and bounce; only explicit offline processing
+  may wait for workers/spares. Start the user session with recorded input, PDC All,
+  Low Latency Mode Off, 128-frame I/O and Small process buffer. No automatic host
+  operation or transfer of prior evaluation-AU acceptance to the new binary.
+- Engineering evidence and self-review: `docs/evidence/pr-08/implementation-001.md`.
+  New synthetic kit: `evaluation/pr-08/logic-kit-20261026T134318Z-ded21219/`;
+  every actual-host case is pending. Actual Logic project hashes, recorded-vocal
+  compensation/re-acquisition, real reopen/duplicate and real bounce observations
+  remain required; native functional tests cannot close those validation gates.
 - Reflections/next-agent cautions: PDC aligns playback, not causal live input;
   neither a saved project file nor a script proves Logic was reopened successfully.
 

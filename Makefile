@@ -2,12 +2,14 @@ SHELL := /bin/zsh
 PROFILE ?= debug
 JOBS ?= 6
 
-.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check tracking-check engine-check interaction-check architecture-check install-au validate-au reload-au
+.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check tracking-check engine-check interaction-check architecture-check install-au validate-au reload-au host-check host-kit
 help:
 	@echo "make check       Debug build/tests (no install or audio device)"
 	@echo "make check-full  Debug/Release + focused ASan/TSan (no install)"
 	@echo "make build       AU + development Standalone; PROFILE=release for Release"
 	@echo "make reload-au   Explicit Release build/install/ad-hoc sign/auval"
+	@echo "make host-check  PR08 exact-built-AU bounce and fresh-process checks; no installation/Logic/device"
+	@echo "make host-kit    New synthetic Logic checklist/probes; no project/recording/playback opened"
 	@echo "make routing-check  Native AU/processor routing checks; no Logic/device/UI"
 	@echo "make routing-fixtures  New private WAV/MIDI test kit; no recording"
 	@echo "make evaluation-check  PR02 immutable synthetic fixtures/metric calibration"
@@ -50,3 +52,8 @@ validate-au:
 	python3 scripts/au.py validate
 reload-au: install-au
 	$(MAKE) validate-au
+host-check:
+	$(MAKE) build PROFILE=release
+	python3 scripts/host_integration.py check --build-dir build/local-release
+host-kit:
+	python3 scripts/host_integration.py kit

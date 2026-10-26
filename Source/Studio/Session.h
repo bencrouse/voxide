@@ -36,7 +36,7 @@ private:
     std::atomic<bool> stop {false},buildFailed {false};
     std::atomic<unsigned> recoveryRequested {0};
     std::thread builder;
-    bool needsRestart=false,failed=false,wasSuppressed=false;
+    bool needsRestart=false,failed=false,wasSuppressed=false,wasOffline=false;
     Snapshot current;
     void buildLoop() noexcept;
 };

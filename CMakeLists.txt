@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_OSX_ARCHITECTURES arm64 CACHE STRING "Supported architecture")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum macOS")
-project(voxide VERSION 0.2.0 LANGUAGES C CXX)
+project(voxide VERSION 0.3.0 LANGUAGES C CXX)
 
 if(NOT APPLE OR NOT CMAKE_OSX_ARCHITECTURES STREQUAL "arm64"
    OR NOT CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "15.0")
@@ -86,7 +86,7 @@ add_executable(voxide_dsp_tests Source/Tests/PassThroughTests.cpp Source/Tests/T
 target_link_libraries(voxide_dsp_tests PRIVATE voxide_dsp voxide_allocation_audit)
 add_test(NAME dsp COMMAND voxide_dsp_tests)
 juce_add_console_app(voxide_processor_tests PRODUCT_NAME "voxide_processor_tests")
-target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp Source/Tests/StudioUiTests.cpp Source/Tests/StateRecoveryTests.cpp)
+target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp Source/Tests/StudioUiTests.cpp Source/Tests/StateRecoveryTests.cpp Source/Tests/BounceTests.cpp)
 target_compile_definitions(voxide_processor_tests PRIVATE VOXIDE_TEST_OUTPUT_DIR="${PROJECT_BINARY_DIR}/test-output/diagnostics")
 target_link_libraries(voxide_processor_tests PRIVATE voxide_processor voxide_allocation_audit)
 add_test(NAME processor COMMAND voxide_processor_tests)
@@ -101,12 +101,24 @@ target_link_libraries(voxide_studio_reference_tests PRIVATE voxide_studio)
 add_test(NAME studio_reference COMMAND voxide_studio_reference_tests)
 if(NOT VOXIDE_SANITIZER)
     add_test(NAME studio_native_reference COMMAND voxide_studio_reference_tests --native)
+    add_test(NAME studio_bounce_native COMMAND voxide_processor_tests --bounce-native)
 endif()
 add_executable(voxide_au_render_tests Source/Tests/AuRenderTests.cpp)
 target_link_libraries(voxide_au_render_tests PRIVATE "-framework AudioToolbox" "-framework CoreFoundation")
 add_dependencies(voxide_au_render_tests voxide_AU)
 add_test(NAME au_render COMMAND voxide_au_render_tests "$<TARGET_BUNDLE_DIR:voxide_AU>"
     --report "${PROJECT_BINARY_DIR}/au-routing-report.json")
+juce_add_console_app(voxide_host_integration_tests PRODUCT_NAME "voxide_host_integration_tests")
+target_sources(voxide_host_integration_tests PRIVATE Source/Tests/HostBounceTests.cpp)
+target_link_libraries(voxide_host_integration_tests PRIVATE voxide_processor "-framework AudioToolbox" "-framework CoreFoundation")
+# The harness and loaded AU each own JUCE. Do not let executable weak/template
+# exports interpose the bundle's distinct singleton storage (notably Debug String).
+target_link_options(voxide_host_integration_tests PRIVATE "-Wl,-no_exported_symbols")
+add_dependencies(voxide_host_integration_tests voxide_AU)
+if(NOT VOXIDE_SANITIZER)
+    add_test(NAME host_bounce COMMAND voxide_host_integration_tests --component "$<TARGET_BUNDLE_DIR:voxide_AU>")
+    add_test(NAME host_recall COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/scripts/host_integration.py" recall --build-dir "${PROJECT_BINARY_DIR}")
+endif()
 add_test(NAME tooling COMMAND "${Python3_EXECUTABLE}" -m unittest discover -s scripts/tests -v)
 set_tests_properties(tooling PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 add_test(NAME bundle_metadata COMMAND "${Python3_EXECUTABLE}"

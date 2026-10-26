@@ -5,13 +5,19 @@ three harmony voices. **Current priority: recorded vocals, scale mode, inclusive
 ±12-semitone support and an intentionally processed vocal character.** Live use,
 MIDI-mode qualification and ±24 coverage are deferred, not achieved or cancelled.
 
-**PR07 product integration** on `pr-07-product-integration` adds the auditioned
+**PR08 host/bounce implementation** on `pr-08-host-bounce-integration` extends the
+locally merged PR07 product. Version **0.3.0** adds same-engine offline harmony
+bounce, exact-built-AU tests and fresh-process recall. Actual installed/Logic/
+recorded-vocal acceptance remains user-coordinated, not inferred from native tests.
+See [PR08](docs/PR08_HOST_INTEGRATION.md) and its [Logic checklist](docs/PR08_LOGIC_CHECKLIST.md).
+
+PR07 added the auditioned
 Rubber Band worker path to the original `voxide` AU: native key/scale and three
 degree/octave/level/enable controls, aligned original level and 100 ms latency.
 The user explicitly approved advancing after manual Logic/listening acceptance,
 while **deferring, not passing, formal measured qualification**. Existing failures
-and accuracy requirements stand. Real-time playback only at 44.1/48 kHz; offline
-bounce and MIDI synthesis remain unsupported. See [PR07](docs/PR07_PRODUCT_INTEGRATION.md).
+and accuracy requirements stand. Playback and offline bounce use the same studio
+path at 44.1/48 kHz; MIDI synthesis/live monitoring remain deferred. See [PR07](docs/PR07_PRODUCT_INTEGRATION.md).
 The separate [evaluation AU](docs/PR06B_EVALUATION_AU.md) and original artifacts
 are retained unchanged. No automatic installation, host operation or playback.
 
