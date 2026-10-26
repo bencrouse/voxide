@@ -40,6 +40,20 @@ Standalone as an automated check. It is not a qualified monitoring route.
 dependencies. The full check script also contains historical synthetic research;
 the fresh-checkout command below limits execution to the current CTest profiles.
 
+The selected architecture is the existing causal tracker/explicit scale selector
+feeding three independent worker-owned Rubber Band R3-short instances, with fixed
+100 ms software alignment and an unchanged original path except declared gain/
+alignment. No alternate engine or upstream patch is introduced. To locate the
+synthetic reference/bounce comparisons without private recordings:
+
+```sh
+ctest --test-dir build/local-release --output-on-failure \
+  -R '^(studio_reference|studio_native_reference|host_bounce|host_recall)$'
+```
+
+These compare generated-signal reference/processor/exact-AU behavior. They do not
+replace a vocal-quality judgment or the original failed performance observation.
+
 For a fresh **local Git clone**, no network, no discarded working changes:
 
 ```sh
@@ -69,10 +83,11 @@ or an exact preserved component without rebuilding it:
 
 ```sh
 python3 scripts/local_handoff.py verify \
-  --component build/pr-09-artifacts/ready-20261026-02/voxide.component \
-  --artifact build/pr-09-artifacts/ready-20261026-02
+  --component build/pr-10-artifacts/ready-20261026-01/voxide.component \
+  --artifact build/pr-10-artifacts/ready-20261026-01 \
+  --expected-sha256 c4c156e1cd034b1b2b1b862aa719424a23bd5f9b60ad62fb848dd4164e6a0006
 python3 scripts/au.py install \
-  --component build/pr-09-artifacts/ready-20261026-02/voxide.component
+  --component build/pr-10-artifacts/ready-20261026-01/voxide.component
 python3 scripts/au.py validate
 ```
 

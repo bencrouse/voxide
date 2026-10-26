@@ -1550,18 +1550,24 @@ completion of the deferred live/MIDI/±24 brief.
   render or album reference as a supported/qualified product feature.
 - [x] Provide a local ad-hoc-signed build/install path with ownership checks and
   safe uninstall. Do not add paid signing, notarization, installers, or public release.
-- [ ] Audit zero-spend compliance, dependency notices, source/distribution obligations,
+- [x] Audit zero-spend compliance, dependency notices, source/distribution obligations,
   and private-recording separation. Do not publish/upload without user direction.
-- [ ] Close each PR handoff and state final go/no-go with unresolved dependencies.
+- [x] Close each PR handoff and state final go/no-go with unresolved dependencies.
 
 **Validation required to merge**
 - [ ] Fresh checkout/cache-based build, full test profiles, installed-AU checks,
   and documented user workflow succeed with the exact candidate identity.
-- [ ] Installation collision and edited-file refusal tests preserve user files and
+  **Fresh local clone passes** Release/Debug 11/11 each (275 Python tests each),
+  ASan/TSan 4/4 each; exact build-only signed candidate/reference/recall passes.
+  Actual installed-AU/user workflow remains separately coordinated, not performed.
+- [x] Installation collision and edited-file refusal tests preserve user files and
   Nitride; ordinary checks do not touch devices, recordings, or installed components.
 - [ ] Another reader can reproduce a synthetic comparison and locate the evidence
   supporting each acceptance claim. Private evidence has clear availability limits.
+  Reproduction commands, reference comparisons and full scoped index are delivered;
+  execution by another reader is not invented. Private/raw availability is explicit.
 - [ ] No pending required gate is called passed; user accepts the final outcome.
+  Explicit **NO-GO** delivered; final user acceptance/merge remain pending.
 
 **Agent handoff — update before merge**
 - Major decisions: PR10 authorized on `pr-10-local-handoff` from `ef80f07`; retain
@@ -1571,6 +1577,8 @@ completion of the deferred live/MIDI/±24 brief.
   [index](evidence/pr-10/handoff-index.json) and
   [execution/no-go report](evidence/pr-10/implementation-001.md).
   Reversible quarantine, not deletion; clean local Git/cache-only reproduction.
+  Build checkpoint `7207af7`; evidence `build/pr-10-reproduction/final-001/`;
+  separate signed delivery `build/pr-10-artifacts/ready-20261026-01/`.
   Installed-AU and actual user workflow remain separately coordinated, not waived.
 - Reflections/next-agent cautions: preserve known limits and negative results; a
   local qualified AU is not a notarized/public release or a commercial license grant.
