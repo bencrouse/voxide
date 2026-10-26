@@ -93,7 +93,7 @@ def _check_locked(build,output,*,fresh_only,installed):
     build=au.no_symlinks(Path(build).absolute());binary,profile=native_binary(build)
     source=build/"voxide_artefacts"/profile/"AU/voxide.component"
     expected=au.fingerprint(source)
-    require(au.check_identity(source)=="0.3.0","Build the PR08 product (0.3.0), not the older shell/evaluation AU")
+    require(au.check_identity(source)=="0.4.0","Build the current product (0.4.0), not the older product/shell/evaluation AU")
     verify_linkage(source)
     component=source;ledger=None
     if installed:
@@ -148,7 +148,7 @@ def kit(output=None):
         source=[(.01 if i==0 else .02*math.sin(2*math.pi*220*i/rate)) if i<rate else 0. for i in range(rate*16//10)]
         for prefix,samples in (("first-sample",source),("preroll",[0.]*(rate//4)+source)):
             name=f"{prefix}-{rate}.wav";write_wav(directory/name,rate,samples);files[name]=sha256(directory/name)
-    worksheet={"schema":"voxide.pr08-Logic-worksheet.v1","status":"pending_user_session","expected_product_version":"0.3.0",
+    worksheet={"schema":"voxide.pr08-Logic-worksheet.v1","status":"pending_user_session","expected_product_version":"0.4.0",
         "source_kind":"generated_synthetic_probe_not_recorded_vocal","private_recording_selected":None,"private_read_or_render_approval":None,
         "Logic_version":None,"macOS_version":None,"project_path":None,"project_sha256":None,
         "sample_rate":None,"IO_buffer":128,"process_buffer":"Small","PDC":"All","low_latency_mode":"Off",

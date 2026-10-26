@@ -1,4 +1,7 @@
 #include "PluginProcessor.h"
+#include "AllocationAudit.h"
+#include "BuildInfo.h"
+#include "ScreenObservations.h"
 #include <AudioToolbox/AudioToolbox.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <filesystem>
@@ -20,7 +23,8 @@ float signal(int at,int rate)
 }
 struct Input
 {
-    int rate;bool selected;
+    int rate;bool selected;bool continuous=false;
+    static float tone(int at,int rate) { return at<0?0.f:static_cast<float>(.02*std::sin(6.283185307179586*220*at/rate)); }
     static OSStatus render(void* context,AudioUnitRenderActionFlags*,const AudioTimeStamp* time,UInt32,UInt32 frames,AudioBufferList* buffers)
     {
         const auto& input=*static_cast<Input*>(context);
@@ -28,7 +32,11 @@ struct Input
         {
             auto& buffer=buffers->mBuffers[channel];if (!buffer.mData) return kAudio_ParamError;
             auto* audio=static_cast<float*>(buffer.mData);
-            for (UInt32 i=0;i<frames;++i) audio[i]=input.selected?signal(static_cast<int>(time->mSampleTime)+static_cast<int>(i),input.rate):.07f;
+            for (UInt32 i=0;i<frames;++i)
+            {
+                const auto at=static_cast<int>(time->mSampleTime)+static_cast<int>(i);
+                audio[i]=input.selected?(input.continuous?tone(at,input.rate):signal(at,input.rate)):.07f;
+            }
             buffer.mDataByteSize=frames*sizeof(float);
         }
         return noErr;
@@ -280,19 +288,88 @@ void recallParameterGuards(AudioComponent component)
         u.initial(false,false);require(u.matchesInitial(false,false),"Recall negative control did not restore fixture");
     }
 }
+void performanceScreen(AudioComponent component,const std::string& path)
+{
+    require(std::string(voxide::build::profile)=="Release" && voxide::audit::available,"Performance screen requires ordinary Release");
+    require(voxide::audit::selfTest(),"Performance allocation detector failed");
+    voxide::screen::observationGuards();
+    // Metadata retained for every callback, including startup and outliers. This
+    // is controlled synthetic full-AudioUnitRender timing, not a Logic session.
+    const std::string columns="case,rate,begin,frames,ns,allocations,api_error,nonfinite,peak,wet0,wet1,wet2,wet3,wet4,audible0,audible1,audible2,audible3,audible4,scheduler_lag_ns,requested_root,requested_scale,degree1,degree2,degree3\n";
+    std::string csv=columns;
+    for (int rate:{44100,48000}) for (int mode=0;mode<3;++mode)
+    {
+        Unit u(component);u.initial(false,false);u.set("Voice 1 degree steps",2);u.set("Voice 3 octaves",0);u.set("Voice 3 degree steps",6);
+        Input main {rate,true,true},side {rate,false,true};u.initialize(rate,false,main,side);
+        for (const char* name:{"Voice 1 enabled","Voice 2 enabled","Voice 3 enabled"}) require(juce::exactlyEqual(u.get(name),u.rawValue(name,1)),"Screen did not enable all three voices");
+        const std::vector<int> partitions=mode==0?std::vector<int>{128}:mode==1?std::vector<int>{512}:std::vector<int>{32,128,257,512,1024};
+        std::array<float,1024> left {},right {};
+        struct Buffers { UInt32 count=2;AudioBuffer data[2]; } buffers;
+        buffers.data[0]={1,1024*sizeof(float),left.data()};buffers.data[1]={1,1024*sizeof(float),right.data()};
+        struct Record { int begin,frames;std::int64_t ns,lag;std::size_t allocations;OSStatus error;voxide::screen::Observations output {}; };
+        std::vector<Record> records;records.reserve(static_cast<std::size_t>(rate*5/32+1));
+        const auto epoch=std::chrono::steady_clock::now();std::size_t partition=0;int changed=0;
+        for (int at=0;at<rate*5;)
+        {
+            if (at/rate!=changed)
+            {
+                changed=at/rate;u.set("Scale root",static_cast<float>((5+changed)%12));u.set("Scale (12-TET)",static_cast<float>(changed%3));
+                u.set("Voice 1 degree steps",changed%2?2.f:-2.f);u.set("Voice 2 degree steps",changed%2?4.f:3.f);
+                u.set("Voice 3 degree steps",changed%2?6.f:5.f);
+            }
+            const int n=std::min(partitions[partition++%partitions.size()],rate*5-at);
+            std::this_thread::sleep_until(epoch+std::chrono::nanoseconds(static_cast<std::int64_t>(at)*1000000000/rate));
+            AudioTimeStamp time {};time.mFlags=kAudioTimeStampSampleTimeValid;time.mSampleTime=at;AudioUnitRenderActionFlags flags=0;
+            for (auto& b:buffers.data) b.mDataByteSize=static_cast<UInt32>(n)*sizeof(float);
+            voxide::audit::begin();const auto start=std::chrono::steady_clock::now();
+            const auto error=AudioUnitRender(u.unit,&flags,&time,0,static_cast<UInt32>(n),reinterpret_cast<AudioBufferList*>(&buffers));
+            const auto end=std::chrono::steady_clock::now();const auto allocations=voxide::audit::end();
+            Record row {at,n,std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count(),
+                std::chrono::duration_cast<std::chrono::nanoseconds>(start-epoch).count()-static_cast<std::int64_t>(at)*1000000000/rate,allocations,error};
+            for (int i=0;i<n;++i)
+            {
+                const auto index=static_cast<std::size_t>(i);const float lead=Input::tone(at+i-rate/10,rate);
+                row.output.observe(at+i,rate,left[index],right[index],lead);
+            }
+            records.push_back(row);at+=n;
+        }
+        checked(AudioUnitUninitialize(u.unit),"Uninitialize performance AU");
+        std::string completed=columns;
+        for (const auto& r:records)
+        {
+            const auto change=r.begin/rate;
+            auto line=std::to_string(rate)+"-"+std::to_string(mode)+","+std::to_string(rate)+","+std::to_string(r.begin)+","+std::to_string(r.frames)+","+std::to_string(r.ns)+","+std::to_string(r.allocations)+","+std::to_string(r.error)+","+std::to_string(r.output.nonfinite)+","+std::to_string(r.output.peak);
+            for (const auto count:r.output.wet) line+=","+std::to_string(count);
+            for (const auto count:r.output.audible) line+=","+std::to_string(count);
+            line+=","+std::to_string(r.lag)
+                +","+std::to_string((5+change)%12)+","+std::to_string(change?change%3:1)+","+std::to_string(change && change%2==0?-2:2)
+                +","+std::to_string(change && change%2==0?3:4)+","+std::to_string(change && change%2==0?5:6)+"\n";
+            csv+=line;completed+=line;
+        }
+        // Preserve each completed case even if a later invocation aborts.
+        writeBytes(path+"."+std::to_string(rate)+"-"+std::to_string(mode)+".csv",completed.data(),completed.size());
+    }
+    writeBytes(path,csv.data(),csv.size());
+}
 }
 int main(int argc,char** argv)
 {
     std::string report;
     try
     {
-        juce::ScopedJuceInitialiser_GUI gui;require(argc>=3 && std::string(argv[1])=="--component","Pass --component exact.component");
-        std::string save,restore,audio;
+        juce::ScopedJuceInitialiser_GUI gui;voxide::screen::observationGuards();require(argc>=3 && std::string(argv[1])=="--component","Pass --component exact.component");
+        std::string save,restore,audio,screen;
         for (int i=3;i<argc;i+=2)
         {
             require(i+1<argc,"Missing option value");const std::string key=argv[i];
             if (key=="--report") report=argv[i+1];else if (key=="--save-state") save=argv[i+1];
-            else if (key=="--restore-state") restore=argv[i+1];else if (key=="--audio") audio=argv[i+1];else throw std::runtime_error("Unknown host-test option");
+            else if (key=="--restore-state") restore=argv[i+1];else if (key=="--audio") audio=argv[i+1];else if (key=="--screen") screen=argv[i+1];else throw std::runtime_error("Unknown host-test option");
+        }
+        if (!screen.empty())
+        {
+            require(save.empty() && restore.empty() && audio.empty(),"Screen is synthetic only");Bundle bundle(argv[2]);performanceScreen(bundle.component,screen);
+            const auto json=std::string("{\"schema\":\"voxide.pr09-screen.v2\",\"status\":\"captured_not_qualified\",\"pid\":")+std::to_string(getpid())+",\"profile\":\"Release\",\"cases\":6,\"voices\":3,\"seconds_per_case\":5,\"full_AudioUnitRender_timing\":true,\"allocation_audit\":true,\"sample_observation_guards\":true,\"Logic_operated\":false}\n";
+            if (!report.empty()) writeBytes(report,json.data(),json.size());std::cout<<json;return 0;
         }
         require(save.empty() || restore.empty(),"Choose save or restore");Bundle bundle(argv[2]);recallParameterGuards(bundle.component);int cases=0;
         if (!save.empty() || !restore.empty())

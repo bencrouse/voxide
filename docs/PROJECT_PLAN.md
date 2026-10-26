@@ -1425,6 +1425,31 @@ separate formal accuracy, challenge c, performance/soak and licensing gates rema
 
 Depends on: PR08's recorded-vocal host qualification and user/listener sessions.
 
+**Implementation authorization (2026-10-26):** user requested PR09 to completion on
+`pr-09-studio-session-qualification` from merged PR08 `8aa76c6`. PR08 user acceptance
+is retained without requiring its worksheet/retesting. Implement opt-in local
+metadata capture, controlled synthetic full-AU screens, strict analysis/regressions
+and a concrete user handoff. No automatic host/device/private-source operation.
+See `docs/PR09_STUDIO_SESSION.md`. Actual soak, independent listening and formal
+qualification below cannot be checked off by native tests or metadata alone.
+
+**Local merge authorization (2026-10-26):** after reviewed fixes `45a34ab`, the user
+explicitly requested commit/merge. Merge the engineering implementation and labeled
+negative qualification result locally. No additional host/soak/listening results or
+requirement changes were reported; the failed variable-output gate and studio
+qualification checklists below remain open. See `docs/DECISIONS.md`.
+
+**Engineering implementation**
+- [x] Opt-in bounded metadata-only processor capture, off-render persistent writer,
+  explicit stop/in-flight handshake, dropped/aborted capture rejection, editor-close
+  continuity, module-file identity and no source audio/hash/pitch/MIDI capture.
+- [x] Exact-built-AU Release timing/allocation screen, two fresh processes, both
+  rates, fixed/variable buffers, three changing voices and retained raw outliers.
+- [x] Consent-before-access strict local metadata parser, unchanged frozen CPU
+  thresholds, headroom/status/exposure checks, and explicitly incomplete qualification.
+- [x] User instructions without a required manual worksheet; source-bound consent,
+  whole-wrapper timing limits and still-unapproved revised PR06B rubric visible.
+
 **First studio milestone — scope / TODO**
 - [ ] Measure optimized Release callbacks for three changing scale-derived voices
   on the user's representative recorded-vocal Logic session at 44.1/48 kHz and
@@ -1450,10 +1475,27 @@ Depends on: PR08's recorded-vocal host qualification and user/listener sessions.
   If blocked, produce a labeled negative studio qualification report, not success.
 
 **Agent handoff — update before merge**
-- Major decisions: pending — studio configuration, tested Mac/buffers/session and
-  final recorded-vocal acceptance. Analog loopback is not inferred from PDC.
-- Learnings/evidence: pending — distributions, soak log, independent judgments and
-  support limitations. A studio milestone is not full original-product completion.
+- Major decisions: 0.4.0 adds opt-in bounded metadata and an off-render writer,
+  unchanged musical DSP/state/100 ms PDC; full-AU Release timing is measured in an
+  exact-built synthetic host, while Logic metadata times the processor body only.
+  No automatic installation, host/device/playback or private-source operation.
+- Learnings/evidence: `docs/evidence/pr-09/implementation-001.md`; Release/Debug
+  11/11 each (238 Python tests each), focused ASan/TSan 4/4 each. The single planned
+  two-process screen observes zero caller allocations/CPU-overdue callbacks, but
+  **both 44.1 kHz variable-block cases fail wet-output coverage**. This is a negative
+  qualification result, not a passed performance/three-voice gate. Full raw evidence
+  and outliers remain under `build/pr-09-validation/final-001/`.
+- Independent review subsequently found three P2 counter/boundary/header defects
+  and a follow-up P3 peak-consistency gap. All are fixed and independently closed
+  at source level; final Release/Debug 11/11 each (245 Python tests each) and focused
+  ASan/TSan 4/4 each pass. See `docs/evidence/pr-09/review-fixes-001.md` and separate
+  artifact `ready-20261026-02`. Corrected v2 observations are not a timing rerun or
+  regrading of old v1 data; the original variable-output failure remains unresolved.
+- Actual Logic soak/workload/whole-host measurements, independently approved final
+  listening/rubric and final acceptance remain open; PR08 acceptance is not repeated
+  or transferred into them. No worksheet is required from the user. See
+  `docs/PR09_STUDIO_SESSION.md`. Analog loopback is not inferred from PDC; a studio
+  milestone would not complete the deferred live/MIDI/±24 brief.
 
 ### Deferred live/MIDI follow-up — original PR09 monitoring gates retained
 

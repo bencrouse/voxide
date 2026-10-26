@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "BuildInfo.h"
 
 namespace voxide
 {
@@ -79,6 +80,14 @@ public:
             owner.requestRestart();
         };
         addAndMakeVisible(restart);
+        capture.setComponentID("sessionCapture");capture.setButtonText("Log session metadata");
+        capture.onClick=[this]
+        {
+            auto& log=owner.sessionLog();
+            if (log.active()) log.stop();else log.start(juce::File(build::sessionDirectory),owner.instanceId());
+            timerCallback();
+        };
+        addAndMakeVisible(capture);
         setResizable(true,true);setResizeLimits(720,600,1000,760);setSize(780,620);startTimerHz(10);timerCallback();
     }
     ~StudioEditor() override { stopTimer(); }
@@ -90,7 +99,7 @@ public:
     void resized() override
     {
         const int width=getWidth()-40;
-        title.setBounds(20,14,width,34);warning.setBounds(20,50,width,48);
+        title.setBounds(20,14,width-210,34);capture.setBounds(getWidth()-220,18,200,28);warning.setBounds(20,50,width,48);
         key->setBounds(20,110,110,62);scale->setBounds(142,110,width-342,62);source->setBounds(getWidth()-208,110,188,62);
         for (std::size_t i=0;i<3;++i)
         {
@@ -120,6 +129,10 @@ private:
         const auto tick=owner.renderTick();
         const bool fresh=tick>0 && juce::Time::highResolutionTicksToSeconds(juce::Time::getHighResolutionTicks()-tick)<.5;
         text+=fresh?" | "+juce::String(snapshot.hz,1)+" Hz | "+juce::String(juce::countNumberOfBits(snapshot.active))+"/3 active":" | no current callback";
+        auto& log=owner.sessionLog();
+        capture.setButtonText(log.stopping()?"Finishing session log":log.active()?"Stop session log":"Log session metadata");capture.setEnabled(!log.stopping());
+        capture.setTooltip("Explicit local metadata logging; no audio/MIDI recorded. Continues with editor closed. Stop before closing project.\n"+log.path()+"\n"+log.error());
+        if (log.active()) text+=" | logging";else if (log.error().isNotEmpty()) text+=" | log failed";
         const auto peak=owner.inputPeak();text+="\nInput "+(peak>0?juce::String(juce::Decibels::gainToDecibels(peak),1):juce::String("-inf"))+" dBFS | provide headroom";
         status.setText(text,juce::dontSendNotification);
         const bool needsPreparation=snapshot.status==studio::Status::initializationFailed;
@@ -133,7 +146,7 @@ private:
     std::array<juce::ToggleButton,3> enabled;
     std::array<std::unique_ptr<Level>,3> degree,octave,level;
     std::unique_ptr<Level> original;
-    juce::TextButton restart;
+    juce::TextButton restart,capture;
     std::array<std::unique_ptr<juce::ButtonParameterAttachment>,3> buttons;
 };
 }

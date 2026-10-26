@@ -10,6 +10,7 @@ void runTrackingProcessorTests();
 void runStudioUiTests();
 void runStateRecoveryTests();
 void runBounceTests(bool);
+void runSessionTelemetryTests();
 
 namespace
 {
@@ -230,7 +231,7 @@ int main(int argc,char** argv)
         if (argc==2 && juce::String(argv[1])=="--bounce-native") { runBounceTests(true);return 0; }
         require(argc==1,"Unknown product test mode");
         if (voxide::audit::available) require(voxide::audit::selfTest(),"Allocation detector failed");
-        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();voicesAndFaults();rangeAndFiniteContracts();runStateRecoveryTests();runBounceTests(false);
+        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();voicesAndFaults();rangeAndFiniteContracts();runStateRecoveryTests();runBounceTests(false);runSessionTelemetryTests();
         require(studioTest::wrongOwner.load()==0 && studioTest::living.load()==0,"Native ownership/lifetime escaped worker");
         std::cout<<"PR07 product contracts passed; no install, private audio, device or Logic\n";return 0;
     }

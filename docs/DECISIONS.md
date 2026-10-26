@@ -610,3 +610,33 @@ artifacts and generated worksheet retain their historical pending records; the
 new user decision supersedes them for PR08 acceptance and merge, not formal
 measured accuracy/full-support, challenge c, performance/soak or licensing gates.
 Record: `docs/evidence/pr-08/user-acceptance-001.md`.
+
+## PR09 branch implementation authorization (2026-10-26)
+
+After local PR08 merge `8aa76c6`, the user requested completing PR09 on a branch.
+`pr-09-studio-session-qualification` implements an opt-in metadata-only processor
+capture, synthetic exact-AU Release timing/allocation screen and strict local
+analysis/handoff. Version 0.4.0 identifies the instrumented candidate; musical DSP,
+30 parameter meanings, v4 state, native engine/profile and 100 ms PDC are unchanged.
+
+No automatic installation, installed `auval`, Logic/device/playback operation,
+private-source reading/rendering, new corpus sweep or consumed-claim reuse is
+authorized. PR08 user acceptance stands without another worksheet. PR09 actual
+30-minute session observations and independent final listening cannot be invented
+from it. The purported approved PR06B revised listening rubric remains pending in
+the underlying protocol records. Missing resources/observations require an explicit
+incomplete/negative qualification result, not a success claim or lowered gates.
+Scope and operator steps: `docs/PR09_STUDIO_SESSION.md`.
+
+## PR09 local merge authorization (2026-10-26)
+
+After implementation `4de958d`, reviewed fixes `45a34ab` and explicit notice that
+the original variable-block audio failure remains unresolved, the user requested
+"ok please commit and merge". Record the approval and merge PR09 locally as an
+**engineering / negative-qualification milestone**, not a qualified studio pass.
+
+No new host/soak/listening results or requirement revisions were supplied. The
+failed screen, missing actual Logic/whole-host evidence, independent listening/
+rubric, formal full-support/challenge-c/licensing gates remain open. Prior artifact
+reports are historical and are not rewritten or regraded. This authorizes no push,
+additional installation/host/device/playback operation or private-source access.

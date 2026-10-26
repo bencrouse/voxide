@@ -8,4 +8,5 @@ inline constexpr auto juceRevision = "@VOXIDE_JUCE_REVISION@";
 inline constexpr auto profile = "@CMAKE_BUILD_TYPE@";
 inline constexpr auto diagnosticBuild = "studio-product-001";
 inline constexpr auto diagnosticDirectory = "@PROJECT_SOURCE_DIR@/evaluation/pr-01/telemetry";
+inline constexpr auto sessionDirectory = "@PROJECT_SOURCE_DIR@/evaluation/pr-09/telemetry";
 }
