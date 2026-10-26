@@ -96,7 +96,7 @@ struct Unit
     }
     static void latencyChanged(void* context,AudioUnit,AudioUnitPropertyID,AudioUnitScope,AudioUnitElement)
     { ++static_cast<Unit*>(context)->latencyNotifications; }
-    void set(const char* name,float value)
+    float rawValue(const char* name,float value) const
     {
         // Pinned JUCE AU exposes [0, steps-1] for discrete controls and [0,1]
         // for continuous controls, not the processor's physical degree/dB units.
@@ -104,18 +104,42 @@ struct Unit
         for (auto* base:parameterContract.getParameters())
             if (auto* ranged=dynamic_cast<juce::RangedAudioParameter*>(base);ranged && ranged->getName(1024)==name)
             {
-                const float raw=au.minimum+(au.maximum-au.minimum)*ranged->convertTo0to1(value);
-                checked(AudioUnitSetParameter(unit,au.id,kAudioUnitScope_Global,0,raw,0),"Set AU parameter");
-                AudioUnitParameterValue observed=0;checked(AudioUnitGetParameter(unit,au.id,kAudioUnitScope_Global,0,&observed),"Read AU automation");
-                require(juce::exactlyEqual(raw,observed),"AU automation readback mismatch");return;
+                return au.minimum+(au.maximum-au.minimum)*ranged->convertTo0to1(value);
             }
         throw std::runtime_error("Missing physical parameter mapping");
     }
+    float get(const char* name) const
+    {
+        AudioUnitParameterValue observed=0;
+        checked(AudioUnitGetParameter(unit,parameters.at(name).id,kAudioUnitScope_Global,0,&observed),"Read AU parameter");return observed;
+    }
+    void set(const char* name,float value)
+    {
+        const auto raw=rawValue(name,value);
+        checked(AudioUnitSetParameter(unit,parameters.at(name).id,kAudioUnitScope_Global,0,raw,0),"Set AU parameter");
+        require(juce::exactlyEqual(raw,get(name)),"AU automation readback mismatch");
+    }
+    std::map<std::string,float> initialValues(bool side,bool dry) const
+    {
+        std::map<std::string,float> values;
+        for (auto* base:parameterContract.getParameters())
+            if (auto* ranged=dynamic_cast<juce::RangedAudioParameter*>(base))
+                values.emplace(ranged->getName(1024).toStdString(),ranged->convertFrom0to1(ranged->getDefaultValue()));
+        require(values.size()==30,"Incomplete initial parameter contract");
+        values.at("Vocal source")=side?1.f:0.f;values.at("Scale root")=5;values.at("Scale (12-TET)")=1;
+        values.at("Voice 1 degree steps")=0;values.at("Voice 2 level")=-6;
+        if (dry) for (const char* name:{"Voice 1 enabled","Voice 2 enabled","Voice 3 enabled"}) values.at(name)=0;
+        return values;
+    }
     void initial(bool side,bool dry)
     {
-        set("Vocal source",side?1.f:0.f);set("Scale root",5);set("Scale (12-TET)",1);
-        set("Voice 1 degree steps",0);set("Voice 2 level",-6);
-        if (dry) for (const char* name:{"Voice 1 enabled","Voice 2 enabled","Voice 3 enabled"}) set(name,0);
+        for (const auto& [name,value]:initialValues(side,dry)) set(name.c_str(),value);
+    }
+    bool matchesInitial(bool side,bool dry) const
+    {
+        for (const auto& [name,value]:initialValues(side,dry))
+            if (!juce::exactlyEqual(get(name.c_str()),rawValue(name.c_str(),value))) return false;
+        return true;
     }
     CFPropertyListRef state()
     {
@@ -175,9 +199,10 @@ std::vector<float> reference(int rate,bool dry)
     }
     return result;
 }
-std::vector<float> capture(Unit& u,int rate,bool offline,bool selectedSide,const std::vector<int>& partitions)
+std::vector<float> capture(Unit& u,int rate,bool offline,bool selectedSide,const std::vector<int>& partitions,bool verifyRecall=false)
 {
     Input main {rate,!selectedSide},side {rate,selectedSide};u.initialize(rate,offline,main,side);
+    if (verifyRecall) require(u.matchesInitial(selectedSide,false),"Initialized AU lost recalled parameters before audio/automation");
     std::vector<float> result;std::array<float,1024> left {},right {};
     struct Buffers { UInt32 count=2;AudioBuffer data[2]; } buffers;
     buffers.data[0]={1,1024*sizeof(float),left.data()};buffers.data[1]={1,1024*sizeof(float),right.data()};
@@ -244,6 +269,17 @@ CFPropertyListRef readState(const std::string& path)
     auto data=CFDataCreate(nullptr,reinterpret_cast<const UInt8*>(bytes.data()),static_cast<CFIndex>(bytes.size()));
     auto state=CFPropertyListCreateWithData(nullptr,data,kCFPropertyListImmutable,nullptr,nullptr);CFRelease(data);require(state,"Invalid saved AU state");return state;
 }
+void recallParameterGuards(AudioComponent component)
+{
+    Unit u(component);u.initial(false,false);require(u.matchesInitial(false,false),"Initial AU parameter fixture mismatch");
+    // Each omitted field must be detected even though the original audio fixture
+    // cannot distinguish F minor from default C major before automation starts.
+    for (const char* name:{"Scale root","Scale (12-TET)"})
+    {
+        u.set(name,0);require(!u.matchesInitial(false,false),"Recall guard accepted a defaulted key/scale");
+        u.initial(false,false);require(u.matchesInitial(false,false),"Recall negative control did not restore fixture");
+    }
+}
 }
 int main(int argc,char** argv)
 {
@@ -258,7 +294,7 @@ int main(int argc,char** argv)
             if (key=="--report") report=argv[i+1];else if (key=="--save-state") save=argv[i+1];
             else if (key=="--restore-state") restore=argv[i+1];else if (key=="--audio") audio=argv[i+1];else throw std::runtime_error("Unknown host-test option");
         }
-        require(save.empty() || restore.empty(),"Choose save or restore");Bundle bundle(argv[2]);int cases=0;
+        require(save.empty() || restore.empty(),"Choose save or restore");Bundle bundle(argv[2]);recallParameterGuards(bundle.component);int cases=0;
         if (!save.empty() || !restore.empty())
         {
             Unit u(bundle.component);
@@ -268,7 +304,8 @@ int main(int argc,char** argv)
                 u.initial(false,false);auto state=u.state();auto bytes=CFPropertyListCreateData(nullptr,state,kCFPropertyListBinaryFormat_v1_0,0,nullptr);CFRelease(state);
                 require(bytes,"Serialize AU state");writeBytes(save,CFDataGetBytePtr(bytes),static_cast<std::size_t>(CFDataGetLength(bytes)));CFRelease(bytes);
             }
-            const auto output=capture(u,48000,true,false,{512});equal(output,reference(48000,false),48000,false);
+            require(u.matchesInitial(false,false),"AU ClassInfo did not restore all initial parameters");
+            const auto output=capture(u,48000,true,false,{512},true);equal(output,reference(48000,false),48000,false);
             require(!audio.empty(),"State process test requires an output capture");writeBytes(audio,output.data(),output.size()*sizeof(float));cases=1;
         }
         else
@@ -292,7 +329,7 @@ int main(int argc,char** argv)
             }
         }
         const auto json=std::string("{\"schema\":\"voxide.pr08-native-host.v1\",\"status\":\"pass\",\"pid\":")+std::to_string(getpid())
-            +",\"cases\":"+std::to_string(cases)+",\"exact_reference\":true,\"latency_notifications\":true,\"installed_registry_or_Logic_test\":false,\"scope\":\"Exact-bundle synthetic functional API test, not Logic PDC or vocal qualification\"}\n";
+            +",\"cases\":"+std::to_string(cases)+",\"exact_reference\":true,\"latency_notifications\":true,\"initial_parameters_checked\":true,\"recall_parameter_negative_controls\":2,\"installed_registry_or_Logic_test\":false,\"scope\":\"Exact-bundle synthetic functional API test, not Logic PDC or vocal qualification\"}\n";
         if (!report.empty()) writeBytes(report,json.data(),json.size());std::cout<<json;return 0;
     }
     catch (const std::exception& e)

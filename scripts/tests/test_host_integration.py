@@ -29,10 +29,13 @@ class HostIntegrationTests(unittest.TestCase):
                 if fault=="different" and label=="reopen-process":payload=struct.pack("<f",.03)*76800
                 Path(command[command.index("--audio")+1]).write_bytes(payload)
             value={"schema":"voxide.pr08-native-host.v1","status":"pass","pid":123 if fault=="same-pid" else 123+len(calls),
-                "cases":14 if label=="exact-au" else 1,"exact_reference":True,"latency_notifications":True,"installed_registry_or_Logic_test":False}
+                "cases":14 if label=="exact-au" else 1,"exact_reference":True,"latency_notifications":True,"installed_registry_or_Logic_test":False,
+                "initial_parameters_checked":True,"recall_parameter_negative_controls":2}
             if fault=="scope":value["installed_registry_or_Logic_test"]=True
             if fault=="old-report":value["schema"]="voxide.native-au.v2"
             if fault=="cases":value["cases"]=0
+            if fault=="no-parameter-check":value.pop("initial_parameters_checked")
+            if fault=="no-negative-controls":value["recall_parameter_negative_controls"]=0
             report.write_text(json.dumps(value))
         return run,calls
 
@@ -50,7 +53,7 @@ class HostIntegrationTests(unittest.TestCase):
             self.assertNotEqual(*report["fresh_process_recall"]["pids"])
 
     def test_wrong_or_overclaimed_native_report_rejected(self):
-        for fault in ("scope","old-report","cases"):
+        for fault in ("scope","old-report","cases","no-parameter-check","no-negative-controls"):
             with self.subTest(fault=fault),tempfile.TemporaryDirectory() as temp,self.assertRaises(ValueError):self.native(Path(temp),fault)
 
     def test_nonfresh_different_nonfinite_or_short_recall_rejected(self):
@@ -95,7 +98,7 @@ class HostIntegrationTests(unittest.TestCase):
     def test_failed_native_check_keeps_report_and_never_claims_Logic_pass(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp).resolve();build=self.fixture(root);output=root/"run"
-            with patch.object(host.au,"check_identity",return_value="0.3.0"),patch.object(host,"verify_linkage"), \
+            with patch.object(host.au,"check_identity",return_value="0.3.0"),patch.object(host,"verify_linkage"),patch.object(host.au,"fingerprint",return_value={}), \
                  patch.object(host,"run_native",side_effect=RuntimeError("native failed")),self.assertRaises(RuntimeError):
                 host.check(build,output)
             report=host.load_json(output/"report.json")
@@ -110,9 +113,10 @@ class HostIntegrationTests(unittest.TestCase):
 
     def test_failed_approved_auval_attempt_is_recorded_not_hidden(self):
         with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp).resolve();build=self.fixture(root);output=root/"evaluation/pr-08/run"
+            root=Path(temp).resolve();build=self.fixture(root);output=root/"evaluation/pr-08/run";state=root/"state";state.mkdir()
             with patch.object(host,"ROOT",root),patch.object(host.au,"check_identity",return_value="0.3.0"), \
                  patch.object(host,"verify_linkage"),patch.object(host.au,"owned_component",return_value={"files":{},"version":"0.3.0"}), \
+                 patch.object(host.au,"DEFAULT_STATE",state), \
                  patch.object(host.au,"fingerprint",return_value={}),patch.object(host,"run_native") as native, \
                  patch.object(host.subprocess,"run",side_effect=host.subprocess.CalledProcessError(1,["mock-auval"])) as run, \
                  self.assertRaises(host.subprocess.CalledProcessError):
@@ -121,3 +125,54 @@ class HostIntegrationTests(unittest.TestCase):
             report=host.load_json(output/"report.json")
             self.assertEqual(report["status"],"fail");self.assertTrue(report["installed_auval_executed"])
             self.assertFalse(report["Logic_operated"])
+
+    def test_native_cannot_rebase_expected_bundle_identity(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();build=self.fixture(root);directory=root/"run";directory.mkdir()
+            with patch.object(host.au,"fingerprint",return_value={"binary":"B"}),patch.object(host.subprocess,"run") as run, \
+                 self.assertRaisesRegex(ValueError,"requested build"):
+                host.run_native(build,root/"fake.component",directory,{},expected_files={"binary":"A"})
+            run.assert_not_called()
+
+    def test_native_rechecks_bundle_and_helper_after_each_process(self):
+        for fault in ("bundle","helper"):
+            with self.subTest(fault=fault),tempfile.TemporaryDirectory() as temp:
+                root=Path(temp).resolve();build=self.fixture(root);directory=root/"run";directory.mkdir()
+                binary,_=host.native_binary(build);current={"binary":"A"};runner,calls=self.runner()
+                def replace(command,**kwargs):
+                    runner(command,**kwargs)
+                    if fault=="bundle":current["binary"]="B"
+                    else:binary.write_bytes(b"replacement helper")
+                with patch.object(host.au,"fingerprint",side_effect=lambda _:dict(current)), \
+                     patch.object(host.subprocess,"run",side_effect=replace),self.assertRaisesRegex(ValueError,"requested build"):
+                    host.run_native(build,root/"fake.component",directory,{},expected_files=dict(current))
+                self.assertEqual(len(calls),1)
+
+    def test_installed_lock_and_original_build_binding_survive_auval(self):
+        for replacement in (False,True):
+            with self.subTest(replacement=replacement),tempfile.TemporaryDirectory() as temp:
+                root=Path(temp).resolve();build=self.fixture(root);output=root/"evaluation/pr-08/run"
+                state=root/"state";state.mkdir();install=root/"install";expected={"binary":"A"};current=dict(expected)
+                component=install/host.au.COMPONENT;native_calls=[]
+                def fingerprint(path):return dict(current if path==component else expected)
+                def auval(command,**kwargs):
+                    with (state/"au-install.lock").open("a") as stream,self.assertRaises(BlockingIOError):
+                        host.fcntl.flock(stream,host.fcntl.LOCK_EX|host.fcntl.LOCK_NB)
+                    kwargs["stdout"].write("mock successful auval, not host evidence\n")
+                    if replacement:current["binary"]="B"
+                def native(*args,**kwargs):native_calls.append(kwargs["expected_files"])
+                with patch.object(host,"ROOT",root),patch.object(host.au,"DEFAULT_STATE",state),patch.object(host.au,"DEFAULT_INSTALL",install), \
+                     patch.object(host.au,"check_identity",return_value="0.3.0"),patch.object(host,"verify_linkage"), \
+                     patch.object(host.au,"owned_component",return_value={"files":expected,"version":"0.3.0"}), \
+                     patch.object(host.au,"fingerprint",side_effect=fingerprint),patch.object(host.au,"verify_validation_output"), \
+                     patch.object(host.subprocess,"run",side_effect=auval),patch.object(host,"run_native",side_effect=native):
+                    if replacement:
+                        with self.assertRaisesRegex(ValueError,"requested build"):
+                            host.check(build,output,installed=True,allow_installed=True,allow_auval=True)
+                    else:host.check(build,output,installed=True,allow_installed=True,allow_auval=True)
+                report=host.load_json(output/"report.json")
+                self.assertEqual(report["requested_component_files"],expected)
+                self.assertEqual(report["status"],"fail" if replacement else "native_functional_pass_logic_pending")
+                self.assertEqual(native_calls,[] if replacement else [expected])
+                # Publication/failure reporting has finished: the installer lock is released.
+                with (state/"au-install.lock").open("a") as stream:host.fcntl.flock(stream,host.fcntl.LOCK_EX|host.fcntl.LOCK_NB)

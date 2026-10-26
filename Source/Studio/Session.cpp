@@ -189,6 +189,9 @@ void Session::buildLoop() noexcept
 }
 void Session::begin(const HarmonyConfig& config,TrackerVariant variant,bool offline,bool midiMode) noexcept
 {
+    // A missing-spare timeout invalidates this epoch. Ordinary callbacks, recall
+    // and transport/mode changes must neither wait again nor adopt a late graph.
+    if (offlineWaitFailed) { fail();return; }
     const bool suppressed=midiMode;
     if (suppressed!=wasSuppressed || offline!=wasOffline || (active && active->configured && active->variant!=variant)) needsRestart=true;
     wasSuppressed=suppressed;wasOffline=offline;
@@ -203,13 +206,14 @@ void Session::begin(const HarmonyConfig& config,TrackerVariant variant,bool offl
     {
         // Fast bounce can request another epoch before the spare is replenished.
         // Retirement is already published; construction and joins stay on builder.
+        ++spareWaitCalls;
         const auto limit=std::chrono::steady_clock::now()+std::chrono::seconds(5);
         while (!active && !buildFailed.load(std::memory_order_acquire) && std::chrono::steady_clock::now()<limit)
         {
             active=ready.exchange(nullptr,std::memory_order_acq_rel);
             if (!active) std::this_thread::sleep_for(std::chrono::microseconds(50));
         }
-        if (!active) { fail();return; }
+        if (!active) { offlineWaitFailed=true;fail();return; }
     }
     if (!active) { current.status=buildFailed.load(std::memory_order_acquire)?Status::failed:Status::preparing;return; }
     if (failed || !active->allHealthy()) { fail();return; }

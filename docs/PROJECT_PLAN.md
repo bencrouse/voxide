@@ -1398,6 +1398,12 @@ implementation. See `docs/PR08_HOST_INTEGRATION.md` and `docs/PR08_LOGIC_CHECKLI
   Low Latency Mode Off, 128-frame I/O and Small process buffer. No automatic host
   operation or transfer of prior evaluation-AU acceptance to the new binary.
 - Engineering evidence and self-review: `docs/evidence/pr-08/implementation-001.md`.
+  The independent review of `6d751fa` identified three P2 timeout/installed-identity/
+  recall-test issues, now fixed and independently source-verified. All four profile
+  suites pass again (223 Python tests per normal tooling run). Fixes/regressions:
+  `docs/evidence/pr-08/review-fixes-001.md`; new artifact `ready-20261026-02`.
+  Original artifact `ready-20261026-01`
+  remains unchanged and does not prove the missing guarantees.
   New synthetic kit: `evaluation/pr-08/logic-kit-20261026T134318Z-ded21219/`;
   every actual-host case is pending. Actual Logic project hashes, recorded-vocal
   compensation/re-acquisition, real reopen/duplicate and real bounce observations

@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "StudioTestSupport.h"
 #include "AllocationAudit.h"
+#include "ProcessorTestAccess.h"
 #include <bit>
 #include <iostream>
 void runBounceTests(bool native);
@@ -107,6 +108,74 @@ void offlineFailure()
     require(p.studioStatus().status==voxide::studio::Status::failed && p.studioStatus().active==0,"Offline fault was accepted as successful bounce");
     p.releaseResources();studioTest::nonfinite.store(false);
 }
+std::atomic<bool> holdBuild {false},buildEntered {false};
+std::unique_ptr<voxide::studio::Native> slowFactory(int rate,double ratio,double hz)
+{
+    if (holdBuild.load(std::memory_order_acquire))
+    {
+        buildEntered.store(true,std::memory_order_release);
+        while (holdBuild.load(std::memory_order_acquire)) std::this_thread::sleep_for(std::chrono::microseconds(50));
+    }
+    return studioTest::factory(rate,ratio,hz);
+}
+void offlineSpareTimeout()
+{
+    using Access=voxide::ProcessorTestAccess;
+    voxide::Processor p(slowFactory);p.setNonRealtime(true);
+    for (const auto* id:{"voiceEnabled1","voiceEnabled2","voiceEnabled3"}) set(p,id,0);
+    p.prepareToPlay(48000,128);buildEntered.store(false);holdBuild.store(true);
+    // Release even on a failed assertion, before processor destruction joins builder.
+    struct Release { ~Release() { holdBuild.store(false,std::memory_order_release); } } release;
+    juce::AudioBuffer<float> audio(2,128);juce::MidiBuffer midi;int at=0,leadStart=0;
+    auto tone=[](int source) { return source<0?0.f:static_cast<float>(.02*std::sin(6.283185307179586*220*source/48000)); };
+    auto block=[&](bool originalOnly=true)
+    {
+        for (int i=0;i<128;++i) audio.setSample(0,i,tone(at+i));
+        const auto waits=voxide::studio::Worker::waitCallsOnThreadForTest();voxide::audit::begin();p.processBlock(audio,midi);
+        const auto allocations=voxide::audit::end();
+        if (!p.isNonRealtime())
+        {
+            require(voxide::studio::Worker::waitCallsOnThreadForTest()==waits,"Latched realtime callback waited for workers");
+            if (voxide::audit::available) require(allocations==0,"Latched realtime callback allocated");
+        }
+        if (originalOnly) for (int i=0;i<128;++i)
+        {
+            const float lead=at+i-4800<leadStart?0.f:tone(at+i-4800);
+            require(juce::exactlyEqual(audio.getSample(0,i),lead),"Spare timeout/recovery changed queued original");
+        }
+        at+=128;
+    };
+    auto waitFor=[&](auto predicate)
+    {
+        const auto limit=std::chrono::steady_clock::now()+std::chrono::seconds(5);
+        while (!predicate() && std::chrono::steady_clock::now()<limit) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        require(predicate(),"Timeout fixture builder did not reach the expected barrier");
+    };
+    for (int n=0;n<45;++n) block();
+    waitFor([]{return buildEntered.load(std::memory_order_acquire);});
+    require(p.studioStatus().status==voxide::studio::Status::ready && !Access::spareReady(p),"Timeout fixture did not exhaust its spare");
+    juce::MemoryBlock saved;p.getStateInformation(saved);
+    p.setStateInformation(saved.getData(),static_cast<int>(saved.getSize()));block();
+    require(p.studioStatus().status==voxide::studio::Status::failed && !Access::graph(p)
+        && Access::spareWaitCalls(p)==1,"Missing spare did not produce one bounded failure");
+    auto latched=[&]
+    {
+        block();require(p.studioStatus().status==voxide::studio::Status::failed && p.studioStatus().active==0
+            && !Access::graph(p) && Access::spareWaitCalls(p)==1,"Spare timeout retried/recovered without explicit restart");
+    };
+    latched();p.setStateInformation(saved.getData(),static_cast<int>(saved.getSize()));latched();
+    p.setNonRealtime(false);leadStart=at;latched();p.setNonRealtime(true);leadStart=at;latched();
+    holdBuild.store(false,std::memory_order_release);waitFor([&]{return Access::spareReady(p);});latched();
+    p.requestRestart();block();require(p.studioStatus().status==voxide::studio::Status::ready,"Explicit restart did not recover late spare");
+    for (const auto* id:{"voiceEnabled1","voiceEnabled2","voiceEnabled3"}) set(p,id,1);
+    bool wet=false;
+    for (int n=0;n<100;++n)
+    {
+        block(false);
+        if (n>60) for (int i=0;i<128;++i) if (std::abs(audio.getSample(0,i)-tone(at-128+i-4800))>1e-5f) wet=true;
+    }
+    require(wet && p.studioStatus().status==voxide::studio::Status::ready && p.studioStatus().active==7,"Timeout recovery passed on dry/inactive output");
+}
 }
 void runBounceTests(bool native)
 {
@@ -119,6 +188,6 @@ void runBounceTests(bool native)
         require(offline.audio==repeated.audio,"Offline partition/repeat/recall changed audio");
         capture(rate,true,native,{1024,1,257},true);
     }
-    if (!native) { offlineResets();offlineFailure(); }
+    if (!native) { offlineResets();offlineFailure();offlineSpareTimeout(); }
     std::cout<<(native?"Native":"Fake")<<" bounce: exact playback/offline/partition/recall agreement, first sample and 0.6 s tails; not Logic/PDC or vocal-quality qualification\n";
 }

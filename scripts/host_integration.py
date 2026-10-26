@@ -2,6 +2,8 @@
 """PR08 synthetic exact-AU tests and opt-in installed checks; never operate Logic."""
 import argparse
 import datetime
+from contextlib import ExitStack
+import fcntl
 import json
 import math
 import os
@@ -36,18 +38,25 @@ def validate_native(report,cases):
             and type(report.get("cases")) is int and report["cases"]==cases,"Incomplete/wrong native host report")
     require(report.get("exact_reference") is True and report.get("latency_notifications") is True
             and report.get("installed_registry_or_Logic_test") is False,"Native report overclaims or lacks checks")
+    require(report.get("initial_parameters_checked") is True and type(report.get("recall_parameter_negative_controls")) is int
+            and report["recall_parameter_negative_controls"]==2,"Native report lacks initial-parameter recall guards")
     require(type(report.get("pid")) is int and report["pid"]>0,"Missing native process identity")
 
 
-def run_native(build,component,directory,report,fresh_only=False):
+def run_native(build,component,directory,report,fresh_only=False,*,expected_files=None):
     binary,_=native_binary(build);report["native_binary_sha256"]=sha256(binary)
-    before=au.fingerprint(component)
+    before=au.fingerprint(component) if expected_files is None else expected_files
+
+    def unchanged():
+        require(au.fingerprint(component)==before and sha256(binary)==report["native_binary_sha256"],"Tested binary/bundle changed from requested build")
 
     def run(label,options,cases):
+        unchanged()
         result=directory/(label+".json");command=[str(binary),"--component",str(component),*options,"--report",str(result)]
         report.setdefault("commands",[]).append(command)
         with (directory/(label+".log")).open("x") as log:
             subprocess.run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True)
+        unchanged()
         value=load_json(result);validate_native(value,cases);return value
 
     if not fresh_only:report["exact_AU"]=run("exact-au",[],14)
@@ -61,7 +70,7 @@ def run_native(build,component,directory,report,fresh_only=False):
     require(payload==second.read_bytes(),"Fresh-process settings/automation/bounce audio changed")
     samples=[sample[0] for sample in struct.iter_unpack("<f",payload)]
     require(all(math.isfinite(x) for x in samples) and any(abs(x)>1e-4 for x in samples),"Invalid/silent recall audio")
-    require(au.fingerprint(component)==before and sha256(binary)==report["native_binary_sha256"],"Tested binary/bundle changed")
+    unchanged()
     report["fresh_process_recall"]={"pids":[a["pid"],b["pid"]],"state_sha256":state_hash,
         "audio_sha256":sha256(first),"frames":76800,"sample_rate":48000,"format":"mono-f32le","exact":True}
     report["component_files"]=before
@@ -71,14 +80,30 @@ def check(build,output=None,*,fresh_only=False,installed=False,allow_installed=F
     # Installed files, ownership ledgers and auval are untouched until both
     # explicit operation approvals are present. Normal checks use build artifacts.
     if installed:require(allow_installed and allow_auval,"Installed-AU and auval operations require both explicit approvals")
+    with ExitStack() as stack:
+        if installed:
+            # Cooperate with au.install's exclusive publication lock throughout
+            # preflight, auval, exact-path loading and final evidence publication.
+            lock=au.no_symlinks(au.DEFAULT_STATE/"au-install.lock")
+            stream=stack.enter_context(lock.open("a"));fcntl.flock(stream,fcntl.LOCK_SH)
+        return _check_locked(build,output,fresh_only=fresh_only,installed=installed)
+
+
+def _check_locked(build,output,*,fresh_only,installed):
     build=au.no_symlinks(Path(build).absolute());binary,profile=native_binary(build)
     source=build/"voxide_artefacts"/profile/"AU/voxide.component"
+    expected=au.fingerprint(source)
     require(au.check_identity(source)=="0.3.0","Build the PR08 product (0.3.0), not the older shell/evaluation AU")
     verify_linkage(source)
     component=source;ledger=None
     if installed:
         component=au.DEFAULT_INSTALL/au.COMPONENT;ledger=au.owned_component(component,au.DEFAULT_STATE/"au-install.json")
-        require(ledger["files"]==au.fingerprint(source),"Installed bundle differs from the requested build")
+        require(ledger["files"]==expected,"Installed bundle differs from the requested build")
+
+    def unchanged():
+        require(au.fingerprint(source)==expected and au.fingerprint(component)==expected,"Component changed from requested build")
+
+    unchanged()
     base=ROOT/("evaluation/pr-08" if installed else "build/pr-08-host-checks")
     directory=au.no_symlinks(Path(output).absolute() if output else base/stamp())
     if installed:require(directory.is_relative_to((ROOT/"evaluation/pr-08").absolute()),"Installed/private evidence must stay under ignored evaluation/pr-08")
@@ -86,9 +111,11 @@ def check(build,output=None,*,fresh_only=False,installed=False,allow_installed=F
     report={"schema":"voxide.pr08-host-check.v1","status":"running","operation":"installed" if installed else "build-only",
         "component":str(component),"profile":profile,"installed_auval_executed":False,"Logic_operated":False,
         "private_recording_read":False,"host_acceptance":"pending_user_session",
+        "requested_component_files":expected,
         "scope":"Synthetic functional AU/recall evidence, not actual Logic PDC, vocal pitch or performance qualification"}
     write_json(directory/"started.json",report)
     try:
+        unchanged()
         if installed:
             command=["launchctl","asuser",str(os.getuid()),"/usr/bin/auval","-v",*[au.IDENTITY[key] for key in ("type","subtype","manufacturer")]]
             report["auval_command"]=command
@@ -96,8 +123,10 @@ def check(build,output=None,*,fresh_only=False,installed=False,allow_installed=F
                 report["installed_auval_executed"]=True
                 subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,check=True)
             au.verify_validation_output((directory/"auval.log").read_text(),ledger["version"])
+            unchanged()
             report["registry_scope"]="Identity/version validation, not cryptographic proof of a cached registry image or Logic execution"
-        run_native(build,component,directory,report,fresh_only)
+        run_native(build,component,directory,report,fresh_only,expected_files=expected)
+        unchanged()
         report["status"]="native_functional_pass_logic_pending"
     except Exception as error:
         report["status"]="fail";report["error"]=str(error);raise

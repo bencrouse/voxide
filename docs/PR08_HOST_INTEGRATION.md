@@ -36,6 +36,9 @@ for opening/closing/reopening Logic, measured PDC, or a recorded-vocal audition.
   spare waits have five-second bounds; failure latches an explicit fault and
   preserves finite original output. That output is **not a passing harmony bounce**.
   Failed native builds still require explicit recovery; no retry loop is introduced.
+- A missing-spare timeout remains latched even if the builder later publishes a
+  graph. Ordinary callbacks, recall, transport and mode changes neither re-wait nor
+  adopt it; an explicit harmony restart or host re-preparation is required.
 - Mode changes are declared stream discontinuities. Supported rates remain
   **44.1/48 kHz**, with **4410/4800 sample latency**; lead is unchanged except declared
   alignment/gain. Exactly three voices and inclusive ±12 requirements remain.
@@ -80,6 +83,10 @@ It does not patch the wrapper or change host parameter meanings to fit a test.
 
 Fresh-process checks serialize actual AU ClassInfo, dispose/exit, launch a new
 process, restore before initialization and reproduce the same automation/audio.
+All 30 expected initial parameter values are read back immediately after restore
+and again after initialization, before audio or automation can mask a missing
+field. Independent key-default and scale-default negative controls must fail that
+comparison, even when the chosen audio would produce the same early shifts.
 The coordinator requires distinct PIDs, unchanged state/binary/bundle hashes,
 identical finite/nonzero 76,800-frame float output including tail at 48 kHz, and
 native success reports with narrowly declared scope. This is fresh **native host**
@@ -115,6 +122,13 @@ version checks and scoped `auval` run, followed by exact-installed-path syntheti
 tests. Private installed-session evidence stays under ignored `evaluation/pr-08/`.
 Registry identity/version is not cryptographic proof of a cached loaded image;
 neither that nor exact-path native loading proves actual Logic behavior.
+The installed check holds the installer's shared publication lock from preflight
+through final reporting, blocking normal exclusive installer publication. The
+requested build's original fingerprint is carried into native testing, checked
+around `auval` and every native process, and compared again at completion; it is
+never replaced with a later installed-bundle baseline. Noncooperating persistent
+file edits fail the boundary checks; no claim of protection against arbitrary
+hostile transient filesystem modification or cached registry images is made.
 
 The supported **initial** user settings remain recorded input, PDC All, Low Latency
 Mode Off, 128-frame I/O and Small process buffer. The known track-fed/Low Latency
@@ -144,3 +158,9 @@ Implementation decisions, retained development failures, self-review, validation
 and preserved signed delivery are recorded in
 [implementation-001](evidence/pr-08/implementation-001.md). No independent PR08
 review or actual-host acceptance is implied by that engineering closeout.
+
+The subsequent [independent review](evidence/pr-08/review-001.md) found three P2
+timeout/identity/recall-test issues. Their fixes and new regression evidence are
+tracked separately in [review-fixes-001](evidence/pr-08/review-fixes-001.md); the
+original `6d751fa` artifact and passing evidence remain preserved, not retroactively
+promoted as proving the missing guarantees.
