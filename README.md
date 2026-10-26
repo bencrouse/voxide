@@ -7,8 +7,10 @@ MIDI-mode qualification and ±24 coverage are deferred, not achieved or cancelle
 
 **PR08 host/bounce implementation** on `pr-08-host-bounce-integration` extends the
 locally merged PR07 product. Version **0.3.0** adds same-engine offline harmony
-bounce, exact-built-AU tests and fresh-process recall. Actual installed/Logic/
-recorded-vocal acceptance remains user-coordinated, not inferred from native tests.
+bounce, exact-built-AU tests and fresh-process recall. The user reports completing
+the product Logic checklist, declares PR08 a pass and authorizes local merge;
+[acceptance is user-reported](docs/evidence/pr-08/user-acceptance-001.md), not
+independently measured or inferred from native tests. No worksheet was supplied.
 See [PR08](docs/PR08_HOST_INTEGRATION.md) and its [Logic checklist](docs/PR08_LOGIC_CHECKLIST.md).
 
 PR07 added the auditioned

@@ -13,8 +13,12 @@ and all old failed experiments remain unchanged.
 
 **Engineering implementation and actual host acceptance are distinct.** This
 branch can complete code and automated tests without operating Logic. The plan's
-actual installed/Logic/recorded-vocal gates remain pending until the coordinated
-session occurs. No generated project file, script or native API report substitutes
+actual installed/Logic/recorded-vocal gates were pending until user testing.
+The user now reports completing the full checklist, declares a pass and explicitly
+authorizes local commit/merge without a worksheet; see
+[user-acceptance-001](evidence/pr-08/user-acceptance-001.md). This is user-reported
+acceptance, not independently supplied numerical evidence.
+No generated project file, script or native API report substitutes
 for opening/closing/reopening Logic, measured PDC, or a recorded-vocal audition.
 
 ## Product changes
@@ -138,7 +142,12 @@ unity reference must meet the frozen zero-integer-offset, max 1e-6/RMS 1e-7 null
 limits; shifted-vowel phase is not a unity reference. Host chase cannot reconstruct
 MIDI events the host never sends; MIDI musical qualification remains deferred.
 
-## Actual host acceptance still required
+## Host acceptance checklist and user decision
+
+The following was the coordinated host-checklist scope. The user reports testing
+all of it and accepts PR08 for local merge. No worksheet, raw measurements,
+exports, setup details or project/binary hashes were supplied; those details are
+not invented, and archived pending records are not rewritten.
 
 - Approved installed identity/`auval` and actual Logic route, with no doubled lead.
 - Recorded-vocal first syllable/re-acquisition, transformed onset/pitch timing,
@@ -149,7 +158,8 @@ MIDI events the host never sends; MIDI musical qualification remains deferred.
   correct duration and tail, and measured differences. Any non-exact differences
   require explanation and independent listening before acceptance.
 
-Those are not marked passed by native tests. PR09 session performance/soak,
+Those are accepted on the user's report, not marked passed by native tests or
+independently measured by the agent. PR09 session performance/soak,
 formal accuracy/support, challenge c, licensing and final studio go stay open.
 
 ## Engineering closeout
