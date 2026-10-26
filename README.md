@@ -13,6 +13,12 @@ the product Logic checklist, declares PR08 a pass and authorizes local merge;
 independently measured or inferred from native tests. No worksheet was supplied.
 See [PR08](docs/PR08_HOST_INTEGRATION.md) and its [Logic checklist](docs/PR08_LOGIC_CHECKLIST.md).
 
+**PR09 implementation** on `pr-09-studio-session-qualification` adds opt-in local
+session metadata logging and controlled full-AU timing/allocation screens in
+product **0.4.0**, without changing musical DSP/state. Actual 30-minute Logic soak,
+independent listening/rubric and final studio qualification are not claimed from
+engineering tests. See [PR09](docs/PR09_STUDIO_SESSION.md).
+
 PR07 added the auditioned
 Rubber Band worker path to the original `voxide` AU: native key/scale and three
 degree/octave/level/enable controls, aligned original level and 100 ms latency.

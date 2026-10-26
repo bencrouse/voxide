@@ -4,6 +4,7 @@
 #include "DSP/PitchTracker.h"
 #include "DSP/HarmonySelector.h"
 #include "Studio/Session.h"
+#include "SessionLog.h"
 #include <mutex>
 #include <optional>
 
@@ -22,6 +23,8 @@ public:
     studio::Snapshot studioStatus() const noexcept;
     float inputPeak() const noexcept { return meterPeak.load(std::memory_order_relaxed); }
     std::int64_t renderTick() const noexcept { return lastRenderTick.load(std::memory_order_relaxed); }
+    SessionLog& sessionLog() noexcept { return performanceLog; }
+    SessionTelemetry& sessionTelemetry() noexcept { return performance; }
     bool waitIdleForTest() const { return !session || session->waitIdleForTest(); }
     bool isBusesLayoutSupported(const BusesLayout&) const override;
     void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
@@ -50,6 +53,7 @@ public:
 
 private:
     void render(juce::AudioBuffer<float>&, juce::MidiBuffer&, bool bypassed);
+    void measuredRender(juce::AudioBuffer<float>&,juce::MidiBuffer&,bool);
     struct RenderSettings
     {
         int source = 0, variant = 0;
@@ -72,6 +76,8 @@ private:
     RenderSettings renderedSettings;
     studio::Factory factory;
     std::unique_ptr<studio::Session> session;
+    SessionTelemetry performance;
+    SessionLog performanceLog {performance};
     std::vector<float> leadDelay;
     std::size_t leadPosition=0;
     std::array<float,3> voiceGains {1,1,1};
@@ -96,6 +102,7 @@ private:
     std::int64_t lastHostSample = -1;
     std::uint32_t lastHostFrames = 0;
     bool heldKnown = true, wasPlaying = false, lastHostSampleKnown = false;
+    bool lastTransportKnown=false;
     juce::AudioParameterChoice* sourceChoice = nullptr; // Owned by AudioProcessor.
     juce::AudioParameterChoice *modeChoice = nullptr, *rootChoice = nullptr,
         *scaleChoice = nullptr, *trackerChoice = nullptr;

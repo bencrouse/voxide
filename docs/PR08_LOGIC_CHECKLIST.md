@@ -5,13 +5,18 @@ recording. Create a **new disposable project yourself**; no generated `.logicx`
 file is presented as a real saved/reopened project. The prior evaluation-AU manual
 acceptance remains accepted; this session concerns product **voxide 0.3.0**, its
 new controls/state and actual offline bounce, not a demand to repeat that audition.
+PR08 itself is now user-accepted; this checklist remains its routing reference.
+The current PR09-instrumented build is **0.4.0** and uses the same route. For new
+session performance/soak work use [PR09_STUDIO_SESSION.md](PR09_STUDIO_SESSION.md),
+not a demand to repeat accepted PR08 testing or complete its worksheet.
 
 ## 1. Establish exactly what is installed
 
 Quit Logic before an explicitly chosen `make reload-au`. That command builds,
 installs/signs only the product AU and runs its scoped `auval` validation. It does
 not install Studio Eval. Rescan only voxide in Logic's Plug-in Manager if needed;
-never delete broad AU caches. Confirm version **0.3.0** and record installed binary
+never delete broad AU caches. Confirm the requested candidate version (**0.3.0**
+for the archived PR08 binary, **0.4.0** for the current PR09 build) and record installed binary
 hash, Logic/macOS versions, rate and buffer settings in `worksheet.json`.
 
 Optional installed-file API checks, only when you choose to authorize them:

@@ -2,7 +2,7 @@ SHELL := /bin/zsh
 PROFILE ?= debug
 JOBS ?= 6
 
-.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check tracking-check engine-check interaction-check architecture-check install-au validate-au reload-au host-check host-kit
+.PHONY: help configure build test check check-full routing-check routing-fixtures evaluation-check tracking-check engine-check interaction-check architecture-check install-au validate-au reload-au host-check host-kit session-screen session-kit
 help:
 	@echo "make check       Debug build/tests (no install or audio device)"
 	@echo "make check-full  Debug/Release + focused ASan/TSan (no install)"
@@ -10,6 +10,8 @@ help:
 	@echo "make reload-au   Explicit Release build/install/ad-hoc sign/auval"
 	@echo "make host-check  PR08 exact-built-AU bounce and fresh-process checks; no installation/Logic/device"
 	@echo "make host-kit    New synthetic Logic checklist/probes; no project/recording/playback opened"
+	@echo "make session-screen  Release synthetic full-AU timing/allocation screen; no Logic/audio device"
+	@echo "make session-kit     PR09 instructions/status only; no source/Logic access"
 	@echo "make routing-check  Native AU/processor routing checks; no Logic/device/UI"
 	@echo "make routing-fixtures  New private WAV/MIDI test kit; no recording"
 	@echo "make evaluation-check  PR02 immutable synthetic fixtures/metric calibration"
@@ -57,3 +59,8 @@ host-check:
 	python3 scripts/host_integration.py check --build-dir build/local-release
 host-kit:
 	python3 scripts/host_integration.py kit
+session-screen:
+	$(MAKE) build PROFILE=release
+	python3 scripts/studio_session.py screen --build-dir build/local-release
+session-kit:
+	python3 scripts/studio_session.py kit

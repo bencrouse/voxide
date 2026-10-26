@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_OSX_ARCHITECTURES arm64 CACHE STRING "Supported architecture")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum macOS")
-project(voxide VERSION 0.3.0 LANGUAGES C CXX)
+project(voxide VERSION 0.4.0 LANGUAGES C CXX)
 
 if(NOT APPLE OR NOT CMAKE_OSX_ARCHITECTURES STREQUAL "arm64"
    OR NOT CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "15.0")
@@ -44,7 +44,7 @@ add_library(voxide_studio STATIC Source/Studio/RubberBand.cpp Source/Studio/Work
 target_include_directories(voxide_studio PUBLIC Source/Studio Source/DSP)
 target_link_libraries(voxide_studio PUBLIC voxide_dsp voxide_rubberband)
 target_compile_options(voxide_studio PRIVATE -Wall -Wextra -Wpedantic)
-add_library(voxide_processor STATIC Source/PluginProcessor.cpp Source/PluginEditor.cpp Source/DiagnosticLog.cpp)
+add_library(voxide_processor STATIC Source/PluginProcessor.cpp Source/PluginEditor.cpp Source/DiagnosticLog.cpp Source/SessionLog.cpp)
 target_include_directories(voxide_processor PUBLIC Source "${PROJECT_BINARY_DIR}/generated")
 target_compile_definitions(voxide_processor PUBLIC
     JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
@@ -86,7 +86,7 @@ add_executable(voxide_dsp_tests Source/Tests/PassThroughTests.cpp Source/Tests/T
 target_link_libraries(voxide_dsp_tests PRIVATE voxide_dsp voxide_allocation_audit)
 add_test(NAME dsp COMMAND voxide_dsp_tests)
 juce_add_console_app(voxide_processor_tests PRODUCT_NAME "voxide_processor_tests")
-target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp Source/Tests/StudioUiTests.cpp Source/Tests/StateRecoveryTests.cpp Source/Tests/BounceTests.cpp)
+target_sources(voxide_processor_tests PRIVATE Source/Tests/ProcessorTests.cpp Source/Tests/DiagnosticsTests.cpp Source/Tests/TrackingProcessorTests.cpp Source/Tests/StudioUiTests.cpp Source/Tests/StateRecoveryTests.cpp Source/Tests/BounceTests.cpp Source/Tests/SessionTelemetryTests.cpp)
 target_compile_definitions(voxide_processor_tests PRIVATE VOXIDE_TEST_OUTPUT_DIR="${PROJECT_BINARY_DIR}/test-output/diagnostics")
 target_link_libraries(voxide_processor_tests PRIVATE voxide_processor voxide_allocation_audit)
 add_test(NAME processor COMMAND voxide_processor_tests)
@@ -110,7 +110,7 @@ add_test(NAME au_render COMMAND voxide_au_render_tests "$<TARGET_BUNDLE_DIR:voxi
     --report "${PROJECT_BINARY_DIR}/au-routing-report.json")
 juce_add_console_app(voxide_host_integration_tests PRODUCT_NAME "voxide_host_integration_tests")
 target_sources(voxide_host_integration_tests PRIVATE Source/Tests/HostBounceTests.cpp)
-target_link_libraries(voxide_host_integration_tests PRIVATE voxide_processor "-framework AudioToolbox" "-framework CoreFoundation")
+target_link_libraries(voxide_host_integration_tests PRIVATE voxide_processor voxide_allocation_audit "-framework AudioToolbox" "-framework CoreFoundation")
 # The harness and loaded AU each own JUCE. Do not let executable weak/template
 # exports interpose the bundle's distinct singleton storage (notably Debug String).
 target_link_options(voxide_host_integration_tests PRIVATE "-Wl,-no_exported_symbols")

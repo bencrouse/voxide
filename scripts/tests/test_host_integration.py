@@ -98,7 +98,7 @@ class HostIntegrationTests(unittest.TestCase):
     def test_failed_native_check_keeps_report_and_never_claims_Logic_pass(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp).resolve();build=self.fixture(root);output=root/"run"
-            with patch.object(host.au,"check_identity",return_value="0.3.0"),patch.object(host,"verify_linkage"),patch.object(host.au,"fingerprint",return_value={}), \
+            with patch.object(host.au,"check_identity",return_value="0.4.0"),patch.object(host,"verify_linkage"),patch.object(host.au,"fingerprint",return_value={}), \
                  patch.object(host,"run_native",side_effect=RuntimeError("native failed")),self.assertRaises(RuntimeError):
                 host.check(build,output)
             report=host.load_json(output/"report.json")
@@ -114,8 +114,8 @@ class HostIntegrationTests(unittest.TestCase):
     def test_failed_approved_auval_attempt_is_recorded_not_hidden(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp).resolve();build=self.fixture(root);output=root/"evaluation/pr-08/run";state=root/"state";state.mkdir()
-            with patch.object(host,"ROOT",root),patch.object(host.au,"check_identity",return_value="0.3.0"), \
-                 patch.object(host,"verify_linkage"),patch.object(host.au,"owned_component",return_value={"files":{},"version":"0.3.0"}), \
+            with patch.object(host,"ROOT",root),patch.object(host.au,"check_identity",return_value="0.4.0"), \
+                 patch.object(host,"verify_linkage"),patch.object(host.au,"owned_component",return_value={"files":{},"version":"0.4.0"}), \
                  patch.object(host.au,"DEFAULT_STATE",state), \
                  patch.object(host.au,"fingerprint",return_value={}),patch.object(host,"run_native") as native, \
                  patch.object(host.subprocess,"run",side_effect=host.subprocess.CalledProcessError(1,["mock-auval"])) as run, \
@@ -162,8 +162,8 @@ class HostIntegrationTests(unittest.TestCase):
                     if replacement:current["binary"]="B"
                 def native(*args,**kwargs):native_calls.append(kwargs["expected_files"])
                 with patch.object(host,"ROOT",root),patch.object(host.au,"DEFAULT_STATE",state),patch.object(host.au,"DEFAULT_INSTALL",install), \
-                     patch.object(host.au,"check_identity",return_value="0.3.0"),patch.object(host,"verify_linkage"), \
-                     patch.object(host.au,"owned_component",return_value={"files":expected,"version":"0.3.0"}), \
+                     patch.object(host.au,"check_identity",return_value="0.4.0"),patch.object(host,"verify_linkage"), \
+                     patch.object(host.au,"owned_component",return_value={"files":expected,"version":"0.4.0"}), \
                      patch.object(host.au,"fingerprint",side_effect=fingerprint),patch.object(host.au,"verify_validation_output"), \
                      patch.object(host.subprocess,"run",side_effect=auval),patch.object(host,"run_native",side_effect=native):
                     if replacement:

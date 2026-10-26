@@ -166,12 +166,34 @@ HarmonyConfig Processor::musicalConfig() const noexcept
 
 void Processor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
-    render(buffer, midi, false);
+    measuredRender(buffer, midi, false);
 }
 
 void Processor::processBlockBypassed(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
-    render(buffer, midi, true);
+    measuredRender(buffer, midi, true);
+}
+
+void Processor::measuredRender(juce::AudioBuffer<float>& buffer,juce::MidiBuffer& midi,bool bypassed)
+{
+    const auto token=performance.begin();
+    if (!token) { render(buffer,midi,bypassed);return; }
+    const auto start=juce::Time::getHighResolutionTicks();render(buffer,midi,bypassed);
+    const auto end=juce::Time::getHighResolutionTicks();
+    SessionSample sample;sample.capture=token;sample.tick=static_cast<std::uint64_t>(start);sample.elapsed=static_cast<std::uint64_t>(end-start);
+    sample.frames=buffer.getNumSamples();sample.rate=std::isfinite(diagnosticRate) && diagnosticRate>0 && diagnosticRate<=384000?static_cast<int>(diagnosticRate):0;
+    sample.offline=isNonRealtime();sample.bypassed=bypassed;
+    sample.transportKnown=lastTransportKnown;sample.playing=wasPlaying;
+    const auto snapshot=studioStatus();sample.status=static_cast<int>(snapshot.status);sample.active=static_cast<int>(snapshot.active);
+    sample.root=renderedSettings.harmony.root;sample.scale=renderedSettings.harmony.scale;sample.epoch=trackingEpoch;
+    for (std::size_t v=0;v<3;++v) if (renderedSettings.voiceGain[v]>0) sample.enabled|=1<<v;
+    const auto output=getBusBuffer(buffer,false,0);
+    for (int channel=0;channel<output.getNumChannels();++channel) for (int i=0;i<output.getNumSamples();++i)
+    {
+        const auto value=output.getSample(channel,i);
+        if (!std::isfinite(value)) ++sample.nonfinite;else sample.peak=std::max(sample.peak,std::abs(value));
+    }
+    performance.finish(sample);
 }
 
 namespace
@@ -252,7 +274,8 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
     if (session && (discontinuity || hostReset || harmonyRestart)) session->restart(restart!=renderedRestart);
     if (session) session->begin(settings.harmony,settings.variant==0?TrackerVariant::yin:TrackerVariant::multiCandidate,offline,settings.harmony.midiMode);
     renderedReset=reset;renderedRestart=restart;lastOffline=offline;
-    if (event.transportKnown != 0) wasPlaying = event.playing != 0;
+    lastTransportKnown=event.transportKnown!=0;
+    if (lastTransportKnown) wasPlaying = event.playing != 0;
     lastHostSample = event.hostSample;
     lastHostSampleKnown = event.hostSampleKnown != 0;
     lastHostFrames = event.frames;
