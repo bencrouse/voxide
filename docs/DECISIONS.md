@@ -662,3 +662,16 @@ accepted without another worksheet; PR09's failure is not rerun or regraded.
 The outcome is a **studio-first scale-mode engineering handoff, NOT qualified**;
 full-support/challenge-c, independent listening/rubric, actual Logic/whole-host/soak,
 final studio acceptance and distribution/license clearance remain open.
+
+## PR10 local merge authorization (2026-10-27)
+
+After the independent reviewer closed both P2 findings, all repaired four-profile
+checks passed and the explicit no-go was reiterated, the user requested
+"ok please merge". Merge `pr-10-local-handoff` locally into `main` as a reviewed
+**engineering / negative-qualification handoff**, not a qualified studio pass.
+
+The authorization accepts that limited merge outcome; it does not pass missing
+installed-AU/user-workflow, actual Logic/whole-host/soak, independent listening/
+rubric, full-support/challenge-c, final studio or licensing/distribution gates.
+Preserve the original failure and all artifact histories. No push, installation,
+host/device/playback operation, private-source access or new research is authorized.

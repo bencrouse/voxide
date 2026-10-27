@@ -1566,8 +1566,10 @@ completion of the deferred live/MIDI/±24 brief.
   supporting each acceptance claim. Private evidence has clear availability limits.
   Reproduction commands, reference comparisons and full scoped index are delivered;
   execution by another reader is not invented. Private/raw availability is explicit.
-- [ ] No pending required gate is called passed; user accepts the final outcome.
-  Explicit **NO-GO** delivered; final user acceptance/merge remain pending.
+- [x] No pending required gate is called passed; user accepts the final outcome.
+  Explicit **NO-GO** delivered; user authorized local merge on 2026-10-27 as an
+  engineering/negative-qualification handoff. Final studio acceptance and the
+  unperformed installed/user/independent-reader gates above remain open, not waived.
 
 **Agent handoff — update before merge**
 - Major decisions: PR10 authorized on `pr-10-local-handoff` from `ef80f07`; retain
