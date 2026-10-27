@@ -84,11 +84,11 @@ or an exact preserved component without rebuilding it:
 
 ```sh
 python3 scripts/local_handoff.py verify \
-  --component build/pr-10-artifacts/ready-20261026-01/voxide.component \
-  --artifact build/pr-10-artifacts/ready-20261026-01 \
-  --expected-sha256 c4c156e1cd034b1b2b1b862aa719424a23bd5f9b60ad62fb848dd4164e6a0006
+  --component build/pr-10-artifacts/ready-20261026-02/voxide.component \
+  --artifact build/pr-10-artifacts/ready-20261026-02 \
+  --expected-sha256 33b51208dc8d40933ffd6a3aed82ebaa385a17af5e1663d37647a646145ee40d
 python3 scripts/au.py install \
-  --component build/pr-10-artifacts/ready-20261026-01/voxide.component
+  --component build/pr-10-artifacts/ready-20261026-02/voxide.component
 python3 scripts/au.py validate
 ```
 

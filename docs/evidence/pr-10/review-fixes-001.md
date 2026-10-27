@@ -43,5 +43,32 @@ manifests / 2,805 entries**, including the original PR10 `ready-20261026-01`, an
 unchanged protected product/evaluation sources, dependency pins and cache archives.
 No actual installed operations, private reads, timing or historical study reruns.
 Fresh offline reproduction of the repaired script under inherited
-`CMAKE_GENERATOR=Xcode` is recorded separately when complete; no fixture result
-above is presented as real compilation evidence.
+`CMAKE_GENERATOR=Xcode` **passed**:
+`build/pr-10-review-fixes/reproduction-001/`. Source checkpoint
+`f232d393a11503f82eb8b771fffe4d7b29440c5c`, tree
+`bc4cd1ba2ddf40a5b0c0c44d77cc86f20a4c627a`; every actual configure selects
+Unix Makefiles, and the original checkout/cache are retained.
+
+- Release and Debug: **11/11 CTest checks each**, including **281 Python tests
+  each**. No mocked orchestration result is counted as compilation evidence.
+- Focused ASan and TSan: **4/4 each**, with the existing sanitizer options.
+- `build/pr-10-review-fixes/host-001/`: exact fresh signed AU passes the 14 native
+  functional cases and distinct save/reopen processes with identical generated
+  audio/state checks; no installed AU/auval, Logic or private source operation.
+- `protected-after-001/preservation.json` confirms all ten previous manifests /
+  2,805 entries, pinned archives and protected sources remain unchanged after
+  execution. `main` remains `ef80f07`; no merge or push.
+
+Separate review-fixed delivery:
+`build/pr-10-artifacts/ready-20261026-02/`. It preserves the exact signed tested
+component/native harness, committed build-source/final documentation snapshots,
+logs/build metadata, generated host output, audit records and complete pinned
+archives, without a post-test rebuild or re-sign. Binary SHA-256:
+`33b51208dc8d40933ffd6a3aed82ebaa385a17af5e1663d37647a646145ee40d`.
+Changes after the build checkpoint are documentation-only and separately identified.
+
+Both implementation findings are independently closed. Product **0.4.0 remains
+not qualified**: the original PR09 44.1 kHz variable-block failure, unmeasured v2
+screen and pending actual host/soak/whole-host/listening/full-support/challenge-c/
+licensing/final acceptance gates are unchanged. No new audition/worksheet is
+required to preserve the user's historical PR08 acceptance.

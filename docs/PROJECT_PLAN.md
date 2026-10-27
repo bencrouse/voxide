@@ -1579,6 +1579,10 @@ completion of the deferred live/MIDI/±24 brief.
   Reversible quarantine, not deletion; clean local Git/cache-only reproduction.
   Build checkpoint `7207af7`; evidence `build/pr-10-reproduction/final-001/`;
   separate signed delivery `build/pr-10-artifacts/ready-20261026-01/`.
+  User-requested independent review closed both P2 findings after repairs;
+  checkpoint `f232d39` reproduces under inherited Xcode with pinned Unix Makefiles:
+  Release/Debug 11/11 each (281 Python each), ASan/TSan 4/4 each. Separate reviewed
+  delivery `build/pr-10-artifacts/ready-20261026-02/`; original artifacts unchanged.
   Installed-AU and actual user workflow remain separately coordinated, not waived.
 - Reflections/next-agent cautions: preserve known limits and negative results; a
   local qualified AU is not a notarized/public release or a commercial license grant.
