@@ -36,9 +36,9 @@ struct Position final : juce::AudioPlayHead
 void stateTests()
 {
     voxide::Processor p(studioTest::factory);
-    check(p.getParameters().size() == 30, "v4 state parameter layout changed");
+    check(p.getParameters().size() == 31, "v5 state parameter layout changed");
     for (int i = 0; i < p.getParameters().size(); ++i)
-        check(p.getParameters()[i]->getVersionHint() == (i == 0 ? 1 : i<23?2:3), "AU version hints no longer preserve legacy automation order");
+        check(p.getParameters()[i]->getVersionHint() == (i == 0 ? 1 : i<23?2:i<30?3:4), "AU version hints no longer preserve legacy automation order");
     for (int i = 0; i < p.getParameters().size(); ++i)
         p.getParameters()[i]->setValueNotifyingHost(static_cast<float>(i % 5) / 4);
     juce::MemoryBlock expected, actual;

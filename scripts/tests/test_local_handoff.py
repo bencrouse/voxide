@@ -36,6 +36,12 @@ class LocalHandoffTests(unittest.TestCase):
         self.assertEqual(report["qualification"],"not_qualified");self.assertFalse(report["installed_files_accessed"])
         self.assertFalse(report["evidence"]["entries"][0]["raw_artifact_available_in_this_checkout"])
 
+    def test_mix_version_identity_is_reported_without_relabeling_legacy_bundle(self):
+        self.assertEqual(self.inspect()["version"],"0.4.0")
+        path=self.component/"Contents/Info.plist";info=plistlib.loads(path.read_bytes())
+        info["CFBundleShortVersionString"]="0.5.0";path.write_bytes(plistlib.dumps(info))
+        self.assertEqual(self.inspect()["version"],"0.5.0")
+
     def test_installed_and_private_paths_rejected_before_bundle_access(self):
         for path in (self.root/"Library/Audio/Plug-Ins/Components/voxide.component",self.root/"evaluation/pr-09/voxide.component"):
             with self.subTest(path=str(path)),patch.object(handoff.au,"check_identity") as identity,self.assertRaisesRegex(ValueError,"local build"):

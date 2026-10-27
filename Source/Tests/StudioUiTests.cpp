@@ -101,7 +101,7 @@ void runStudioUiTests()
         {
             std::unique_ptr<juce::AudioProcessorEditor> editor(p.createEditor());
             require(!editor->getWantsKeyboardFocus(),"Editor steals host keyboard focus");
-            for (auto size:{juce::Point<int>(720,600),juce::Point<int>(780,620),juce::Point<int>(1000,760)})
+            for (auto size:{juce::Point<int>(720,680),juce::Point<int>(780,700),juce::Point<int>(1000,840)})
             {
                 editor->setSize(size.x,size.y);bounds(*editor);
                 juce::Image image(juce::Image::ARGB,size.x,size.y,true);juce::Graphics graphics(image);editor->paintEntireComponent(graphics,true);
@@ -127,8 +127,14 @@ void runStudioUiTests()
             auto* voiceLevel=dynamic_cast<juce::Slider*>(find(*editor,"voiceLevel1"));require(voiceLevel,"UI level missing");
             voiceLevel->setValue(-6,juce::sendNotificationSync);
             require(std::abs(p.getParameters()[24]->getValue()-.9f)<1e-6f,"UI voice level gesture ignored");
+            auto* mix=dynamic_cast<juce::Slider*>(find(*editor,"harmonyMix"));require(mix && mix->getWantsKeyboardFocus(),"Accessible Mix control missing");
+            const auto trimBeforeMix=voiceLevel->getValue();const auto parameterBeforeMix=p.getParameters()[24]->getValue();
+            mix->setValue(75,juce::sendNotificationSync);
+            require(std::abs(p.getParameters()[30]->getValue()-.75f)<1e-6f,"Mix gesture not delivered to host parameter");
+            require(juce::exactlyEqual(voiceLevel->getValue(),trimBeforeMix) && juce::exactlyEqual(p.getParameters()[24]->getValue(),parameterBeforeMix),"Mix rewrote individual voice trim");
             p.setStateInformation(initial.getData(),static_cast<int>(initial.getSize()));
             require(key->getSelectedItemIndex()==0 && std::abs(degree->getValue()-2)<1e-9,"Recall did not update controls");
+            require(std::abs(mix->getValue()-50)<1e-9,"Recall did not update Mix");
             for (int index=0;index<p.getParameters().size();++index)
                 if (index>=23) p.getParameters()[index]->setValueNotifyingHost(static_cast<float>(pass%5)/4);
             // Reopening must not write a stale attachment snapshot over automation.

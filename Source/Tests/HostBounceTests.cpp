@@ -86,7 +86,7 @@ struct Unit
     {
         checked(AudioComponentInstanceNew(component,&unit),"Instantiate exact AU");UInt32 bytes=0;
         checked(AudioUnitGetPropertyInfo(unit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,0,&bytes,nullptr),"Parameter list size");
-        require(bytes==30*sizeof(AudioUnitParameterID),"Host parameter compatibility changed");std::vector<AudioUnitParameterID> ids(30);
+        require(bytes==31*sizeof(AudioUnitParameterID),"Host parameter compatibility changed");std::vector<AudioUnitParameterID> ids(31);
         checked(AudioUnitGetProperty(unit,kAudioUnitProperty_ParameterList,kAudioUnitScope_Global,0,ids.data(),&bytes),"Parameters");
         require(ids.front()==449045605u,"Legacy source AU ID changed");
         for (auto id:ids)
@@ -133,9 +133,10 @@ struct Unit
         for (auto* base:parameterContract.getParameters())
             if (auto* ranged=dynamic_cast<juce::RangedAudioParameter*>(base))
                 values.emplace(ranged->getName(1024).toStdString(),ranged->convertFrom0to1(ranged->getDefaultValue()));
-        require(values.size()==30,"Incomplete initial parameter contract");
+        require(values.size()==31,"Incomplete initial parameter contract");
         values.at("Vocal source")=side?1.f:0.f;values.at("Scale root")=5;values.at("Scale (12-TET)")=1;
         values.at("Voice 1 degree steps")=0;values.at("Voice 2 level")=-6;
+        values.at("Original / harmonies mix")=dry?50.f:75.f;
         if (dry) for (const char* name:{"Voice 1 enabled","Voice 2 enabled","Voice 3 enabled"}) values.at(name)=0;
         return values;
     }
@@ -185,6 +186,7 @@ void set(voxide::Processor& p,const char* id,float value)
 std::vector<float> reference(int rate,bool dry)
 {
     voxide::Processor p;set(p,"scaleRoot",5);set(p,"scaleSet",1);set(p,"voiceDegree1",0);set(p,"voiceLevel2",-6);
+    set(p,"harmonyMix",dry?50.f:75.f);
     if (dry) for (const auto* id:{"voiceEnabled1","voiceEnabled2","voiceEnabled3"}) set(p,id,0);
     p.setNonRealtime(true);p.prepareToPlay(rate,128);std::vector<float> result;std::size_t event=0;bool bypass=false;
     for (int at=0;at<rate+rate*6/10;)
@@ -193,7 +195,7 @@ std::vector<float> reference(int rate,bool dry)
         {
             if (event==0) { set(p,"scaleRoot",7);set(p,"scaleSet",2); }
             if (event==1) set(p,"voiceDegree1",-2);
-            if (event==2) set(p,"voiceLevel2",-9);
+            if (event==2) { set(p,"voiceLevel2",-9);if (!dry) set(p,"harmonyMix",100); }
             if (event==3) { bypass=true;p.reset(); }
             if (event==4) bypass=false;
             ++event;
@@ -210,6 +212,7 @@ std::vector<float> reference(int rate,bool dry)
 std::vector<float> capture(Unit& u,int rate,bool offline,bool selectedSide,const std::vector<int>& partitions,bool verifyRecall=false)
 {
     Input main {rate,!selectedSide},side {rate,selectedSide};u.initialize(rate,offline,main,side);
+    const bool dry=juce::exactlyEqual(u.get("Voice 1 enabled"),u.rawValue("Voice 1 enabled",0));
     if (verifyRecall) require(u.matchesInitial(selectedSide,false),"Initialized AU lost recalled parameters before audio/automation");
     std::vector<float> result;std::array<float,1024> left {},right {};
     struct Buffers { UInt32 count=2;AudioBuffer data[2]; } buffers;
@@ -221,7 +224,7 @@ std::vector<float> capture(Unit& u,int rate,bool offline,bool selectedSide,const
         {
             if (event==0) { u.set("Scale root",7);u.set("Scale (12-TET)",2); }
             if (event==1) u.set("Voice 1 degree steps",-2);
-            if (event==2) u.set("Voice 2 level",-9);
+            if (event==2) { u.set("Voice 2 level",-9);if (!dry) u.set("Original / harmonies mix",100); }
             if (event==3 || event==4)
             { UInt32 bypass=event==3?1u:0u;checked(AudioUnitSetProperty(u.unit,kAudioUnitProperty_BypassEffect,kAudioUnitScope_Global,0,&bypass,sizeof(bypass)),"Toggle AU bypass"); }
             ++event;
@@ -300,6 +303,7 @@ void performanceScreen(AudioComponent component,const std::string& path)
     for (int rate:{44100,48000}) for (int mode=0;mode<3;++mode)
     {
         Unit u(component);u.initial(false,false);u.set("Voice 1 degree steps",2);u.set("Voice 3 octaves",0);u.set("Voice 3 degree steps",6);
+        u.set("Original / harmonies mix",50); // Preserve the frozen PR09 workload; do not regrade old observations.
         Input main {rate,true,true},side {rate,false,true};u.initialize(rate,false,main,side);
         for (const char* name:{"Voice 1 enabled","Voice 2 enabled","Voice 3 enabled"}) require(juce::exactlyEqual(u.get(name),u.rawValue(name,1)),"Screen did not enable all three voices");
         const std::vector<int> partitions=mode==0?std::vector<int>{128}:mode==1?std::vector<int>{512}:std::vector<int>{32,128,257,512,1024};

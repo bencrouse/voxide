@@ -66,13 +66,15 @@ private:
     RenderSettings readSettings() noexcept;
     void resetMusical(const RenderSettings&) noexcept;
     HarmonyConfig musicalConfig() const noexcept;
-    void applyState(const std::array<float,30>&);
+    static constexpr std::size_t parameterCount=31;
+    using StateValues=std::array<float,parameterCount>;
+    void applyState(const StateValues&);
     PitchTracker tracker;
     HarmonySelector selector;
     std::atomic<unsigned> stateGeneration { 0 };
     std::recursive_mutex stateMutex; // State serialization only; never render.
     bool recallingState=false,applyingDeferredState=false;
-    std::optional<std::array<float,30>> deferredState;
+    std::optional<StateValues> deferredState;
     RenderSettings renderedSettings;
     studio::Factory factory;
     std::unique_ptr<studio::Session> session;
@@ -111,6 +113,7 @@ private:
     std::array<juce::AudioParameterBool*,3> voiceEnabled {};
     std::array<juce::AudioParameterFloat*,3> voiceLevels {};
     juce::AudioParameterFloat* originalLevel=nullptr;
+    juce::AudioParameterFloat* harmonyMix=nullptr;
     friend class ProcessorTestAccess;
 };
 }

@@ -5,7 +5,13 @@ three harmony voices. **Current priority: recorded vocals, scale mode, inclusive
 ±12-semitone support and an intentionally processed vocal character.** Live use,
 MIDI-mode qualification and ±24 coverage are deferred, not achieved or cancelled.
 
-**PR10 local handoff:** product remains **0.4.0**, **not qualified for studio use
+**Current product 0.5.0:** a prominent **Mix: Original ↔ Harmonies** control lets
+you bring harmonies forward without raising the wet sum. Start around **75–90%**;
+50% preserves the previous blend, 100% is harmonies only. Per-voice trims remain.
+Existing projects retain their sound. See [the mix guide](docs/HARMONY_MIX.md).
+The studio-qualification no-go below remains unchanged.
+
+**Historical PR10 local handoff:** product **0.4.0** remains **not qualified for studio use
 or public release**. PR09's original 44.1 kHz variable-block wet-output failure
 remains unresolved; corrected observation logic has not been timed again. See the
 [setup/use/uninstall guide](docs/PR10_LOCAL_HANDOFF.md),
@@ -186,6 +192,14 @@ This builds Release, copies only `voxide.component` into
 No Developer ID or notarization is involved. Unknown or edited existing components
 are refused; recognized previous builds are preserved outside the AU scan directory
 in `~/.local/state/voxide/backups/`.
+
+The helper refreshes only Voxide's bundle directory timestamp (copying otherwise
+preserves an old build timestamp) and allows a bounded registry-update delay.
+Validation retries only a successful `auval` report with a stale version, retaining
+each attempt; real validation failures still fail immediately. It does not clear
+shared AU caches, kill registrar/DAW processes, or replace a plug-in image already
+loaded in Logic. Quit Logic before replacing a loaded instance. `make validate-au`
+can refresh/recheck an already-owned installation without rebuilding/reinstalling.
 
 The identity is `aumf / Vx00 / Vxid`, bundle `com.voxide.audio.voxide`.
 Logic is expected to expose it under **AU MIDI-controlled Effects** in an instrument

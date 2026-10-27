@@ -29,6 +29,11 @@ class StudioSessionTests(unittest.TestCase):
         self.assertFalse(report["gates"]["30_minute_exposure"]);self.assertIn("allocation",report["unmeasured"][0])
         self.assertEqual(report["callbacks"],6);self.assertEqual(report["three_active_callbacks"],6)
 
+    def test_mix_version_metadata_does_not_inherit_qualification(self):
+        rows=self.metadata();rows[0]["version"]="0.5.0";report=self.parse(rows)
+        self.assertEqual(report["qualification"],"incomplete_studio_qualification")
+        self.assertFalse(report["gates"]["30_minute_exposure"])
+
     def test_long_wall_clock_does_not_invent_rendered_soak(self):
         rows=self.metadata();rows[-1]["unix_ms"]+=1800000;rows[-2]["tick"]+=1800000000000
         report=self.parse(rows);self.assertFalse(report["gates"]["30_minute_exposure"])

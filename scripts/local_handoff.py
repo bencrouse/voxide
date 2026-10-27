@@ -46,14 +46,15 @@ def inspect_component(component,expected_sha256=None):
     require({p.relative_to(component).as_posix() for p in entries if p.is_file()}==BUNDLE_FILES,"Unexpected bundle layout/resources; refusing unrelated payloads")
     info=plistlib.loads((component/"Contents/Info.plist").read_bytes())
     require(info.get("CFBundleExecutable")=="voxide","Unexpected/unsafe product executable path")
-    require(au.check_identity(component)=="0.4.0","Expected current product 0.4.0, not Studio Eval/older shell")
+    version=au.check_identity(component)
+    require(version in ("0.4.0","0.5.0"),"Expected studio product 0.4.0/0.5.0, not Studio Eval/older shell")
     before=au.fingerprint(component);binary=component/"Contents/MacOS/voxide";digest=sha256(binary)
     if expected_sha256 is not None:require(digest==expected_sha256,"Candidate binary differs from expected identity")
     libraries=verify_linkage(component)
     symbols=subprocess.check_output(["nm","-a",str(binary)],text=True)
     require(not re.search(r"Signalsmith|signalsmith|voxide.*(?:audit|evaluation)|__interpose|traceAllocation",symbols),"Forbidden evaluator/audit/interpose product symbols")
     require(au.fingerprint(component)==before,"Candidate changed during handoff verification")
-    return {"component":str(component),"version":"0.4.0","binary_sha256":digest,"files":before,"libraries":libraries,
+    return {"component":str(component),"version":version,"binary_sha256":digest,"files":before,"libraries":libraries,
         "scope":"Signed arm64/system-only exact local bundle identity; not installed registry, cached image, Logic or quality qualification"}
 
 

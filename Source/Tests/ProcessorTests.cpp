@@ -68,7 +68,7 @@ void dryRouting()
 }
 void stateMigration()
 {
-    Processor p(studioTest::factory);require(p.getParameters().size()==30,"Parameter layout changed");
+    Processor p(studioTest::factory);require(p.getParameters().size()==31,"Parameter layout changed");
     constexpr char v3[]="voxide-tracking-v3";
     juce::MemoryBlock old(sizeof(v3)+23*sizeof(float),true);std::memcpy(old.getData(),v3,sizeof(v3));
     auto* bytes=static_cast<unsigned char*>(old.getData())+sizeof(v3);
@@ -97,13 +97,90 @@ void stateMigration()
     distinct(); // A no-op v1 implementation must not satisfy the defaults check.
     p.setStateInformation(v1,sizeof(v1));
     require(same(p.getParameters()[0]->getValue(),0.f),"v1 default routing changed");
-    for (int i=0;i<30;++i)
+    for (int i=0;i<31;++i)
     {
         const float expected=(i==23 || i==25 || i==27)?0.f:p.getParameters()[i]->getDefaultValue();
         require(same(p.getParameters()[i]->getValue(),expected),"v1 migration changed defaults or enabled harmonies");
     }
     distinct();juce::MemoryBlock nondefault;p.getStateInformation(nondefault);
     p.setStateInformation(v1,sizeof(v1)-1);p.getStateInformation(after);require(after==nondefault,"Truncated v1 state changed settings");
+}
+void mixControls()
+{
+    studioTest::markers.store(true);studioTest::silent.store(-1);
+    for (int rate:{44100,48000}) for (float mix:{0.f,25.f,50.f,75.f,100.f})
+    {
+        Processor p(studioTest::factory);set(p,"harmonyMix",mix);p.prepareToPlay(rate,128);
+        juce::AudioBuffer<float> audio(2,128);
+        const double wet=(.012+.024+.048)/3.*std::min(1.,mix/50.);
+        const float dry=std::min(1.f,(100.f-mix)/50.f);
+        for (int at=0;at<24064;at+=128)
+        {
+            require(p.waitIdleForTest(),"Mix worker failed");
+            for (int i=0;i<128;++i) audio.setSample(0,i,signal(at+i,rate));callback(p,audio);
+            if (at>16000) for (int i=0;i<128;++i)
+            {
+                const float expected=static_cast<float>(signal(at+i-rate/10,rate)*dry+wet);
+                require(std::abs(audio.getSample(0,i)-expected)<1e-7f,"Original/harmonies mix law or alignment wrong");
+                require(same(audio.getSample(0,i),audio.getSample(1,i)),"Mix changed stereo duplication");
+            }
+        }
+        require(p.studioStatus().status==voxide::studio::Status::ready,"Mix muted a delivery fault into a pass");
+        // Host bypass must ignore both trims and Mix, including wet-only.
+        for (int i=0;i<128;++i) audio.setSample(0,i,signal(24064+i,rate));callback(p,audio,true);
+        for (int i=0;i<128;++i) require(same(audio.getSample(0,i),signal(24064+i-rate/10,rate)),"Mix altered bypassed original");
+    }
+    for (int rate:{44100,48000})
+    {
+        Processor p(studioTest::factory);p.prepareToPlay(rate,128);juce::AudioBuffer<float> audio(2,128);int at=0;
+        auto block=[&]
+        {
+            require(p.waitIdleForTest(),"Automated mix worker failed");
+            for (int i=0;i<128;++i) audio.setSample(0,i,signal(at+i,rate));callback(p,audio);at+=128;
+        };
+        while (at<24064) block();
+        set(p,"harmonyMix",100);const int start=at;const float step=1.f/(.01f*static_cast<float>(rate));float dry=1;
+        while (at-start<rate/100+256)
+        {
+            const int begin=at;block();
+            for (int i=0;i<128;++i)
+            {
+                dry+=std::clamp(-dry,-step,step);
+                const double expected=signal(begin+i-rate/10,rate)*dry+(.012+.024+.048)/3.;
+                require(std::abs(audio.getSample(0,i)-expected)<1e-7,"Mix automation skipped its 10 ms gain ramp");
+            }
+        }
+        require(same(dry,0.f),"Mix ramp failed to reach wet-only");
+    }
+    studioTest::markers.store(false);
+}
+void v4MixMigration()
+{
+    Processor reference(studioTest::factory),restored(studioTest::factory);
+    set(reference,"voiceLevel1",-6);set(reference,"originalLevel",-3);
+    constexpr char prefix[]="voxide-studio-v4";
+    juce::MemoryBlock v4(sizeof(prefix)+30*sizeof(float),true);std::memcpy(v4.getData(),prefix,sizeof(prefix));
+    auto* bytes=static_cast<unsigned char*>(v4.getData())+sizeof(prefix);
+    for (int i=0;i<30;++i)
+    {
+        const auto bits=std::bit_cast<std::uint32_t>(reference.getParameters()[i]->getValue());
+        for (unsigned j=0;j<4;++j) *bytes++=static_cast<unsigned char>(bits>>(8*j));
+    }
+    set(restored,"harmonyMix",100);restored.setStateInformation(v4.getData(),static_cast<int>(v4.getSize()));
+    for (int i=0;i<31;++i) require(same(reference.getParameters()[i]->getValue(),restored.getParameters()[i]->getValue()),"v4 migration changed legacy trims or failed to reset Mix to centre");
+    reference.prepareToPlay(48000,128);restored.prepareToPlay(48000,128);
+    juce::AudioBuffer<float> a(2,128),b(2,128);
+    for (int at=0;at<24064;at+=128)
+    {
+        require(reference.waitIdleForTest() && restored.waitIdleForTest(),"v4 migration worker failed");
+        for (int i=0;i<128;++i) { a.setSample(0,i,signal(at+i,48000));b.setSample(0,i,signal(at+i,48000)); }
+        callback(reference,a);callback(restored,b);
+        for (int i=0;i<128;++i) require(same(a.getSample(0,i),b.getSample(0,i)),"v4 recall changed original/harmony audio");
+    }
+    auto invalid=v4;static_cast<unsigned char*>(invalid.getData())[invalid.getSize()-1]=0xff;
+    juce::MemoryBlock before,after;restored.getStateInformation(before);
+    restored.setStateInformation(invalid.getData(),static_cast<int>(invalid.getSize()));restored.getStateInformation(after);
+    require(before==after,"Malformed v4 migration partially applied");
 }
 void layoutContracts()
 {
@@ -231,7 +308,7 @@ int main(int argc,char** argv)
         if (argc==2 && juce::String(argv[1])=="--bounce-native") { runBounceTests(true);return 0; }
         require(argc==1,"Unknown product test mode");
         if (voxide::audit::available) require(voxide::audit::selfTest(),"Allocation detector failed");
-        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();voicesAndFaults();rangeAndFiniteContracts();runStateRecoveryTests();runBounceTests(false);runSessionTelemetryTests();
+        runDiagnosticsTests();runTrackingProcessorTests();dryRouting();layoutContracts();stateMigration();mixControls();v4MixMigration();voicesAndFaults();rangeAndFiniteContracts();runStateRecoveryTests();runBounceTests(false);runSessionTelemetryTests();
         require(studioTest::wrongOwner.load()==0 && studioTest::living.load()==0,"Native ownership/lifetime escaped worker");
         std::cout<<"PR07 product contracts passed; no install, private audio, device or Logic\n";return 0;
     }

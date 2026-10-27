@@ -196,7 +196,7 @@ AudioUnitParameterID sourceId(AudioUnit unit)
     UInt32 size = 0;
     checked(AudioUnitGetPropertyInfo(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
                                      0, &size, nullptr), "parameter list size");
-    require(size == 30 * sizeof(AudioUnitParameterID), "Unexpected studio parameter count");
+    require(size == 31 * sizeof(AudioUnitParameterID), "Unexpected studio parameter count");
     std::vector<AudioUnitParameterID> ids(size / sizeof(AudioUnitParameterID));
     checked(AudioUnitGetProperty(unit, kAudioUnitProperty_ParameterList, kAudioUnitScope_Global,
                                  0, ids.data(), &size), "source parameter");

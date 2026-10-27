@@ -44,6 +44,35 @@ private:
     juce::Slider slider;
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 };
+class Mix final : public juce::Component
+{
+public:
+    explicit Mix(juce::RangedAudioParameter& p)
+    {
+        title.setText("Mix",juce::dontSendNotification);title.setFont(juce::FontOptions(18.f));
+        hint.setText("Turn right for more harmony",juce::dontSendNotification);
+        hint.setJustificationType(juce::Justification::centredRight);
+        hint.setColour(juce::Label::textColourId,juce::Colour(0xffb5c4c9));
+        dry.setText("Original",juce::dontSendNotification);wet.setText("Harmonies",juce::dontSendNotification);
+        wet.setJustificationType(juce::Justification::centredRight);
+        for (auto* label:{&title,&hint,&dry,&wet}) addAndMakeVisible(label);
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);slider.setTextBoxStyle(juce::Slider::TextBoxRight,false,76,28);
+        slider.setTitle("Original / harmonies mix");slider.setComponentID(p.paramID);slider.setWantsKeyboardFocus(true);
+        slider.setTooltip("0%: original only. 50%: existing blend. 100%: harmonies only.\nTurn right to reduce the original without changing voice trims. Smoothed over 10 ms; host bypass restores unity original.");
+        slider.setColour(juce::Slider::thumbColourId,juce::Colour(0xff7bd5c4));
+        slider.setColour(juce::Slider::trackColourId,juce::Colour(0xff7bd5c4));
+        addAndMakeVisible(slider);attachment=std::make_unique<juce::SliderParameterAttachment>(p,slider);
+    }
+    void resized() override
+    {
+        const auto width=getWidth();title.setBounds(0,0,100,22);hint.setBounds(110,0,width-110,22);
+        slider.setBounds(0,24,width,32);dry.setBounds(0,56,100,20);wet.setBounds(width-186,56,100,20);
+    }
+private:
+    juce::Label title,hint,dry,wet;
+    juce::Slider slider;
+    std::unique_ptr<juce::SliderParameterAttachment> attachment;
+};
 class StudioEditor final : public juce::AudioProcessorEditor,private juce::Timer
 {
 public:
@@ -55,6 +84,7 @@ public:
         warning.setColour(juce::Label::textColourId,juce::Colours::orange);
         help.setText("Degree steps: 0 = unison; +2 = third in seven-note scales. Shifts beyond +/-12 semitones mute.",juce::dontSendNotification);
         for (auto* label:{&title,&warning,&help,&status}) addAndMakeVisible(label);
+        mix=std::make_unique<Mix>(parameter(p,"harmonyMix"));addAndMakeVisible(mix.get());
         key=std::make_unique<Choice>(dynamic_cast<juce::AudioParameterChoice&>(parameter(p,"scaleRoot")),"Key");
         scale=std::make_unique<Choice>(dynamic_cast<juce::AudioParameterChoice&>(parameter(p,"scaleSet")),"Scale (12-TET)");
         source=std::make_unique<Choice>(p.sourceParameter(),"Vocal source");
@@ -67,10 +97,10 @@ public:
             buttons[i]=std::make_unique<juce::ButtonParameterAttachment>(parameter(p,"voiceEnabled"+suffix),enabled[i]);
             degree[i]=std::make_unique<Level>(parameter(p,"voiceDegree"+suffix),"Degree steps","Source-time scale steps; existing -11 to +11 range preserved. Out-of-range targets mute, never clamp musically.");
             octave[i]=std::make_unique<Level>(parameter(p,"voiceOctave"+suffix),"Octaves","Source-time octave offset; existing -2 to +2 range preserved. Final shifts must stay within +/-12 semitones.");
-            level[i]=std::make_unique<Level>(parameter(p,"voiceLevel"+suffix),"Harmony level (dB)","Output-time trim, 10 ms ramp. Each voice has a fixed one-third mix gain. -60 dB = silent.");
+            level[i]=std::make_unique<Level>(parameter(p,"voiceLevel"+suffix),"Voice trim (dB)","Output-time voice trim, 10 ms ramp. The main Mix control sets the original/harmony balance. Each voice retains its one-third safety gain. -60 dB = silent.");
             for (auto* control:{degree[i].get(),octave[i].get(),level[i].get()}) addAndMakeVisible(control);
         }
-        original=std::make_unique<Level>(parameter(p,"originalLevel"),"Original level (dB)","Aligned original only: declared gain, no tuning. -60 dB = silent; host bypass restores unity original.");
+        original=std::make_unique<Level>(parameter(p,"originalLevel"),"Original trim (dB)","Trim before the main Mix balance; no tuning. -60 dB = silent; host bypass restores unity original.");
         addAndMakeVisible(original.get());restart.setButtonText("Restart harmonies");restart.setTooltip("Recover harmony workers without clearing queued original audio.");
         restart.setComponentID("restartHarmonies");
         restart.onClick=[this]
@@ -88,29 +118,30 @@ public:
             timerCallback();
         };
         addAndMakeVisible(capture);
-        setResizable(true,true);setResizeLimits(720,600,1000,760);setSize(780,620);startTimerHz(10);timerCallback();
+        setResizable(true,true);setResizeLimits(720,680,1000,840);setSize(780,700);startTimerHz(10);timerCallback();
     }
     ~StudioEditor() override { stopTimer(); }
     void paint(juce::Graphics& g) override
     {
         g.fillAll(juce::Colour(0xff202329));g.setColour(juce::Colour(0xff3a3e46));
-        for (int y:{192,270,348,426}) g.drawHorizontalLine(y,20.f,static_cast<float>(getWidth()-20));
+        for (int y:{268,346,424,502}) g.drawHorizontalLine(y,20.f,static_cast<float>(getWidth()-20));
     }
     void resized() override
     {
         const int width=getWidth()-40;
         title.setBounds(20,14,width-210,34);capture.setBounds(getWidth()-220,18,200,28);warning.setBounds(20,50,width,48);
-        key->setBounds(20,110,110,62);scale->setBounds(142,110,width-342,62);source->setBounds(getWidth()-208,110,188,62);
+        mix->setBounds(20,102,width,80);
+        key->setBounds(20,194,110,62);scale->setBounds(142,194,width-342,62);source->setBounds(getWidth()-208,194,188,62);
         for (std::size_t i=0;i<3;++i)
         {
-            const int y=202+static_cast<int>(i)*78;
+            const int y=278+static_cast<int>(i)*78;
             enabled[i].setBounds(20,y+22,92,32);
             const int available=width-104;
             degree[i]->setBounds(124,y,available/4,62);octave[i]->setBounds(134+available/4,y,available/4,62);
             level[i]->setBounds(144+available/2,y,available/2-20,62);
         }
-        original->setBounds(20,438,width/2,62);help.setBounds(20,504,width,30);
-        status.setBounds(20,540,width-202,56);restart.setBounds(getWidth()-202,552,182,32);
+        original->setBounds(20,514,width/2,62);help.setBounds(20,580,width,30);
+        status.setBounds(20,614,width-202,56);restart.setBounds(getWidth()-202,626,182,32);
     }
 private:
     void timerCallback() override
@@ -143,6 +174,7 @@ private:
     Processor& owner;
     juce::Label title,warning,help,status;
     std::unique_ptr<Choice> key,scale,source;
+    std::unique_ptr<Mix> mix;
     std::array<juce::ToggleButton,3> enabled;
     std::array<std::unique_ptr<Level>,3> degree,octave,level;
     std::unique_ptr<Level> original;
