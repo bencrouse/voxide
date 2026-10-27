@@ -675,3 +675,32 @@ installed-AU/user-workflow, actual Logic/whole-host/soak, independent listening/
 rubric, full-support/challenge-c, final studio or licensing/distribution gates.
 Preserve the original failure and all artifact histories. No push, installation,
 host/device/playback operation, private-source access or new research is authorized.
+
+## Original / harmonies mix follow-up (2026-10-27)
+
+The user reports that harmonies are too quiet relative to the original and asks
+for a mix-style UI. On `fix-harmony-mix`, add a prominent, genuine automatable
+Original ↔ Harmonies balance while retaining existing per-voice/original trims.
+Use centre-unity attenuation: 50% retains the exact old sound; turning right
+reduces the original rather than boosting the wet sum. Keep the one-third voice
+gain and 10 ms smoothing; add no limiter/normalization or extra latency.
+
+Version 0.5.0 appends `harmonyMix` after the existing 30 parameters (new version
+hint 4) and writes v5 state. V4 loads at centre; older dry-only migrations remain.
+No old host parameter meaning/order/range/default changes. This authorizes the
+declared mixing/UI change, not changes to pitch/worker architecture or frozen
+qualification gates, installation/Logic/device/playback/private-source operations,
+new dependencies, historical timing/research reruns, merge or push.
+
+## Harmony Mix and AU reload local merge authorization (2026-10-27)
+
+After implementation of the 0.5.0 Mix control and the timestamp/registry-wait
+reload repair, the user requested "ok please commit and merge". Commit
+`fix-harmony-mix` and merge it locally into `main`; no push or additional installed
+operations. Mix passed Release/Debug 11/11 and ASan/TSan 4/4 each; the subsequent
+Python-only reload repair passed all 295 Python tests and uninstalled-copy
+signature preservation checks. Evidence lives under `docs/evidence/harmony-mix/`.
+
+No new successful actual registry/Logic result was supplied, so none is inferred
+from this merge approval. Existing PR08 acceptance stands; PR09's variable-block
+failure and remaining formal studio/host/listening/licensing gates stay open.

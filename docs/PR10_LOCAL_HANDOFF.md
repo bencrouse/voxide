@@ -1,5 +1,9 @@
 # Local handoff — studio-first scale-mode milestone
 
+This preserves the PR10 **0.4.0** handoff and its exact artifacts. The subsequent
+**0.5.0** [harmony Mix control](HARMONY_MIX.md) appends one parameter and migrates
+old states without changing their sound. The qualification no-go is unchanged.
+
 **NO-GO for qualified studio use / public release.** This is a reproducible local
 engineering handoff, not completion of the original live/MIDI/±24 brief. Product
 0.4.0 is available for deliberately chosen local evaluation only. Both original

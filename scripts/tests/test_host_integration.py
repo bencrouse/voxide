@@ -105,6 +105,16 @@ class HostIntegrationTests(unittest.TestCase):
             self.assertEqual(report["status"],"fail");self.assertEqual(report["host_acceptance"],"pending_user_session")
             self.assertFalse(report["Logic_operated"])
 
+    def test_mix_product_version_can_use_build_only_native_checks(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();build=self.fixture(root);output=root/"run"
+            with patch.object(host.au,"check_identity",return_value="0.5.0"),patch.object(host,"verify_linkage"), \
+                 patch.object(host.au,"fingerprint",return_value={}),patch.object(host,"run_native") as native:
+                host.check(build,output)
+            native.assert_called_once();report=host.load_json(output/"report.json")
+            self.assertEqual(report["operation"],"build-only");self.assertEqual(report["host_acceptance"],"pending_user_session")
+            self.assertFalse(report["installed_auval_executed"]);self.assertFalse(report["Logic_operated"])
+
     def test_default_kit_refuses_symlink_evidence_root(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp).resolve();(root/"outside").mkdir();(root/"evaluation").symlink_to(root/"outside",target_is_directory=True)

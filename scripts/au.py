@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +23,7 @@ BUNDLE_ID = "com.voxide.audio.voxide"
 IDENTITY = {"type": "aumf", "subtype": "Vx00", "manufacturer": "Vxid"}
 DEFAULT_INSTALL = Path.home() / "Library/Audio/Plug-Ins/Components"
 DEFAULT_STATE = Path.home() / ".local/state/voxide"
+VALIDATION_RETRY_DELAYS = (0.5, 1.0, 2.0, 4.0)
 
 
 def no_symlinks(path):
@@ -103,6 +105,10 @@ def sign(bundle):
     subprocess.run(["codesign", "--verify", "--deep", "--strict", str(bundle)], check=True)
 
 
+class RegistryVersionMismatch(ValueError):
+    pass
+
+
 def verify_validation_output(text, expected_version):
     if "AU VALIDATION SUCCEEDED." not in text:
         raise ValueError("auval did not report successful validation")
@@ -110,10 +116,11 @@ def verify_validation_output(text, expected_version):
     if identity not in text:
         raise ValueError("auval validated a different component identity")
     version = re.search(r"Component Version:\s*(\d+\.\d+\.\d+)", text)
-    if version is None or version.group(1) != expected_version:
-        actual = version.group(1) if version else "missing"
-        raise ValueError(f"AU registry version is {actual}, expected {expected_version}. "
-                         "Rescan only Voxide in Logic's Plug-in Manager before claiming installed-host acceptance; do not reset broad caches.")
+    if version is None:
+        raise ValueError("auval did not report a component version")
+    if version.group(1) != expected_version:
+        raise RegistryVersionMismatch(f"AU registry version is {version.group(1)}, expected {expected_version}. "
+                          "Rescan only Voxide in Logic's Plug-in Manager before claiming installed-host acceptance; do not reset broad caches.")
 
 
 def owned_component(target, ledger):
@@ -153,6 +160,10 @@ def install(source, install_dir, state_dir, signer=sign):
             shutil.copytree(source, staged)
             signer(staged)
             check_identity(staged)
+            # copytree preserves the old build directory timestamp even when
+            # nested code/plist files are new. Refresh just this signed bundle's
+            # directory so AU discovery can observe the replacement; no cache reset.
+            os.utime(staged, None, follow_symlinks=False)
             data = {"path": str(target), "version": version, "files": fingerprint(staged)}
             candidate_identity = entry_identity(staged)
             pending = state_dir / ("au-install-" + uuid.uuid4().hex + ".json")
@@ -201,6 +212,71 @@ def install(source, install_dir, state_dir, signer=sign):
                 raise
         return {"installed": str(target), "version": version,
                 "backup": str(backup) if backup else None, "files": data["files"]}
+
+
+def validate(install_dir, state_dir, report_dir, result, *, retry_delays=VALIDATION_RETRY_DELAYS, sleeper=time.sleep):
+    """Validate the owned AU, allowing bounded time for registry refresh only."""
+    install_dir = no_symlinks(install_dir)
+    state_dir = no_symlinks(state_dir)
+    report_dir = no_symlinks(report_dir)
+    target = no_symlinks(install_dir / COMPONENT)
+    ledger = no_symlinks(state_dir / "au-install.json")
+    lock = no_symlinks(state_dir / "au-install.lock")
+    with lock.open("a") as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX)
+        installed = owned_component(target, ledger)
+        target_identity, ledger_identity = entry_identity(target), entry_identity(ledger)
+        ledger_bytes = ledger.read_bytes()
+
+        def unchanged():
+            no_symlinks(ledger)
+            if (entry_identity(target) != target_identity or entry_identity(ledger) != ledger_identity
+                    or ledger.read_bytes() != ledger_bytes or fingerprint(target) != installed["files"]):
+                raise RuntimeError("Owned AU/ledger changed during validation; refusing further refresh or retries")
+
+        unchanged()
+        subprocess.run(["codesign", "--verify", "--deep", "--strict", str(target)], check=True)
+        unchanged()
+        # Also repair an earlier install's preserved timestamp when the user runs
+        # validate-au alone. Signed files, ledger and unrelated components stay intact.
+        os.utime(target, None, follow_symlinks=False)
+        unchanged()
+        result["files"] = installed["files"]
+        result["bundle_timestamp_refreshed"] = True
+        command = ["launchctl", "asuser", str(os.getuid()), "/usr/bin/auval", "-v",
+                   IDENTITY["type"], IDENTITY["subtype"], IDENTITY["manufacturer"]]
+        result["command"] = command
+        attempts = result["validation_attempts"] = []
+        for attempt in range(len(retry_delays) + 1):
+            unchanged()
+            name = "auval.log" if attempt == 0 else f"auval-retry-{attempt}.log"
+            row = {"log": name, "status": "running"}
+            attempts.append(row)
+            with (report_dir / name).open("x") as log:
+                process = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+            row["exit_code"] = result["exit_code"] = process.returncode
+            unchanged()
+            text = (report_dir / name).read_text()
+            print(text)
+            if process.returncode:
+                row["status"] = "failed_auval"
+                raise subprocess.CalledProcessError(process.returncode, command)
+            try:
+                verify_validation_output(text, installed["version"])
+            except RegistryVersionMismatch as error:
+                row.update(status="stale_registry_version", error=str(error))
+                if attempt == len(retry_delays):
+                    raise
+                delay = retry_delays[attempt]
+                row["retry_delay_seconds"] = delay
+                print(f"AU registry has not refreshed to {installed['version']} yet; retrying in {delay:g}s. No shared caches/processes changed.")
+                sleeper(delay)
+                continue
+            except BaseException as error:
+                row.update(status="fail", error=str(error) or type(error).__name__)
+                raise
+            row["status"] = "pass"
+            return
 
 
 def write_exclusive_json(path, value):
@@ -337,20 +413,7 @@ def main():
             print("Owned product removed from discovery; recoverable component:", result["retained_component"])
             print("Retained ownership receipt:", result["retained_ledger"])
         else:
-            target = DEFAULT_INSTALL / COMPONENT
-            installed = owned_component(target, DEFAULT_STATE / "au-install.json")
-            subprocess.run(["codesign", "--verify", "--deep", "--strict", str(target)], check=True)
-            result["files"] = fingerprint(target)
-            command = ["launchctl", "asuser", str(os.getuid()), "/usr/bin/auval", "-v",
-                       IDENTITY["type"], IDENTITY["subtype"], IDENTITY["manufacturer"]]
-            result["command"] = command
-            with (report_dir / "auval.log").open("w") as log:
-                process = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
-            result["exit_code"] = process.returncode
-            print((report_dir / "auval.log").read_text())
-            if process.returncode:
-                raise subprocess.CalledProcessError(process.returncode, command)
-            verify_validation_output((report_dir / "auval.log").read_text(), installed["version"])
+            validate(DEFAULT_INSTALL, DEFAULT_STATE, report_dir, result)
         result["status"] = "pass"
     except BaseException as error:
         result["status"] = "fail"

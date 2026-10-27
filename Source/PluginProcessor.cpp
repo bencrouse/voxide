@@ -55,6 +55,12 @@ Processor::Processor(studio::Factory nativeFactory)
     originalLevel=new juce::AudioParameterFloat(juce::ParameterID{"originalLevel",3},"Original level",juce::NormalisableRange<float>{-60,0},0,
         levelAttributes());
     addParameter(originalLevel);
+    harmonyMix=new juce::AudioParameterFloat(juce::ParameterID{"harmonyMix",4},"Original / harmonies mix",
+        juce::NormalisableRange<float>{0,100},50,
+        juce::AudioParameterFloatAttributes().withLabel("%")
+            .withStringFromValueFunction([](float value,int){return juce::String(value,0)+"%";})
+            .withValueFromStringFunction([](const juce::String& text){return text.getFloatValue();}));
+    addParameter(harmonyMix);
 }
 Processor::~Processor() { releaseResources(); }
 
@@ -115,8 +121,13 @@ Processor::RenderSettings Processor::captureSettings() const noexcept
     RenderSettings settings;settings.source=sourceChoice->getIndex();settings.variant=trackerChoice->getIndex();
     settings.harmony=musicalConfig();settings.generation=generation;
     auto gain=[](float db) { return db<=-60?0.f:juce::Decibels::decibelsToGain(db); };
-    for (std::size_t i=0;i<3;++i) settings.voiceGain[i]=voiceEnabled[i]->get()?gain(voiceLevels[i]->get()):0.f;
-    settings.originalGain=gain(originalLevel->get());return settings;
+    // Centre-unity balance: retain the exact legacy blend at 50%, with no
+    // additional gain/headroom cost. Moving right reduces only the original;
+    // moving left reduces only the harmonies. The existing 10 ms ramps apply.
+    const float mix=harmonyMix->get()/100.f;
+    const float wet=std::min(1.f,2.f*mix),dry=std::min(1.f,2.f*(1.f-mix));
+    for (std::size_t i=0;i<3;++i) settings.voiceGain[i]=voiceEnabled[i]->get()?gain(voiceLevels[i]->get())*wet:0.f;
+    settings.originalGain=gain(originalLevel->get())*dry;return settings;
 }
 Processor::RenderSettings Processor::readSettings() noexcept
 {
@@ -426,7 +437,7 @@ void Processor::render(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi,
 void Processor::getStateInformation(juce::MemoryBlock& destination)
 {
     const std::lock_guard lock(stateMutex);
-    constexpr char prefix[] = "voxide-studio-v4";
+    constexpr char prefix[] = "voxide-studio-v5";
     const auto& parameters = getParameters();
     destination.setSize(sizeof(prefix) + static_cast<std::size_t>(parameters.size()) * sizeof(float));
     std::memcpy(destination.getData(), prefix, sizeof(prefix));
@@ -438,7 +449,7 @@ void Processor::getStateInformation(juce::MemoryBlock& destination)
     }
 }
 
-void Processor::applyState(const std::array<float,30>& values)
+void Processor::applyState(const StateValues& values)
 {
     // Called under stateMutex, including reentrant host/listener calls. Coalesce
     // nested requests into one last-wins deferred recall. Notifications from that
@@ -450,7 +461,7 @@ void Processor::applyState(const std::array<float,30>& values)
     }
     const juce::ScopedValueSetter<bool> recalling(recallingState,true);
     deferredState.reset();
-    auto publish=[&](const std::array<float,30>& state)
+    auto publish=[&](const StateValues& state)
     {
         stateGeneration.fetch_add(1,std::memory_order_acq_rel);
         const auto& parameters=getParameters();
@@ -476,18 +487,21 @@ void Processor::setStateInformation(const void* data, int size)
     constexpr char legacy[] = "voxide-shell-v1";
     constexpr char prefix[] = "voxide-shell-v2";
     constexpr char tracking[] = "voxide-tracking-v3";
-    constexpr char current[] = "voxide-studio-v4";
+    constexpr char studio[] = "voxide-studio-v4";
+    constexpr char current[] = "voxide-studio-v5";
     const auto& parameters = getParameters();
-    const bool v4=size==static_cast<int>(sizeof(current)+30*sizeof(float)) && std::memcmp(data,current,sizeof(current))==0;
+    const bool v5=size==static_cast<int>(sizeof(current)+parameterCount*sizeof(float)) && std::memcmp(data,current,sizeof(current))==0;
+    const bool v4=size==static_cast<int>(sizeof(studio)+30*sizeof(float)) && std::memcmp(data,studio,sizeof(studio))==0;
     const bool v3=size==static_cast<int>(sizeof(tracking)+23*sizeof(float)) && std::memcmp(data,tracking,sizeof(tracking))==0;
-    if (v4 || v3)
+    if (v5 || v4 || v3)
     {
-        std::array<float, 30> values {};
+        StateValues values {};
         if (parameters.size() != static_cast<int>(values.size())) return;
         for (std::size_t i=0;i<values.size();++i) values[i]=parameters[static_cast<int>(i)]->getDefaultValue();
         if (v3) for (std::size_t i=23;i<29;i+=2) values[i]=0; // Old sessions were dry-only.
-        const auto* bytes = static_cast<const unsigned char*>(data) + (v4?sizeof(current):sizeof(tracking));
-        for (std::size_t index=0;index<(v4?30u:23u);++index)
+        const auto* bytes = static_cast<const unsigned char*>(data) + (v5?sizeof(current):v4?sizeof(studio):sizeof(tracking));
+        const auto count=v5?parameterCount:v4?30u:23u;
+        for (std::size_t index=0;index<count;++index)
         {
             std::uint32_t bits = 0;
             for (unsigned j = 0; j < 4; ++j) bits |= static_cast<std::uint32_t>(*bytes++) << (j * 8);
@@ -500,7 +514,7 @@ void Processor::setStateInformation(const void* data, int size)
     }
     auto restoreLegacy = [&](int source)
     {
-        std::array<float,30> values {};
+        StateValues values {};
         for (std::size_t i=0;i<values.size();++i) values[i]=parameters[static_cast<int>(i)]->getDefaultValue();
         values[0]=static_cast<float>(source);
         for (std::size_t i=23;i<29;i+=2) values[i]=0;

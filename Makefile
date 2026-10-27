@@ -7,7 +7,7 @@ help:
 	@echo "make check       Debug build/tests (no install or audio device)"
 	@echo "make check-full  Debug/Release + focused ASan/TSan (no install)"
 	@echo "make build       AU + development Standalone; PROFILE=release for Release"
-	@echo "make reload-au   Explicit Release build/install/ad-hoc sign/auval"
+	@echo "make reload-au   Explicit Release build/install/refresh/validate; quit Logic first"
 	@echo "make host-check  PR08 exact-built-AU bounce and fresh-process checks; no installation/Logic/device"
 	@echo "make host-kit    New synthetic Logic checklist/probes; no project/recording/playback opened"
 	@echo "make session-screen  Release synthetic full-AU timing/allocation screen; no Logic/audio device"

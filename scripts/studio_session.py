@@ -56,7 +56,7 @@ def validate_header(row,expected_binary_sha256):
         value=row[key]
         require(type(value) is str and len(value)<=limit and "\0" not in value and (value or key in ("os","cpu")),"Invalid header text: "+key)
     require(row["kind"]=="header" and row["schema"]=="voxide.pr09-session.v1","Wrong session metadata header")
-    require(row["version"]=="0.4.0" and row["profile"]=="Release" and row["pcm_recorded"] is False
+    require(row["version"] in ("0.4.0","0.5.0") and row["profile"]=="Release" and row["pcm_recorded"] is False
         and row["allocation_audit_available"] is False and row["scope"]=="processor render body only; excludes AU wrapper, telemetry collection and file IO","Wrong/unqualified capture scope")
     require(Path(row["module_path"]).is_absolute(),"Module path must be absolute metadata, not an accessed file")
     require(row["module_file_sha256"]==expected_binary_sha256,"Module file differs from requested candidate")
@@ -106,7 +106,7 @@ def screen(build,output=None):
     build=au.no_symlinks(Path(build).absolute());binary,profile=native_binary(build)
     require(profile=="Release","Timing requires Release; Debug/sanitizers are not performance evidence")
     component=build/"voxide_artefacts/Release/AU/voxide.component"
-    require(au.check_identity(component)=="0.4.0","Build the PR09 instrumented product first");verify_linkage(component)
+    require(au.check_identity(component) in ("0.4.0","0.5.0"),"Build the instrumented studio product first");verify_linkage(component)
     expected=au.fingerprint(component);helper_hash=sha256(binary);contract_hash=sha256(CONTRACT)
     directory=au.no_symlinks(Path(output).absolute() if output else ROOT/"build/pr-09-screens"/stamp());directory.mkdir(parents=True,exist_ok=False)
     report={"schema":"voxide.pr09-screen-report.v2","status":"running","cases":[],"component":str(component),"component_files":expected,
