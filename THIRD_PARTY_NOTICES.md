@@ -107,3 +107,38 @@ The bounded `ArchitectureEvaluation/` diagnostics reuse the same pins and compar
 Signalsmith Linear's existing built-in FFT with Accelerate. They add no dependency
 or upstream-source patch and remain isolated local research, including the same
 Rubber Band GPL obligations; they do not authorize product linkage/distribution.
+
+## Current product linkage (PR07–PR10; supersedes historical evaluator-only labels)
+
+The earlier sections describe the research stages when the packages were isolated.
+Since PR07, the local product **does statically link the same pinned Rubber Band
+4.0.0 source** (`1d95888bec3ae0a17c0c4af791810d5a63f6bc35`) through
+`cmake/StudioDependency.cmake` and `scripts/product_dependencies.py`. No new pin,
+commercial SDK/license, package install or upstream patch was adopted. The shared
+pin inventory's historical "local evaluator only" wording is not a claim that
+Rubber Band is absent from the current product or exempt from its license.
+
+The exact pinned `README.md` states **GPL-2.0-or-later**, points to `COPYING`, and
+requires a commercial license for distribution under other terms, explicitly
+including Apple App Store distribution. No commercial license was bought or
+assumed. The current single-file build uses R3 short, preserved formants, native
+consonants, no native internal threading, Apple Accelerate/vDSP and the built-in
+resampler; alternative Signalsmith engines remain outside normal product linkage.
+
+JUCE remains under the user-selected AGPLv3 option. Private local development is
+the authorized use; this inventory **does not clear distribution or decide the
+combined work's legal obligations**. Before conveying a binary/source package or
+offering covered modified software over a network, review the exact applicable
+AGPL/GPL terms, choice of the GPL "or later" version, combination obligations,
+corresponding source/build materials, notices, full license texts and any required
+source offer/access. A binary hash or ad-hoc signature is not license clearance.
+The repository has no newly granted proprietary/public redistribution license.
+
+Preserve the complete pinned archives/source inventories, not just selected
+notice excerpts. Required evidence locations for this build include JUCE
+`LICENSE.md` and referenced dependency notices, and Rubber Band `COPYING`,
+`README.md`, `COMPILING.md` and single-compilation-unit source. Apple frameworks
+and CommonCrypto are existing system SDK APIs, not vendored dependencies.
+No paid signing, notarization, SDK account, installer, download, upload or public
+release is performed by the PR10 handoff. See `docs/PR10_LOCAL_HANDOFF.md` for
+the zero-spend/evidence audit and unresolved licensing boundary.

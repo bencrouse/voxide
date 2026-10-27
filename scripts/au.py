@@ -203,18 +203,139 @@ def install(source, install_dir, state_dir, signer=sign):
                 "backup": str(backup) if backup else None, "files": data["files"]}
 
 
+def write_exclusive_json(path, value):
+    descriptor = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, "w") as stream:
+        json.dump(value, stream, indent=2)
+        stream.write("\n")
+
+
+def uninstall(install_dir, state_dir, *, allow=False):
+    """Remove only the owned product from discovery, retaining every byte/receipt."""
+    if not allow:
+        raise ValueError("Uninstall requires explicit --allow-uninstall approval")
+    install_dir = no_symlinks(install_dir)
+    state_dir = no_symlinks(state_dir)
+    if (state_dir == install_dir or state_dir.is_relative_to(install_dir)
+            or install_dir.is_relative_to(state_dir)):
+        raise ValueError("Uninstall state and AU discovery directories must be disjoint")
+    target = no_symlinks(install_dir / COMPONENT)
+    ledger = no_symlinks(state_dir / "au-install.json")
+    lock = no_symlinks(state_dir / "au-install.lock")
+    # Missing/unknown installs are not silently accepted; their ledgers stay intact.
+    with lock.open("a") as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX)
+        if not present(target):
+            raise ValueError("No installed product component; ownership state preserved")
+        previous = owned_component(target, ledger)
+        component_identity = entry_identity(target)
+        ledger_identity = entry_identity(ledger)
+        ledger_bytes = ledger.read_bytes()
+        if json.loads(ledger_bytes) != previous:
+            raise RuntimeError("Ownership ledger changed during uninstall preflight")
+
+        def known_component(path):
+            try:
+                return entry_identity(path) == component_identity and fingerprint(path) == previous["files"]
+            except (OSError, ValueError):
+                return False
+
+        def known_ledger(path):
+            try:
+                no_symlinks(path)
+                return entry_identity(path) == ledger_identity and path.read_bytes() == ledger_bytes
+            except (OSError, ValueError):
+                return False
+
+        retained_root = no_symlinks(state_dir / "uninstalled")
+        retained_root.mkdir(exist_ok=True)
+        operation = retained_root / uuid.uuid4().hex
+        operation.mkdir(exist_ok=False)
+        retained = operation / COMPONENT
+        receipt = operation / "au-install.json"
+        info = {"schema": "voxide.au-uninstall.v1", "status": "started",
+                "target": str(target), "retained_component": str(retained),
+                "retained_ledger": str(receipt), "files": previous["files"],
+                "policy": "quarantine outside AU discovery; no deletion or cache reset"}
+        write_exclusive_json(operation / "started.json", info)
+        component_move_attempted = ledger_move_attempted = False
+        try:
+            if not known_component(target) or not known_ledger(ledger):
+                raise RuntimeError("Owned component/ledger changed before uninstall")
+            # Mark the attempt first: Ctrl-C can arrive after the kernel rename
+            # succeeds but before Python resumes. Rollback still verifies bytes
+            # and identity before moving anything back.
+            component_move_attempted = True
+            rename_exclusive(target, retained)
+            if not known_component(retained):
+                raise RuntimeError("Moved component changed; unverified bytes retained")
+            if not known_ledger(ledger):
+                raise RuntimeError("Ownership ledger changed before receipt retention")
+            ledger_move_attempted = True
+            rename_exclusive(ledger, receipt)
+            if not known_ledger(receipt) or not known_component(retained):
+                raise RuntimeError("Retained component/receipt changed during uninstall")
+            if present(target) or present(ledger):
+                raise RuntimeError("New target/ledger appeared during uninstall")
+            result = dict(info, status="uninstalled_recoverable")
+            write_exclusive_json(operation / "result.json", result)
+            return result
+        except BaseException as failure:
+            # No recursive cleanup, unlinks, overwrites or uncertain-entry moves.
+            # Restore only verified originals to vacant original destinations.
+            rollback_errors = []
+            try:
+                if ledger_move_attempted:
+                    if known_ledger(receipt) and not present(ledger):
+                        rename_exclusive(receipt, ledger)
+                    if not known_ledger(ledger):
+                        raise RuntimeError("Original ownership receipt cannot be safely restored")
+                if component_move_attempted:
+                    if known_component(retained) and known_ledger(ledger) and not present(target):
+                        rename_exclusive(retained, target)
+                    if not known_component(target):
+                        raise RuntimeError("Original component cannot be safely restored")
+            except BaseException as error:
+                rollback_errors.append(str(error) or type(error).__name__)
+            status = "failed_rolled_back" if known_component(target) and known_ledger(ledger) else "failed_manual_recovery"
+            try:
+                write_exclusive_json(operation / "failure.json", dict(info, status=status,
+                    error=str(failure) or type(failure).__name__,
+                    error_type=type(failure).__name__, rollback_errors=rollback_errors))
+            except BaseException as error:
+                print(f"Uninstall failure receipt could not be written; evidence retained at {operation}: {error}", file=sys.stderr)
+            if status == "failed_manual_recovery":
+                message = f"Uninstall failed; uncertain files retained at {operation}; manual recovery required: {failure}; {rollback_errors}"
+                if not isinstance(failure, Exception):
+                    print(message, file=sys.stderr)
+                    raise
+                raise RuntimeError(message) from failure
+            raise
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["install", "validate"])
+    parser.add_argument("action", choices=["install", "validate", "uninstall"])
     parser.add_argument("--build-dir", type=Path, default=ROOT / "build/local-release")
+    parser.add_argument("--component", type=Path, help="Install an exact preserved product component without rebuilding")
+    parser.add_argument("--allow-uninstall", action="store_true", help="Explicitly quarantine the owned installed product; never delete it")
     args = parser.parse_args()
+    if args.component is not None and args.action != "install":
+        parser.error("--component applies only to install")
+    if args.action == "uninstall" and not args.allow_uninstall:
+        parser.error("uninstall requires --allow-uninstall; quit Logic yourself first")
     report_dir = ROOT / "build/au-checks" / (datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8])
     report_dir.mkdir(parents=True)
     result = {"action": args.action, "identity": IDENTITY, "status": "running"}
     try:
         if args.action == "install":
-            result.update(install(args.build_dir / "voxide_artefacts/Release/AU" / COMPONENT,
-                                  DEFAULT_INSTALL, DEFAULT_STATE))
+            result.update(install(args.component if args.component is not None else args.build_dir / "voxide_artefacts/Release/AU" / COMPONENT,
+                                   DEFAULT_INSTALL, DEFAULT_STATE))
+        elif args.action == "uninstall":
+            result.update(uninstall(DEFAULT_INSTALL, DEFAULT_STATE, allow=args.allow_uninstall))
+            result["operation_status"] = result["status"]
+            print("Owned product removed from discovery; recoverable component:", result["retained_component"])
+            print("Retained ownership receipt:", result["retained_ledger"])
         else:
             target = DEFAULT_INSTALL / COMPONENT
             installed = owned_component(target, DEFAULT_STATE / "au-install.json")
@@ -231,9 +352,10 @@ def main():
                 raise subprocess.CalledProcessError(process.returncode, command)
             verify_validation_output((report_dir / "auval.log").read_text(), installed["version"])
         result["status"] = "pass"
-    except Exception as error:
+    except BaseException as error:
         result["status"] = "fail"
-        result["error"] = str(error)
+        result["error"] = str(error) or type(error).__name__
+        result["error_type"] = type(error).__name__
         raise
     finally:
         (report_dir / "result.json").write_text(json.dumps(result, indent=2) + "\n")

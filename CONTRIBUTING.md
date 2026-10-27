@@ -9,7 +9,7 @@ make routing-check                          # device-free inner loop, no Logic U
 make evaluation-check                       # immutable analytic fixtures/metric controls
 python3 scripts/check.py --profile release --offline
 python3 scripts/check.py --full --fresh --offline  # new build trees, no deletion
-cmake --preset local-debug
+cmake --preset local-debug -DVOXIDE_OFFLINE=ON
 cmake --build --preset local-debug
 ctest --preset local-debug
 ```
@@ -34,14 +34,17 @@ Logs are written before/after failure too. No upload, hostname, or serial collec
 
 ## Dependencies
 
-Default acquisition downloads exactly the pin in `cmake/JucePin.cmake` into
-`.cache/dependencies/`, verifies its SHA-256, then extracts into the selected build.
+Default Makefile product commands require the existing pinned archives in
+`.cache/dependencies/` offline; a missing/corrupt archive fails rather than downloads.
+Direct CMake without `VOXIDE_OFFLINE=ON` retains the historical JUCE download path;
+do not use that path as part of this handoff. No new acquisition is authorized.
+The archive SHA-256 is verified before extraction into the selected build.
 Each configure rechecks the archive and an archive-derived digest of the extracted
 tree, including hidden/additional files and symlinks. Reused edited source is rejected
 without overwriting it; use a fresh build directory to recover. An older unverified
 tree is adopted only if identical to a new canonical extraction. Downloads are
 serialized across build profiles. Do not edit the extracted dependency source;
-use an explicit checkout for inspection. After fetching:
+use an explicit checkout for inspection. With the existing cache:
 
 ```sh
 cmake --preset local-release -DVOXIDE_OFFLINE=ON
@@ -101,6 +104,16 @@ renames; a cross-volume error fails safely, without a clobbering copy fallback.
 Do not manually
 delete/re-sign an installed bundle then expect the helper to treat it as unchanged.
 No automatic uninstall or backup pruning is part of PR 00.
+
+PR10 adds **explicit reversible uninstall**, not automatic cleanup:
+`python3 scripts/au.py uninstall --allow-uninstall` after quitting Logic yourself.
+The exact owned component/ledger move to a unique retained path outside AU
+discovery. Edited/unknown files are refused; no recursive deletion/cache reset or
+automatic older-version restoration occurs. `install --component PATH` can copy
+an exact retained candidate without rebuilding it. See
+[the current local handoff](docs/PR10_LOCAL_HANDOFF.md) for recovery and the
+unresolved negative qualification. These instructions do not authorize the agent
+to operate the actual installed AU automatically.
 
 `scripts/au.py validate` requires the reported component identity/version and
 success marker, not just `auval` exit status. A stale registry must be handled by
