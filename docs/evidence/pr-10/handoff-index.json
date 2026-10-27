@@ -21,6 +21,8 @@
     {"id":"pr09-negative-screen","status":"not_qualified","document":"docs/evidence/pr-09/implementation-001.md","artifact_manifest":"build/pr-09-artifacts/ready-20261026-01/artifacts.json","scope":"Both 44.1 kHz variable-block v1 screen repeats miss wet output; failures/outliers retained"},
     {"id":"pr09-reviewed-observations","status":"reviewed_fixes_still_not_qualified","document":"docs/evidence/pr-09/review-fixes-001.md","artifact_manifest":"build/pr-09-artifacts/ready-20261026-02/artifacts.json","scope":"R1/R2/R3/P3 source-verified fixes; 245 Python tests; v2 timing not rerun/regraded"},
     {"id":"pr10-local-handoff","status":"negative_qualification_handoff","document":"docs/evidence/pr-10/implementation-001.md","artifact_manifest":"build/pr-10-artifacts/ready-20261026-01/artifacts.json","scope":"Local reproducibility, reversible uninstall and no-go; not a public or qualified release"},
+    {"id":"pr10-independent-review","status":"two_P2_findings","document":"docs/evidence/pr-10/review-001.md","scope":"Read-only independent review of ef80f07..ab4c1ed; interruption safety and generator selection"},
+    {"id":"pr10-review-repairs","status":"review_repairs_NOT_qualification","document":"docs/evidence/pr-10/review-fixes-001.md","scope":"Interruption rollback/reporting and pinned single-config generator; original artifacts/failures retained"},
     {"id":"licensing-privacy-and-cost","status":"local_only_distribution_clearance_open","document":"docs/PR10_LOCAL_HANDOFF.md","scope":"Zero new expenditure; JUCE AGPLv3/Rubber Band GPL source obligations and private recording separation"}
   ]
 }

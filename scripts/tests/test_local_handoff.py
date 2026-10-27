@@ -2,6 +2,7 @@ from pathlib import Path
 import hashlib
 import json
 import plistlib
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -109,3 +110,29 @@ class LocalHandoffTests(unittest.TestCase):
         with patch.object(handoff.subprocess,"check_output",side_effect=["","revision","tree"]),patch.object(handoff.subprocess,"run") as run,self.assertRaisesRegex(ValueError,"offline archive"):
             handoff.reproduce(self.root/"cache")
         run.assert_not_called();self.assertFalse((self.root/"build/pr-10-reproduction").exists())
+
+    def test_reproduction_pins_single_configuration_generator_for_every_profile(self):
+        cache={"directory":str(self.root/"cache"),"archives_sha256":{},"downloads_performed":False}
+        for generator in ("Xcode","Ninja Multi-Config"):
+            with self.subTest(inherited_generator=generator):
+                output=self.root/"build"/generator
+                def run(command,**kwargs):
+                    if command[0]=="ctest":
+                        log=Path(command[command.index("--test-dir")+1])/"Testing/Temporary/LastTest.log"
+                        log.parent.mkdir(parents=True);log.write_text("synthetic command-generation fixture")
+                    return subprocess.CompletedProcess(command,0)
+                with patch.dict(handoff.os.environ,{"CMAKE_GENERATOR":generator}), \
+                     patch.object(handoff.subprocess,"check_output",side_effect=["","revision","tree","revision","","","tree"]), \
+                     patch.object(handoff.subprocess,"run",side_effect=run),patch.object(handoff,"cache_inventory",return_value=cache), \
+                     patch.object(handoff,"inspect_component",return_value={"fixture":True}):
+                    handoff.reproduce(self.root/"cache",output)
+                report=handoff.load_json(output/"report.json")
+                self.assertEqual(report["qualification"],"not_qualified")
+                self.assertEqual(report["status"],"clean_checkout_cache_only_checks_pass_NOT_qualification")
+                configure=[row["argv"] for row in report["commands"] if row["label"].endswith("-configure")]
+                self.assertEqual(len(configure),4)
+                for index,command in enumerate(configure):
+                    self.assertEqual(command[command.index("-G")+1],"Unix Makefiles")
+                    self.assertIn("-DCMAKE_BUILD_TYPE="+("Release" if index==0 else "Debug"),command)
+                    self.assertIn("-DVOXIDE_OFFLINE=ON",command)
+                self.assertEqual(len([row for row in report["commands"] if row["label"].endswith("-tests")]),4)

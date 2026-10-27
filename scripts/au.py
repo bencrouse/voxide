@@ -258,18 +258,21 @@ def uninstall(install_dir, state_dir, *, allow=False):
                 "retained_ledger": str(receipt), "files": previous["files"],
                 "policy": "quarantine outside AU discovery; no deletion or cache reset"}
         write_exclusive_json(operation / "started.json", info)
-        component_moved = ledger_moved = False
+        component_move_attempted = ledger_move_attempted = False
         try:
             if not known_component(target) or not known_ledger(ledger):
                 raise RuntimeError("Owned component/ledger changed before uninstall")
+            # Mark the attempt first: Ctrl-C can arrive after the kernel rename
+            # succeeds but before Python resumes. Rollback still verifies bytes
+            # and identity before moving anything back.
+            component_move_attempted = True
             rename_exclusive(target, retained)
-            component_moved = True
             if not known_component(retained):
                 raise RuntimeError("Moved component changed; unverified bytes retained")
             if not known_ledger(ledger):
                 raise RuntimeError("Ownership ledger changed before receipt retention")
+            ledger_move_attempted = True
             rename_exclusive(ledger, receipt)
-            ledger_moved = True
             if not known_ledger(receipt) or not known_component(retained):
                 raise RuntimeError("Retained component/receipt changed during uninstall")
             if present(target) or present(ledger):
@@ -277,31 +280,36 @@ def uninstall(install_dir, state_dir, *, allow=False):
             result = dict(info, status="uninstalled_recoverable")
             write_exclusive_json(operation / "result.json", result)
             return result
-        except Exception as failure:
+        except BaseException as failure:
             # No recursive cleanup, unlinks, overwrites or uncertain-entry moves.
             # Restore only verified originals to vacant original destinations.
             rollback_errors = []
             try:
-                if ledger_moved:
+                if ledger_move_attempted:
                     if known_ledger(receipt) and not present(ledger):
                         rename_exclusive(receipt, ledger)
                     if not known_ledger(ledger):
                         raise RuntimeError("Original ownership receipt cannot be safely restored")
-                if component_moved:
+                if component_move_attempted:
                     if known_component(retained) and known_ledger(ledger) and not present(target):
                         rename_exclusive(retained, target)
                     if not known_component(target):
                         raise RuntimeError("Original component cannot be safely restored")
-            except Exception as error:
-                rollback_errors.append(str(error))
+            except BaseException as error:
+                rollback_errors.append(str(error) or type(error).__name__)
             status = "failed_rolled_back" if known_component(target) and known_ledger(ledger) else "failed_manual_recovery"
             try:
                 write_exclusive_json(operation / "failure.json", dict(info, status=status,
-                    error=str(failure), rollback_errors=rollback_errors))
-            except Exception as error:
+                    error=str(failure) or type(failure).__name__,
+                    error_type=type(failure).__name__, rollback_errors=rollback_errors))
+            except BaseException as error:
                 print(f"Uninstall failure receipt could not be written; evidence retained at {operation}: {error}", file=sys.stderr)
             if status == "failed_manual_recovery":
-                raise RuntimeError(f"Uninstall failed; uncertain files retained at {operation}; manual recovery required: {failure}; {rollback_errors}") from failure
+                message = f"Uninstall failed; uncertain files retained at {operation}; manual recovery required: {failure}; {rollback_errors}"
+                if not isinstance(failure, Exception):
+                    print(message, file=sys.stderr)
+                    raise
+                raise RuntimeError(message) from failure
             raise
 
 
@@ -344,9 +352,10 @@ def main():
                 raise subprocess.CalledProcessError(process.returncode, command)
             verify_validation_output((report_dir / "auval.log").read_text(), installed["version"])
         result["status"] = "pass"
-    except Exception as error:
+    except BaseException as error:
         result["status"] = "fail"
-        result["error"] = str(error)
+        result["error"] = str(error) or type(error).__name__
+        result["error_type"] = type(error).__name__
         raise
     finally:
         (report_dir / "result.json").write_text(json.dumps(result, indent=2) + "\n")

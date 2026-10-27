@@ -63,7 +63,8 @@ python3 scripts/local_handoff.py reproduce --cache "$PWD/.cache/dependencies" --
 
 This creates a new retained path under `build/pr-10-reproduction/`, clones local
 Git objects without hardlinks/submodule recursion, disables Git hooks for checkout,
-checks out the exact source commit, configures all builds with offline/cache flags,
+checks out the exact source commit, pins the existing **Unix Makefiles** generator
+(even if `CMAKE_GENERATOR` names Xcode/Ninja Multi-Config), uses offline/cache flags,
 and runs full Release/Debug plus focused ASan/TSan tests. It preserves failures and
 logs; it never resets/deletes your source. Missing cache fails **before cloning**.
 It does not rerun the PR09 timing screen, any private corpus or old consumed study.
@@ -187,6 +188,10 @@ Symlink/edited/unknown/missing/inconsistent installs are refused.
 
 The command prints recovery component/receipt paths and writes operation receipts.
 If a move/report fails, verified originals are restored only to vacant destinations.
+Ctrl-C follows this same recovery/reporting path and is then re-raised; a repeated
+interruption during rollback may require manual recovery. This is not crash-proof
+atomicity: SIGKILL, power loss or termination that prevents Python cleanup can leave
+only the started receipt and retained paths. Inspect them manually; do not delete.
 Uncertain files/newcomers are retained, not deleted or overwritten; failures may
 need manual recovery. **A failure receipt takes precedence over any partial result
 file**; do not infer completion from a result file alone after a failed command.

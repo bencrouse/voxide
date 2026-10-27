@@ -116,6 +116,8 @@ unchanged. `main` remains `ef80f07`; no merge or push is performed.
 
 PR10 implementation is complete as a **local engineering / negative-qualification
 handoff**, not a successful studio qualification or final merge acceptance.
-Independent PR10 review has not been requested or claimed. Stop here for the user:
+At this original closeout, independent PR10 review had not been requested or
+claimed. The subsequent user-requested [review](review-001.md) and
+[repairs](review-fixes-001.md) are separate follow-up evidence. Stop here for the user:
 do not start new DSP research, rerun failed/consumed studies, demand a repeated
 PR08 audition, or operate their installed AU/Logic/private sources automatically.

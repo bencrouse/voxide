@@ -141,7 +141,7 @@ def reproduce(cache,output=None,*,jobs=6):
         require(git("rev-parse","HEAD",cwd=checkout)==revision and not git("status","--porcelain",cwd=checkout),"Clone identity/cleanliness mismatch")
         for profile,sanitizer in (("release",""),("debug",""),("asan","address"),("tsan","thread")):
             build=checkout/"build"/profile
-            run(profile+"-configure",["cmake","-S",str(checkout),"-B",str(build),"-DCMAKE_BUILD_TYPE="+("Release" if profile=="release" else "Debug"),"-DVOXIDE_OFFLINE=ON","-DVOXIDE_DEPENDENCY_CACHE="+cache["directory"],"-DVOXIDE_SANITIZER="+sanitizer,"-DPython3_EXECUTABLE="+sys.executable]).check_returncode()
+            run(profile+"-configure",["cmake","-G","Unix Makefiles","-S",str(checkout),"-B",str(build),"-DCMAKE_BUILD_TYPE="+("Release" if profile=="release" else "Debug"),"-DVOXIDE_OFFLINE=ON","-DVOXIDE_DEPENDENCY_CACHE="+cache["directory"],"-DVOXIDE_SANITIZER="+sanitizer,"-DPython3_EXECUTABLE="+sys.executable]).check_returncode()
             targets=[] if not sanitizer else ["--target","voxide_dsp_tests","voxide_processor_tests","voxide_studio_reference_tests"]
             run(profile+"-build",["cmake","--build",str(build),"--parallel",str(jobs),*targets]).check_returncode()
             env=os.environ.copy();selection=[] if not sanitizer else ["-R","^(dsp|processor|studio_ui|studio_reference)$"]

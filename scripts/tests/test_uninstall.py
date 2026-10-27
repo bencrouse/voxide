@@ -96,6 +96,77 @@ class UninstallTests(unittest.TestCase):
         self.assertEqual(au.fingerprint(self.target),expected);self.assertEqual(self.ledger.read_bytes(),ledger)
         self.assertEqual(json.loads(self.failures()[0].read_text())["status"],"failed_rolled_back")
 
+    def test_interrupt_immediately_after_either_rename_rolls_back(self):
+        for interrupted_source in (self.target,self.ledger):
+            with self.subTest(source=str(interrupted_source)):
+                self.install();expected=au.fingerprint(self.target);ledger=self.ledger.read_bytes()
+                previous=set(self.failures());rename=au.rename_exclusive
+                def interrupt(source,destination):
+                    rename(source,destination)
+                    if source==interrupted_source:raise KeyboardInterrupt()
+                with patch.object(au,"rename_exclusive",side_effect=interrupt),self.assertRaises(KeyboardInterrupt):self.remove()
+                self.assertEqual(au.fingerprint(self.target),expected);self.assertEqual(self.ledger.read_bytes(),ledger)
+                receipt=json.loads((set(self.failures())-previous).pop().read_text())
+                self.assertEqual(receipt["status"],"failed_rolled_back");self.assertEqual(receipt["error_type"],"KeyboardInterrupt")
+
+    def test_interrupt_during_result_write_rolls_back_and_failure_takes_precedence(self):
+        for complete in (False,True):
+            with self.subTest(complete=complete):
+                self.install();expected=au.fingerprint(self.target);ledger=self.ledger.read_bytes()
+                previous=set(self.failures());write=au.write_exclusive_json
+                def interrupt(path,value):
+                    if path.name=="result.json":
+                        if complete:write(path,value)
+                        else:path.write_text('{"status":')
+                        raise KeyboardInterrupt()
+                    write(path,value)
+                with patch.object(au,"write_exclusive_json",side_effect=interrupt),self.assertRaises(KeyboardInterrupt):self.remove()
+                self.assertEqual(au.fingerprint(self.target),expected);self.assertEqual(self.ledger.read_bytes(),ledger)
+                failure=(set(self.failures())-previous).pop()
+                self.assertEqual(json.loads(failure.read_text())["status"],"failed_rolled_back")
+                self.assertTrue((failure.parent/"result.json").exists())
+
+    def test_second_interrupt_during_rollback_records_manual_recovery(self):
+        self.install();expected=au.fingerprint(self.target);ledger=self.ledger.read_bytes();rename=au.rename_exclusive
+        original=KeyboardInterrupt("initial")
+        def interrupt(source,destination):
+            if source==self.ledger:raise original
+            if source.name==au.COMPONENT and source!=self.target:raise KeyboardInterrupt("rollback")
+            rename(source,destination)
+        stderr=io.StringIO()
+        with patch.object(au,"rename_exclusive",side_effect=interrupt),contextlib.redirect_stderr(stderr),self.assertRaises(KeyboardInterrupt) as raised:
+            self.remove()
+        self.assertIs(raised.exception,original);self.assertIn("manual recovery",stderr.getvalue())
+        receipt=json.loads(self.failures()[0].read_text())
+        self.assertEqual(receipt["status"],"failed_manual_recovery");self.assertEqual(receipt["rollback_errors"],["rollback"])
+        self.assertFalse(self.target.exists());self.assertEqual(self.ledger.read_bytes(),ledger)
+        self.assertEqual(au.fingerprint(Path(receipt["retained_component"])),expected)
+
+    def test_interrupted_collision_preserves_newcomer_and_quarantined_original(self):
+        self.install();expected=au.fingerprint(self.target);rename=au.rename_exclusive
+        def interrupt(source,destination):
+            rename(source,destination)
+            if source==self.target:
+                self.target.mkdir();(self.target/"user-data").write_text("newcomer");raise KeyboardInterrupt()
+        with patch.object(au,"rename_exclusive",side_effect=interrupt),contextlib.redirect_stderr(io.StringIO()),self.assertRaises(KeyboardInterrupt):self.remove()
+        receipt=json.loads(self.failures()[0].read_text())
+        self.assertEqual(receipt["status"],"failed_manual_recovery")
+        self.assertEqual((self.target/"user-data").read_text(),"newcomer")
+        self.assertEqual(au.fingerprint(Path(receipt["retained_component"])),expected)
+
+    def test_cli_interruption_records_failure_and_reraises(self):
+        self.install();rename=au.rename_exclusive
+        def interrupt(source,destination):
+            rename(source,destination)
+            if source==self.target:raise KeyboardInterrupt()
+        with patch.object(sys,"argv",["au.py","uninstall","--allow-uninstall"]), \
+             patch.object(au,"ROOT",self.root),patch.object(au,"DEFAULT_INSTALL",self.destination),patch.object(au,"DEFAULT_STATE",self.state), \
+             patch.object(au,"rename_exclusive",side_effect=interrupt),contextlib.redirect_stdout(io.StringIO()),self.assertRaises(KeyboardInterrupt):au.main()
+        reports=list((self.root/"build/au-checks").glob("*/result.json"));self.assertEqual(len(reports),1)
+        result=json.loads(reports[0].read_text())
+        self.assertEqual(result["status"],"fail");self.assertEqual(result["error_type"],"KeyboardInterrupt")
+        self.assertTrue(self.target.exists());self.assertTrue(self.ledger.exists())
+
     def test_edit_during_move_is_retained_not_deleted_or_restored(self):
         self.install();rename=au.rename_exclusive
         def edit(source,destination):
